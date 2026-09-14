@@ -23,9 +23,12 @@ wdi <- WDI(indicator = c(
   credito_privado_bancos_pbi = "FD.AST.PRVT.GD.ZS"),
   country = "all",
   start = 1960,
-  end = 2024,
+  end = 2025,
   extra = TRUE)
 
 view(wdi)
+wdi_clean <- wdi |>
+  filter(region != "Aggregates", !is.na(region), region != "")
+view(wdi_clean)
 
 write.csv(wdi, "raw/wdi_tabla_completa.csv")
