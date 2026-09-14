@@ -1,9 +1,7 @@
-install.packages("WDI")
+install.packages(c("WDI","readxl"))
 
-library(tidyverse)
 library(WDI)
-library(skimr)
-library(tidyr)
+library(readxl)
 
 rm(list = ls())
 
@@ -25,6 +23,9 @@ wdi <- WDI(indicator = c(
   credito_privado_bancos_pbi = "FD.AST.PRVT.GD.ZS"),
   country = "all",
   start = 1960,
-  end = 2024)
+  end = 2024,
+  extra = TRUE)
 
 view(wdi)
+
+write.csv(wdi, "raw/wdi_tabla_completa.csv")
