@@ -27,8 +27,5 @@ wdi <- WDI(indicator = c(
   extra = TRUE)
 
 view(wdi)
-wdi_clean <- wdi |>
-  filter(region != "Aggregates", !is.na(region), region != "")
-view(wdi_clean)
 
 write.csv(wdi, "raw/wdi_tabla_completa.csv")
