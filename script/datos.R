@@ -1,4 +1,4 @@
-install.packages(c("WDI","readxl"))
+#install.packages(c("WDI","readxl"))
 
 library(WDI)
 library(readxl)
