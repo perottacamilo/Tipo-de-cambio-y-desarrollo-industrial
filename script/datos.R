@@ -4,6 +4,8 @@ library(WDI)
 library(readxl)
 
 rm(list = ls())
+setwd("..")
+getwd()
 
 wdi <- WDI(indicator = c(
   crecimiento_industria = "NV.IND.TOTL.KD.ZG",

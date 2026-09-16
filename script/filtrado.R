@@ -11,7 +11,7 @@ getwd()
 
 wdi <- read_csv("~/GitHub/Trabajo-Practico-Ciencia-de-Datos/raw/wdi_tabla_completa.csv")
 
-view(wdi_tabla_completa.csv)
+view(wdi)
 
 wdi_limpio <- wdi |>
   filter(region != "Aggregates", !is.na(region), region != "") |>
