@@ -49,17 +49,18 @@ diccionario <- tribble(
   "ahorro_bruto_pbi",      "Ahorro bruto nacional",                                     "Numérica",   "% del PBI",       "0 a 100",
   "ahorro_interno_bruto",      "Ahorro domestico bruto", "Numérica",   "% del PBI",       "0 a 100",
   "credito_privado_pbi",      "Credito al sector privado como % PBI",                                     "Numérica",   "% del PBI",       "0 a 100",
-  "credito_privados_banco_pbi",      "Credito al sector privado de los bancos como % PBI",                                     "Numérica",   "% del PBI",       "0 a 100",
+  "credito_privado_bancos_pbi",      "Credito al sector privado de los bancos como % PBI",                                     "Numérica",   "% del PBI",       "0 a 100",
   "ingreso",      "Tipo de ingreso per capita del pais",                                     "Categórica",       "-", "5 categorías")
 
 
 
 wdi2 <- wdi_limpio |>
-  filter(anio %in% c(1980, 2004, 2025))
+  filter(anio %in% c(1980, 2004, 2025)) |> 
+         arrange(pais, anio)
 
 tipos <- tibble(
-  variable = names(wdi),
-  tipo_r   = sapply(wdi, function(x) class(x)[1])
+  variable = names(wdi2),
+  tipo_r   = sapply(wdi2, function(x) class(x)[1])
 )
 tipos
 
@@ -70,10 +71,10 @@ colSums(is.na(wdi2))
 vars_num <- c("crecimiento_industria", "industria_pbi", "tipo_cambio_oficial", "tipo_cambio_real",
               "empleo_industrial", "exportacion_manufacturas", "gasto_gobierno", "gasto_gobierno_pbi","valor_agregado_trabajador",
                "valor_agregado_trabajador", "valor_agregado_trabajador", "ahorro_bruto_pbi", "ahorro_interno_bruto", 
-               "gastos_totales_gob_pbi", "credito_privado_pbi", "credito_privados_banco_pbi")
+               "gastos_totales_gob_pbi", "credito_privado_pbi", "credito_privado_bancos_pbi")
               
 
-wdi |>
+wdi2 |>
   mutate(n_na = rowSums(is.na(across(all_of(vars_num))))) |>
   count(n_na)
 
@@ -83,7 +84,7 @@ wdi |>
 # ¿Los faltantes se reparten al azar o se concentran en algún grupo?
 # Esta pregunta es clave: si los NA se concentran en los países de ingreso bajo,
 # cualquier promedio que calculemos va a estar sesgado hacia arriba.
-wdi |>
+wdi2 |>
   group_by(ingreso) |>
   summarise(
     n = n(),
@@ -93,11 +94,11 @@ wdi |>
     .groups = "drop"
   )
 
-wdi_analisis <- wdi |> filter(!is.na(industria_pbi))
+wdi_analisis <- wdi2 |> filter(!is.na(industria_pbi))
 
 
 nrow(wdi_analisis)   # cuántos países quedan
-setdiff(wdi$pais, wdi_analisis$pais)   # cuáles quedaron afuera
+setdiff(wdi2$pais, wdi_analisis$pais)   # cuáles quedaron afuera
 
 
 summary(wdi_analisis)
@@ -130,21 +131,23 @@ tabla_skim <- wdi_analisis |>
 #ANOVA
 
 
-df_anova_1980 <- wdi_paises %>%
-  filter(year == 1980, !is.na(industria_pbi), !is.na(region)) %>%
-  select(iso3c, country, region, industria_pbi) %>%
+df_anova_1980 <- wdi2 %>%
+  filter(anio == 1980, !is.na(industria_pbi), !is.na(region)) %>%
+  select(iso3c, pais, region, industria_pbi) %>%
   mutate(region  = factor(region),
          log_pbi = log(industria_pbi))
 
-df_anova_2004 <- wdi_paises %>%
-  filter(year == 2004, !is.na(industria_pbi), !is.na(region)) %>%
-  select(iso3c, country, region, industria_pbi) %>%
+view(df_anova_1980)
+
+df_anova_2004 <- wdi2 %>%
+  filter(anio == 2004, !is.na(industria_pbi), !is.na(region)) %>%
+  select(iso3c, pais, region, industria_pbi) %>%
   mutate(region  = factor(region),
          log_pbi = log(industria_pbi))
 
-df_anova_2025 <- wdi_paises %>%
-  filter(year == 2025, !is.na(industria_pbi), !is.na(region)) %>%
-  select(iso3c, country, region, industria_pbi) %>%
+df_anova_2025 <- wdi2 %>%
+  filter(anio == 2025, !is.na(industria_pbi), !is.na(region)) %>%
+  select(iso3c, pais, region, industria_pbi) %>%
   mutate(region  = factor(region),
          log_pbi = log(industria_pbi))
 
