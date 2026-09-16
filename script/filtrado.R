@@ -57,6 +57,13 @@ diccionario <- tribble(
 wdi2 <- wdi_limpio |>
   filter(anio %in% c(1980, 2004, 2025)) |> 
          arrange(pais, anio)
+wdi_1980 <- wdi2 |>
+  filter(anio == 1980)
+wdi_2004 <- wdi2 |>
+  filter(anio == 2004)
+wdi_2025 <- wdi2 |>
+  filter(anio == 2025)
+
 
 tipos <- tibble(
   variable = names(wdi2),
@@ -64,19 +71,30 @@ tipos <- tibble(
 )
 tipos
 
-
 colSums(is.na(wdi2))
+colSums(is.na(wdi_1980))
+colSums(is.na(wdi_2004))
+colSums(is.na(wdi_2025))
 
 # ¿Cuántos países tienen la información completa en las variables numéricas?
 vars_num <- c("crecimiento_industria", "industria_pbi", "tipo_cambio_oficial", "tipo_cambio_real",
               "empleo_industrial", "exportacion_manufacturas", "gasto_gobierno", "gasto_gobierno_pbi","valor_agregado_trabajador",
                "valor_agregado_trabajador", "valor_agregado_trabajador", "ahorro_bruto_pbi", "ahorro_interno_bruto", 
                "gastos_totales_gob_pbi", "credito_privado_pbi", "credito_privado_bancos_pbi")
-              
 
 wdi2 |>
   mutate(n_na = rowSums(is.na(across(all_of(vars_num))))) |>
   count(n_na)
+wdi_1980 |>
+  mutate(n_na = rowSums(is.na(across(all_of(vars_num))))) |>
+  count(n_na)
+wdi_2004 |>
+  mutate(n_na = rowSums(is.na(across(all_of(vars_num))))) |>
+  count(n_na)
+wdi_2025 |>
+  mutate(n_na = rowSums(is.na(across(all_of(vars_num))))) |>
+  count(n_na)
+## 2025 parece tener mas na que 2004, deberiamos probar con 2024 o 2023, capaz que hay mas datos
 
 
 
@@ -85,12 +103,12 @@ wdi2 |>
 # Esta pregunta es clave: si los NA se concentran en los países de ingreso bajo,
 # cualquier promedio que calculemos va a estar sesgado hacia arriba.
 wdi2 |>
-  group_by(ingreso) |>
+  group_by(ingreso, anio) |>
   summarise(
     n = n(),
-    na_internet    = sum(is.na(internet)),
-    na_banda_ancha = sum(is.na(banda_ancha)),
-    na_secundaria  = sum(is.na(secundaria)),
+    na_industria_pbi    = sum(is.na(industria_pbi)),
+    ##na_banda_ancha = sum(is.na(banda_ancha)),
+   ## na_secundaria  = sum(is.na(secundaria)),
     .groups = "drop"
   )
 
@@ -99,6 +117,7 @@ wdi_analisis <- wdi2 |> filter(!is.na(industria_pbi))
 
 nrow(wdi_analisis)   # cuántos países quedan
 setdiff(wdi2$pais, wdi_analisis$pais)   # cuáles quedaron afuera
+#¿deberiamos borrar los paises que tengan NA en uno de los tres periodos y quedarnos con los que tienen el dato en todos?
 
 
 summary(wdi_analisis)
