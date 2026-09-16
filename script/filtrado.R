@@ -50,7 +50,8 @@ diccionario <- tribble(
   "ahorro_interno_bruto",      "Ahorro domestico bruto", "Numérica",   "% del PBI",       "0 a 100",
   "credito_privado_pbi",      "Credito al sector privado como % PBI",                                     "Numérica",   "% del PBI",       "0 a 100",
   "credito_privado_bancos_pbi",      "Credito al sector privado de los bancos como % PBI",                                     "Numérica",   "% del PBI",       "0 a 100",
-  "ingreso",      "Tipo de ingreso per capita del pais",                                     "Categórica",       "-", "5 categorías")
+  "ingreso",      "Tipo de ingreso per capita del pais",                                     "Categórica",       "-", "5 categorías",
+  "fator_ppp",      "Factor de conversion de Paridad de Poder Adquisitivo",                                     "Numérica",       "Conversión en dólares", "> 0")
 
 
 
@@ -80,7 +81,7 @@ colSums(is.na(wdi_2025))
 vars_num <- c("crecimiento_industria", "industria_pbi", "tipo_cambio_oficial", "tipo_cambio_real",
               "empleo_industrial", "exportacion_manufacturas", "gasto_gobierno", "gasto_gobierno_pbi","valor_agregado_trabajador",
                "valor_agregado_trabajador", "valor_agregado_trabajador", "ahorro_bruto_pbi", "ahorro_interno_bruto", 
-               "gastos_totales_gob_pbi", "credito_privado_pbi", "credito_privado_bancos_pbi")
+               "gastos_totales_gob_pbi", "credito_privado_pbi", "credito_privado_bancos_pbi", "factor_ppp")
 
 wdi2 |>
   mutate(n_na = rowSums(is.na(across(all_of(vars_num))))) |>
