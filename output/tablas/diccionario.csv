@@ -1,0 +1,20 @@
+variable,descripcion,tipo,unidad,rango_teorico,na_totales,na_2001,na_2008,na_2022
+pais,Nombre del país,Categórica,-,-,0,0,0,0
+iso3c,Código ISO de 3 letras (identificador único),Categórica,-,-,0,0,0,0
+region,Región geográfica del Banco Mundial,Categórica,-,7 categorías,0,0,0,0
+anio,Año de la observacion,Numérica,Anual,66 categorías,0,0,0,0
+crecimiento_industria,Crecimiento de la industria,Numérica,% de crecimiento,> 0,107,48,35,24
+industria_pbi,Participacion de la industria en el PBI,Numérica,% del PBI,0 a 100,76,36,21,19
+indice_precios_relativos,Diferencia entre los precios generales del pais con respecto a EEUU,Numérica,Indice,> 0,77,29,24,24
+factor_ppp,Factor de conversion de Paridad de Poder Adquisitivo,Numérica,Conversión en dólares,> 0,58,23,17,18
+tipo_cambio_oficial,Tipo de cambio oficial de cada pais,Numérica,Moneda local,> 0,33,12,11,10
+tipo_cambio_real,Tipo de cambio real de cada pais,Numérica,Moneda local,> 0,369,122,122,125
+empleo_industrial,Cantidad de empleados en el sector industrial,Numérica,% del total de empleados,0 a 100,91,30,30,31
+exportacion_manufacturas,Porcentaje de la exportacion de manufacturas,Numérica,% del total,0 a 100,157,53,50,54
+gasto_gobierno_pbi,Gasto total del gobierno como % PBI,Numérica,% del PBI,0 a 100,145,58,46,41
+gastos_totales_gob_pbi,Gasto total del gobierno como % PBI (inculye subsidios),Numérica,% del PBI,0 a 100,332,58,46,41
+valor_agregado_trabajador,Valor agregado del trabajador de la industria,Numérica,Dolares constantes 2015,> 0,151,61,46,44
+ied_pbi,Inversion extranjera directa como % PBI,Numérica,% del PBI,0 a 100,75,30,23,22
+ahorro_bruto_pbi,Ahorro bruto nacional,Numérica,% del PBI,0 a 100,209,89,61,59
+credito_privado_pbi,Credito al sector privado como % PBI,Numérica,% del PBI,0 a 100,188,76,54,58
+ingreso,Tipo de ingreso per capita del pais,Categórica,-,5 categorías,0,0,0,0

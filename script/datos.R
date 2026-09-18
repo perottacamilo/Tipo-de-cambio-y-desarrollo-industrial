@@ -14,21 +14,16 @@ wdi <- WDI(indicator = c(
   tipo_cambio_real = "PX.REX.REER",
   empleo_industrial = "SL.IND.EMPL.ZS",
   exportacion_manufacturas = "TX.VAL.MANF.ZS.UN",
-  gasto_gobierno = "NE.CON.GOVT.KD.ZG",
   gasto_gobierno_pbi = "NE.CON.GOVT.ZS",
   gastos_totales_gob_pbi = "GC.XPN.TOTL.GD.ZS",
   valor_agregado_trabajador = "NV.IND.EMPL.KD",
   ied_pbi = "BX.KLT.DINV.WD.GD.ZS",
   ahorro_bruto_pbi = "NY.GNS.ICTR.ZS",
-  ahorro_interno_bruto = "NY.GDS.TOTL.ZS",
   credito_privado_pbi = "FS.AST.PRVT.GD.ZS",
-  credito_privado_bancos_pbi = "FD.AST.PRVT.GD.ZS",
   factor_ppp = "PA.NUS.PPP"),
   country = "all",
   start = 1960,
   end = 2025,
   extra = TRUE)
-
-view(wdi)
 
 write.csv(wdi, "raw/wdi_tabla_completa.csv")
