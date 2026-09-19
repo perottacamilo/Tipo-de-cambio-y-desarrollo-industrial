@@ -15,10 +15,10 @@ wdi <- read_csv("~/GitHub/Trabajo-Practico-Ciencia-de-Datos/raw/wdi_tabla_comple
 
 wdi_limpio <- wdi |>
   filter(region != "Aggregates", !is.na(region), region != "") |>
-  rename(pais = country, anio = year, ingreso = income) |>
+  rename(pais = country, anio = year, ingreso = income, pbi_millones = pbi) |>
   select(-iso2c, -status, -lastupdated, -status, -lending, -latitude, -longitude, -capital) |>
-  mutate(indice_precios_relativos = tipo_cambio_oficial/factor_ppp,
-         ingreso = factor(ingreso,
+  mutate(pbi_millones = pbi_millones/1000000,
+    ingreso = factor(ingreso,
                    levels = c("Low income", "Lower middle income", "Upper middle income",
                               "High income", "Not classified"),
                    labels = c("Ingreso bajo", "Ingreso medio-bajo", "Ingreso medio-alto",
@@ -26,27 +26,28 @@ wdi_limpio <- wdi |>
          mutate(across(where(is.numeric), ~ round(.x, 3))))
 
 
-diccionario <- tribble(
+  diccionario <- tribble(
   ~variable,                    ~descripcion,                                             ~tipo,        ~unidad,                          ~rango_teorico, ~na_totales,      ~na_2001, ~na_2008, ~na_2022,
   "pais",                       "Nombre del país",                                        "Categórica", "-",                              "-",              0,           0,        0,        0,
   "iso3c",                      "Código ISO de 3 letras (identificador único)",           "Categórica", "-",                              "-",              0,           0,        0,        0,
   "region",                     "Región geográfica del Banco Mundial",                    "Categórica", "-",                              "7 categorías",   0,           0,        0,        0,
   "anio",                       "Año de la observacion",                                  "Numérica",   "Anual",                          "66 categorías",  0,           0,        0,        0,
-  "crecimiento_industria",      "Crecimiento de la industria",                            "Numérica",   "% de crecimiento",               "> 0",            6232,         48,       35,       24,
+  "ingreso",                    "Tipo de ingreso per capita del pais",                     "Categórica", "-",                              "5 categorías",  0,            0,        0,        0,
+  "pbi_per_capita",             "PBI per capita ",                                        "Numérica",    "Dolares constanes 2015",        "> 0",         2789,            18,        9,        9,
+  "pbi_millones",               "PBI del pais en millones de dolares",                                        "Numérica",    "Dolares constanes 2015",           "> 0",        2789,            18,        9,        9,
   "industria_pbi",              "Participacion de la industria en el PBI",                "Numérica",   "% del PBI",                      "0 a 100",        5267,          36,       21,       19,
-  "indice_precios_relativos",   "Diferencia entre los precios generales del pais con respecto a EEUU",    "Numérica",   "Indice",          "> 0",           7593,          29,       24,       24,
-  "factor_ppp",                 "Factor de conversion de Paridad de Poder Adquisitivo",    "Numérica",   "Conversión en dólares",          "> 0",           7279,          23,       17,       18,
-  "tipo_cambio_oficial",        "Tipo de cambio oficial de cada pais",                     "Numérica",   "Moneda local",                   "> 0",           1719,          12,       11,       10,
+  "crecimiento_industria",      "Crecimiento de la industria",                            "Numérica",   "% de crecimiento",               "> 0",            6232,         48,       35,       24,
   "tipo_cambio_real_efectivo",  "Nivel de competitividad frente a otros paises",            "Numérica",  "Indice",                         "> 0",           10172,         122,      122,      125,
+  "indice_nivel_precios",          "Indice de nivel de precios",    "Numérica",   "Indice",          "> 0",           7299,          23,       17,       18,
   "empleo_industrial",          "Cantidad de empleados en el sector industrial",           "Numérica",   "% del total de empleados",       "0 a 100",       7791,          30,       30,       31,
-  "exportacion_manufacturas",   "Porcentaje de la exportacion de manufacturas",            "Numérica",   "% del total",                    "0 a 100",       6383,         53,       50,       54,
+  "exportacion_manufactura",   "Porcentaje de la exportacion de manufacturas",            "Numérica",   "% del total",                    "0 a 100",       6383,         53,       50,       54,
   "gasto_gobierno_pbi",         "Gasto total del gobierno como % PBI",                     "Numérica",   "% del PBI",                      "0 a 100",       5593,         58,       46,       41,
   "gastos_totales_gob_pbi",     "Gasto total del gobierno como % PBI (inculye subsidios)", "Numérica",   "% del PBI",                      "0 a 100",       9870,         58,       46,       41,
   "valor_agregado_trabajador",  "Valor agregado del trabajador de la industria",           "Numérica",   "Dolares constantes 2015",        "> 0",           8735,         61,       46,       44,
   "ied_pbi",                    "Inversion extranjera directa como % PBI",                 "Numérica",   "% del PBI",                      "0 a 100",       5016,          30,       23,       22,
   "ahorro_bruto_pbi",           "Ahorro bruto nacional",                                   "Numérica",   "% del PBI",                      "0 a 100",       7892,         89,       61,       59,
   "credito_privado_pbi",        "Credito al sector privado como % PBI",                    "Numérica",   "% del PBI",                      "0 a 100",       6685,         76,       54,       58,
-  "ingreso",                    "Tipo de ingreso per capita del pais",                     "Categórica", "-",                              "5 categorías",  0,            0,        0,        0)
+  "recursos_natural",           "Total de rentas proveniente de los recursos naturales",                    "Numérica",   "% del PBI",     "0 a 100",       5087,         17,       10,       217)
 
 # write_csv(diccionario, "output/tablas/diccionario.csv")
 
@@ -78,10 +79,11 @@ colSums(is.na(wdi_2022))
 
 
 # ¿Cuántos países tienen la información completa en las variables numéricas?
-vars_num <- c("crecimiento_industria", "industria_pbi", "tipo_cambio_oficial", "tipo_cambio_real", 
-              "indice_precios_relativos", "empleo_industrial", "exportacion_manufacturas", 
-              "gasto_gobierno_pbi","valor_agregado_trabajador", "valor_agregado_trabajador",
-              "ahorro_bruto_pbi", "credito_privado_pbi", "factor_ppp")
+vars_num <- c("crecimiento_industria", "industria_pbi", "tipo_cambio_real_efectivo", 
+              "indice_nivel_precios", "empleo_industrial", "exportacion_manufactura", 
+              "gasto_gobierno_pbi", "gastos_totales_gob_pbi", "valor_agregado_trabajador", "valor_agregado_trabajador",
+              "ahorro_bruto_pbi", "credito_privado_pbi", "recursos_naturales", "pbi_per_capita",
+              "pbi")
 
 wdi2 |>
   mutate(n_na = rowSums(is.na(across(all_of(vars_num))))) |>
@@ -103,16 +105,30 @@ wdi2 |>
   group_by(ingreso, anio) |>
   summarise(
     n = n(),
-    na_industria_pbi    = sum(is.na(industria_pbi)),
+    na_industria_pbi  = sum(is.na(industria_pbi)),
+    pct_na_ind = na_industria_pbi/n,
+    na_price_level = sum(is.na(indice_nivel_precios)),
+    pct_na_price_level = na_price_level/n,
     .groups = "drop"
   )
 
 wdi_analisis <- wdi2 |> filter(!is.na(industria_pbi))
-
+wdi_analisis2 <- wdi2 |> filter(!is.na(tipo_cambio_real_efectivo))
 
 nrow(wdi_analisis)   # cuántos países quedan
 setdiff(wdi2$pais, wdi_analisis$pais)   # cuáles quedaron afuera
 #¿deberiamos borrar los paises que tengan NA en uno de los tres periodos y quedarnos con los que tienen el dato en todos?
+nrow(wdi_analisis2)   # cuántos países quedan
+setdiff(wdi2$pais, wdi_analisis2$pais)   # cuáles quedaron afuera
+
+faltantes <- wdi_limpio |>
+  summarise(across(everything(), ~ mean(is.na(.x)) * 100)) |>
+  pivot_longer(everything(), names_to = "variable", values_to = "pct_na") |>
+  arrange(desc(pct_na))
+view(faltantes)
+
+
+
 
 
 summary(wdi_analisis)
@@ -141,10 +157,10 @@ tabla_skim <- wdi_analisis |>
 
 # write_csv(tabla_skim, "output/tablas/descriptivas_wdi.csv")
 view(tabla_skim)
-
+print(tabla_skim)
 
 #Grafico indusrtia
-ggplot(wdi_analisis, aes(x = industria_pbi)) +
+grafico1 <- ggplot(wdi_analisis, aes(x = industria_pbi)) +
   geom_histogram(bins = 30, fill = "steelblue", color = "black", alpha = 0.8) +
   facet_wrap(~ anio, ncol = 1) + # Separa el gráfico por año
   labs(title = "Distribución global de la participación industrial",
@@ -152,6 +168,8 @@ ggplot(wdi_analisis, aes(x = industria_pbi)) +
        x = "Industria (% del PBI)", 
        y = "Cantidad de países") +
   theme_minimal()
+print(grafico1)
+gtsave(grafico1, "output/graficos/histograma_industria_paises.png")
 
 
 #Tabla diccionario
@@ -174,6 +192,100 @@ gtsave(tabla_imagen, "output/tablas/diccionario_imagen.png")
 
 
 
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+na_por_ingreso <- wdi2 |>
+  group_by(ingreso, anio) |>
+  summarise(
+    n = n(),
+    na_industria_pbi = sum(is.na(industria_pbi)),
+    pct_na_ind = na_industria_pbi / n,
+    na_price_level = sum(is.na(indice_nivel_precios)),
+    pct_na_price_level = na_price_level / n,
+    .groups = "drop"
+  )
+
+# Pasar a formato largo: una fila por ingreso-año-variable
+na_largo <- na_por_ingreso |>
+  select(ingreso, anio, pct_na_ind, pct_na_price_level) |>
+  pivot_longer(
+    cols = c(pct_na_ind, pct_na_price_level),
+    names_to = "variable",
+    values_to = "pct_na"
+  ) |>
+  mutate(
+    variable = recode(variable,
+                      pct_na_ind = "industria_pbi",
+                      pct_na_price_level = "indice_nivel_precios"
+    ),
+    anio = factor(anio)
+  )
+
+grafico2 <- ggplot(na_largo, aes(x = ingreso, y = pct_na, fill = anio)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.7) +
+  facet_wrap(~variable) +
+  scale_y_continuous(
+    labels = scales::percent,
+    limits = c(0, 0.4),
+    breaks = seq(0, 1, 0.1)
+  ) +
+  labs(
+    title = "Porcentaje de valores faltantes por nivel de ingreso",
+    subtitle = "Comparación 2001 - 2008 - 2022",
+    x = "Nivel de ingreso",
+    y = "% de países sin dato",
+    fill = "Año"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "top")
+print(grafico2)
+
+gtsave(datos_faltantes_ingreso, "output/graficos/datos_faltantes_ingreso.png")
+
+
+
+#Graficos plots
+grafico3 <- plot(
+  wdi_2001$indice_nivel_precios, wdi_2001$industria_pbi,
+  pch = 19, col = rgb(0.2, 0.4, 0.7, 0.6),
+  main = "Relacion entre industria y el nivel de precios (2001)",
+  ylab = "% industria en el PBI",
+  xlab = "Indice de nivel de precios"
+)
+grafico3 <- abline(lm(industria_pbi ~ indice_nivel_precios, data = wdi_2001), col = "darkred", lwd = 2)
+r <- cor(wdi_2001$industria_pbi, wdi_2001$indice_nivel_precios, use = "complete.obs")
+grafico3 <- legend("topleft", legend = paste("r =", round(r, 2)), bty = "n")
+print(grafico3)
+
+plot(
+  wdi_2008$indice_nivel_precios, wdi_2008$industria_pbi,
+  pch = 19, col = rgb(0.2, 0.4, 0.7, 0.6),
+  main = "Relacion entre industria y el nivel de precios (2008)",
+  ylab = "% industria en el PBI",
+  xlab = "Indice de nivel de precios"
+)
+abline(lm(industria_pbi ~ indice_nivel_precios, data = wdi_2008), col = "darkred", lwd = 2)
+r <- cor(wdi_2008$industria_pbi, wdi_2008$indice_nivel_precios, use = "complete.obs")
+legend("topleft", legend = paste("r =", round(r, 2)), bty = "n")
+
+
+plot(
+  wdi_2022$indice_nivel_precios, wdi_2022$industria_pbi,
+  pch = 19, col = rgb(0.2, 0.4, 0.7, 0.6),
+  main = "Relacion entre industria y el nivel de precios (2022)",
+  ylab = "% industria en el PBI",
+  xlab = "Indice de nivel de precios"
+)
+abline(lm(industria_pbi ~ indice_nivel_precios, data = wdi_2022), col = "darkred", lwd = 2)
+r <- cor(wdi_2022$industria_pbi, wdi_2022$indice_nivel_precios, use = "complete.obs")
+legend("topleft", legend = paste("r =", round(r, 2)), bty = "n")
+
+
+
+
+#Boxplot ingreso-industria
 
 
 
@@ -188,7 +300,7 @@ gtsave(tabla_imagen, "output/tablas/diccionario_imagen.png")
 
 
 
-#ANOVA
+s#ANOVA
 
 
 df_anova_1980 <- wdi2 %>%
