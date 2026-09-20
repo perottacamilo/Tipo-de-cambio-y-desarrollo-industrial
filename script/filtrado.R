@@ -9,8 +9,6 @@ rm(list = ls())
 
 options(scipen = 999)
 
-getwd()
-
 wdi <- read_csv("~/GitHub/Trabajo-Practico-Ciencia-de-Datos/raw/wdi_tabla_completa.csv")
 
 wdi_limpio <- wdi |>
@@ -63,7 +61,6 @@ wdi_2008 <- wdi2 |>
   filter(anio == 2008)
 wdi_2022 <- wdi2 |>
   filter(anio == 2022)
-
 
 
 
@@ -315,7 +312,55 @@ legend("topleft",
 
 
 
+wdi_mediana <- wdi_limpio |> 
+  filter(anio %in% 2001:2022)
 
+wdi_latam <- wdi_mediana |> 
+  filter(region == "Latin America & Caribbean") |> 
+  select(anio, region, indice_nivel_precios)
+
+
+wdi_asia <- wdi_mediana |> 
+  filter(region == "East Asia & Pacific") |> 
+  select(anio, region, indice_nivel_precios)
+
+# 1. Crear wdi_china y cambiarle el nombre a la región
+wdi_china <- wdi_mediana |>
+  filter(pais == "China",
+         anio %in% 2001:2022) |>
+  mutate(region = "China") # ¡Esta es la clave para que aparezca separada!
+
+# 2. Unir todo
+wdi_comparativo <- bind_rows(wdi_latam, wdi_asia, wdi_china)
+
+# 3. Calcular medianas
+medianas_evolucion <- wdi_comparativo |>
+  group_by(anio, region) |>
+  summarize(
+    mediana_precios = median(indice_nivel_precios, na.rm = TRUE), 
+    .groups = "drop"
+  )
+
+# 4. Graficar
+ggplot(medianas_evolucion, aes(x = anio, y = mediana_precios, color = region)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 2.5) +
+  scale_color_manual(values = c("Latin America & Caribbean" = "#D9534F", 
+                                "East Asia & Pacific" = "#5BC0DE",
+                                "China" = "#27F52A")) +
+  scale_x_continuous(limits = c(2001, 2022), breaks = seq(2001, 2022, by = 3)) +
+  labs(
+    title = "Evolución del Índice de Nivel de Precios (Medianas)",
+    subtitle = "América Latina vs. Este de Asia y el Pacífico",
+    x = "Año",
+    y = "Índice de Nivel de Precios (Mediana)",
+    color = "Región"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",
+    plot.title = element_text(face = "bold")
+  )
 
 
 
