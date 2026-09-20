@@ -32,14 +32,14 @@ wdi_limpio <- wdi |>
   "iso3c",                      "Código ISO de 3 letras (identificador único)",           "Categórica", "-",                              "-",              0,           0,        0,        0,
   "region",                     "Región geográfica del Banco Mundial",                    "Categórica", "-",                              "7 categorías",   0,           0,        0,        0,
   "anio",                       "Año de la observacion",                                  "Numérica",   "Anual",                          "66 categorías",  0,           0,        0,        0,
-  "ingreso",                    "Tipo de ingreso per capita del pais",                     "Categórica", "-",                              "5 categorías",  0,            0,        0,        0,
+  "ingreso",                    "Tipo de ingreso per capita del pais",                    "Categórica", "-",                              "5 categorías",  0,            0,        0,        0,
   "pbi_per_capita",             "PBI per capita ",                                        "Numérica",    "Dolares constanes 2015",        "> 0",         2789,            18,        9,        9,
-  "pbi_millones",               "PBI del pais en millones de dolares",                                        "Numérica",    "Dolares constanes 2015",           "> 0",        2789,            18,        9,        9,
+  "pbi_millones",               "PBI del pais en millones de dolares",                    "Numérica",    "Dolares constanes 2015",           "> 0",        2789,            18,        9,        9,
   "industria_pbi",              "Participacion de la industria en el PBI",                "Numérica",   "% del PBI",                      "0 a 100",        5267,          36,       21,       19,
   "crecimiento_industria",      "Crecimiento de la industria",                            "Numérica",   "% de crecimiento",               "> 0",            6232,         48,       35,       24,
-  "tipo_cambio_real_efectivo",  "Nivel de competitividad frente a otros paises",            "Numérica",  "Indice",                         "> 0",           10172,         122,      122,      125,
-  "indice_nivel_precios",          "Indice de nivel de precios",    "Numérica",   "Indice",          "> 0",           7299,          23,       17,       18,
-  "empleo_industrial",          "Cantidad de empleados en el sector industrial",           "Numérica",   "% del total de empleados",       "0 a 100",       7791,          30,       30,       31,
+  "tipo_cambio_real_efectivo",  "Nivel de competitividad frente a otros paises",          "Numérica",  "Indice",                         "> 0",           10172,         122,      122,      125,
+  "indice_nivel_precios",          "Indice de nivel de precios",                          "Numérica",   "Indice",          "> 0",           7299,          23,       17,       18,
+  "empleo_industrial",          "Cantidad de empleados en el sector industrial",          "Numérica",   "% del total de empleados",       "0 a 100",       7791,          30,       30,       31,
   "exportacion_manufactura",   "Porcentaje de la exportacion de manufacturas",            "Numérica",   "% del total",                    "0 a 100",       6383,         53,       50,       54,
   "gasto_gobierno_pbi",         "Gasto total del gobierno como % PBI",                     "Numérica",   "% del PBI",                      "0 a 100",       5593,         58,       46,       41,
   "gastos_totales_gob_pbi",     "Gasto total del gobierno como % PBI (inculye subsidios)", "Numérica",   "% del PBI",                      "0 a 100",       9870,         58,       46,       41,
@@ -65,6 +65,10 @@ wdi_2022 <- wdi2 |>
   filter(anio == 2022)
 
 
+
+
+
+
 tipos <- tibble(
   variable = names(wdi2),
   tipo_r   = sapply(wdi2, function(x) class(x)[1]))
@@ -83,7 +87,7 @@ vars_num <- c("crecimiento_industria", "industria_pbi", "tipo_cambio_real_efecti
               "indice_nivel_precios", "empleo_industrial", "exportacion_manufactura", 
               "gasto_gobierno_pbi", "gastos_totales_gob_pbi", "valor_agregado_trabajador", "valor_agregado_trabajador",
               "ahorro_bruto_pbi", "credito_privado_pbi", "recursos_naturales", "pbi_per_capita",
-              "pbi")
+              "pbi_millones")
 
 wdi2 |>
   mutate(n_na = rowSums(is.na(across(all_of(vars_num))))) |>
@@ -113,7 +117,7 @@ wdi2 |>
   )
 
 wdi_analisis <- wdi2 |> filter(!is.na(industria_pbi))
-wdi_analisis2 <- wdi2 |> filter(!is.na(tipo_cambio_real_efectivo))
+wdi_analisis2 <- wdi2 |> filter(!is.na(indice_nivel_precios))
 
 nrow(wdi_analisis)   # cuántos países quedan
 setdiff(wdi2$pais, wdi_analisis$pais)   # cuáles quedaron afuera
@@ -128,7 +132,10 @@ faltantes <- wdi_limpio |>
 view(faltantes)
 
 
-
+skim(wdi_2001)
+skim(wdi_2008)
+skim(wdi_2022)
+skim(wdi2)
 
 
 summary(wdi_analisis)
@@ -288,6 +295,21 @@ legend("topleft", legend = paste("r =", round(r, 2)), bty = "n")
 #Boxplot ingreso-industria
 
 
+hist(
+  wdi_2001$industria_pbi,
+  breaks = 20, freq = FALSE,
+  main = "Distribución del uso de internet",
+  xlab = "% de la población que usa internet", ylab = "Densidad",
+  col = "grey90", border = "white"
+)
+lines(density(wdi_analisis$internet, na.rm = TRUE), lwd = 2, col = "darkred")
+rug(wdi_2001$industria_pbi)   # marca cada observación sobre el eje
+abline(v = mean(wdi_2001$industria_pbi), col = "blue", lwd = 2, lty = 2)
+abline(v = median(wdi_2001$industria_pbi), col = "darkgreen", lwd = 2, lty = 3)
+legend("topleft",
+       legend = c("Densidad", "Media", "Mediana"),
+       col = c("darkred", "blue", "darkgreen"),
+       lwd = 2, lty = c(1, 2, 3), bty = "n")
 
 
 
@@ -296,6 +318,43 @@ legend("topleft", legend = paste("r =", round(r, 2)), bty = "n")
 
 
 
+
+
+
+
+alta  <- wdi_2001$industria_pbi[wdi_2001$region == "East Asia & Pacific"]
+baja  <- wdi_2001$industria_pbi[wdi_2001$region %in%
+                                 c("Latin America & Caribbean", "")]
+
+hist(baja, breaks = 15, col = rgb(1, 0, 0, 0.5), border = "white",
+     xlim = c(0, 100), ylim = c(0, 12),
+     main = "2001",
+     xlab = "% industria en el PBI", ylab = "Cantidad de países")
+hist(alta, breaks = 15, col = rgb(0, 0, 1, 0.5), border = "white", add = TRUE)
+
+
+
+alta1  <- wdi_2022$industria_pbi[wdi_2022$region == "East Asia & Pacific"]
+baja1  <- wdi_2022$industria_pbi[wdi_2022$region %in%
+                                  c("Latin America & Caribbean", "")]
+
+hist(baja1, breaks = 15, col = rgb(1, 0, 0, 0.5), border = "white",
+     xlim = c(0, 100), ylim = c(0, 12),
+     main = "2022",
+     xlab = "% industria en el PBI", ylab = "Cantidad de países")
+hist(alta1, breaks = 15, col = rgb(0, 0, 1, 0.5), border = "white", add = TRUE)
+
+
+
+alta2  <- wdi_2008$industria_pbi[wdi_2008$region == "East Asia & Pacific"]
+baja2  <- wdi_2008$industria_pbi[wdi_2008$region %in%
+                                   c("Latin America & Caribbean", "")]
+
+hist(baja2, breaks = 15, col = rgb(1, 0, 0, 0.5), border = "white",
+     xlim = c(0, 100), ylim = c(0, 12),
+     main = "2008",
+     xlab = "% industria en el PBI", ylab = "Cantidad de países")
+hist(alta2, breaks = 15, col = rgb(0, 0, 1, 0.5), border = "white", add = TRUE)
 
 
 
