@@ -25,27 +25,27 @@ wdi_limpio <- wdi |>
 
 
   diccionario <- tribble(
-  ~variable,                    ~descripcion,                                             ~tipo,        ~unidad,                          ~rango_teorico, ~na_totales,      ~na_2001, ~na_2008, ~na_2022,
-  "pais",                       "Nombre del país",                                        "Categórica", "-",                              "-",              0,           0,        0,        0,
-  "iso3c",                      "Código ISO de 3 letras (identificador único)",           "Categórica", "-",                              "-",              0,           0,        0,        0,
-  "region",                     "Región geográfica del Banco Mundial",                    "Categórica", "-",                              "7 categorías",   0,           0,        0,        0,
-  "anio",                       "Año de la observacion",                                  "Numérica",   "Anual",                          "66 categorías",  0,           0,        0,        0,
-  "ingreso",                    "Tipo de ingreso per capita del pais",                    "Categórica", "-",                              "5 categorías",  0,            0,        0,        0,
-  "pbi_per_capita",             "PBI per capita ",                                        "Numérica",    "Dolares constanes 2015",        "> 0",         2789,            18,        9,        9,
-  "pbi_millones",               "PBI del pais en millones de dolares",                    "Numérica",    "Dolares constanes 2015",           "> 0",        2789,            18,        9,        9,
-  "industria_pbi",              "Participacion de la industria en el PBI",                "Numérica",   "% del PBI",                      "0 a 100",        5267,          36,       21,       19,
-  "crecimiento_industria",      "Crecimiento de la industria",                            "Numérica",   "% de crecimiento",               "> 0",            6232,         48,       35,       24,
-  "tipo_cambio_real_efectivo",  "Nivel de competitividad frente a otros paises",          "Numérica",  "Indice",                         "> 0",           10172,         122,      122,      125,
-  "indice_nivel_precios",          "Indice de nivel de precios",                          "Numérica",   "Indice",          "> 0",           7299,          23,       17,       18,
-  "empleo_industrial",          "Cantidad de empleados en el sector industrial",          "Numérica",   "% del total de empleados",       "0 a 100",       7791,          30,       30,       31,
-  "exportacion_manufactura",   "Porcentaje de la exportacion de manufacturas",            "Numérica",   "% del total",                    "0 a 100",       6383,         53,       50,       54,
-  "gasto_gobierno_pbi",         "Gasto total del gobierno como % PBI",                     "Numérica",   "% del PBI",                      "0 a 100",       5593,         58,       46,       41,
-  "gastos_totales_gob_pbi",     "Gasto total del gobierno como % PBI (inculye subsidios)", "Numérica",   "% del PBI",                      "0 a 100",       9870,         58,       46,       41,
-  "valor_agregado_trabajador",  "Valor agregado del trabajador de la industria",           "Numérica",   "Dolares constantes 2015",        "> 0",           8735,         61,       46,       44,
-  "ied_pbi",                    "Inversion extranjera directa como % PBI",                 "Numérica",   "% del PBI",                      "0 a 100",       5016,          30,       23,       22,
-  "ahorro_bruto_pbi",           "Ahorro bruto nacional",                                   "Numérica",   "% del PBI",                      "0 a 100",       7892,         89,       61,       59,
-  "credito_privado_pbi",        "Credito al sector privado como % PBI",                    "Numérica",   "% del PBI",                      "0 a 100",       6685,         76,       54,       58,
-  "recursos_natural",           "Total de rentas proveniente de los recursos naturales",                    "Numérica",   "% del PBI",     "0 a 100",       5087,         17,       10,       217)
+  ~variable,                    ~descripcion,                                                                                             ~tipo,                 ~unidad,                          ~rango_teorico,   ~na_totales,      ~na_2001, ~na_2008, ~na_2022,
+  "pais",                       "Nombre del país",                                                                                        "Categórica",          "-",                              "-",              0,                 0,        0,        0,
+  "iso3c",                      "Código ISO de 3 letras (identificador único)",                                                           "Categórica",          "-",                              "-",              0,                 0,        0,        0,
+  "region",                     "Región geográfica del Banco Mundial",                                                                    "Categórica",          "-",                              "7 categorías",   0,                 0,        0,        0,
+  "anio",                       "Año de la observacion",                                                                                  "Numérica",            "Anual",                          "66 categorías",  0,                 0,        0,        0,
+  "pbi_millones",               "PBI del país en millones de dólares",                                                                    "Numérica",            "Dolares constanes 2015",         "> 0",            2789,              18,       9,        9,
+  "pbi_per_capita",             "PBI per capita ",                                                                                        "Numérica",            "Dolares constanes 2015",         "> 0",            2789,              18,       9,        9,
+  "indice_nivel_precios",       "Factor de Paridad de Poder Adquisitivo (PPA) sobre el tipo de cambio nominal multiplicado por 100",      "Numérica",            "Indice",                         "> 0",            7299,              23,       17,       18,
+  "industria_pbi",              "Participacion de la industria en el PBI",                                                                "Numérica",            "% del PBI",                      "0 a 100",        5267,              36,       21,       19,
+  "crecimiento_industria",      "Crecimiento de la industria",                                                                            "Numérica",            "% de crecimiento",               "> 0",            6232,              48,       35,       24,
+  "tipo_cambio_real_efectivo",  "Nivel de Competitividad con base = 2010",                                                                "Numérica",            "Indice",                         "> 0",            10172,             122,      122,      125,
+  "recursos_naturales",         "Rentas Económicas provenientes de los recursos naturales ",                                              "Numérica",            "% del PBI",                      "0 a 100",        5087,              17,       10,       217,
+  "empleo_industrial",          "Cantidad de empleados en el sector industrial",                                                          "Numérica",            "% del total de empleados",       "0 a 100",        7791,              30,       30,       31,
+  "ingreso",                    "Tipo de ingreso per capita del pais",                                                                    "Categórica",          "-",                              "5 categorías",   0,                 0,        0,        0,
+  "exportacion_manufactura",    "Porcentaje de la exportacion en manufacturas",                                                           "Numérica",            "% del total",                    "0 a 100",        6383,              53,       50,       54,
+  "gasto_gobierno_pbi",         "Gasto Total del Gobierno",                                                                               "Numérica",            "% del PBI",                      "0 a 100",        5593,              58,       46,       41,
+  "gastos_totales_gob_pbi",     "Gasto total del gobierno como % PBI (inculye subsidios)",                                                "Numérica",            "% del PBI",                      "0 a 100",        9870,              58,       46,       41,
+  "valor_agregado_trabajador",  "Valor agregado del trabajador de la industria",                                                          "Numérica",            "Dolares constantes 2015",        "> 0",            8735,              61,       46,       44,
+  "ied_pbi",                    "Inversion extranjera directa",                                                                           "Numérica",            "% del PBI",                      "0 a 100",        5016,              30,       23,       22,
+  "ahorro_bruto_pbi",           "Ahorro Bruto Nacional",                                                                                  "Numérica",            "% del PBI",                      "0 a 100",       7892,               89,       61,       59,
+  "credito_privado_pbi",        "Credito al sector privado",                                                                              "Numérica",            "% del PBI",                      "0 a 100",       6685,               76,       54,       58)
 
 # write_csv(diccionario, "output/tablas/diccionario.csv")
 
@@ -85,6 +85,10 @@ vars_num <- c("crecimiento_industria", "industria_pbi", "tipo_cambio_real_efecti
               "gasto_gobierno_pbi", "gastos_totales_gob_pbi", "valor_agregado_trabajador", "valor_agregado_trabajador",
               "ahorro_bruto_pbi", "credito_privado_pbi", "recursos_naturales", "pbi_per_capita",
               "pbi_millones")
+
+
+
+
 
 wdi2 |>
   mutate(n_na = rowSums(is.na(across(all_of(vars_num))))) |>
@@ -141,6 +145,12 @@ summary(wdi_analisis$industria_pbi)
 
 skim(wdi_analisis)
 
+tabla_cruzada <- table(wdi_analisis$region, wdi_analisis$ingreso)
+tabla_cruzada
+
+# Con totales de fila y columna
+addmargins(tabla_cruzada)
+
 
 wdi_analisis |>
   group_by(region) |>
@@ -173,7 +183,7 @@ grafico1 <- ggplot(wdi_analisis, aes(x = industria_pbi)) +
        y = "Cantidad de países") +
   theme_minimal()
 print(grafico1)
-gtsave(grafico1, "output/graficos/histograma_industria_paises.png")
+png(grafico1, "output/graficos/grafico1_industria", width = 900, height = 600)
 
 
 #Tabla diccionario
@@ -324,16 +334,13 @@ wdi_asia <- wdi_mediana |>
   filter(region == "East Asia & Pacific") |> 
   select(anio, region, indice_nivel_precios)
 
-# 1. Crear wdi_china y cambiarle el nombre a la región
 wdi_china <- wdi_mediana |>
   filter(pais == "China",
          anio %in% 2001:2022) |>
-  mutate(region = "China") # ¡Esta es la clave para que aparezca separada!
+  mutate(region = "China") 
 
-# 2. Unir todo
 wdi_comparativo <- bind_rows(wdi_latam, wdi_asia, wdi_china)
 
-# 3. Calcular medianas
 medianas_evolucion <- wdi_comparativo |>
   group_by(anio, region) |>
   summarize(
@@ -345,8 +352,8 @@ medianas_evolucion <- wdi_comparativo |>
 ggplot(medianas_evolucion, aes(x = anio, y = mediana_precios, color = region)) +
   geom_line(linewidth = 1.2) +
   geom_point(size = 2.5) +
-  scale_color_manual(values = c("Latin America & Caribbean" = "#D9534F", 
-                                "East Asia & Pacific" = "#5BC0DE",
+  scale_color_manual(values = c("America Latina y Caribe" = "#D9534F", 
+                                "Este de Asia y Pacifico" = "#5BC0DE",
                                 "China" = "#27F52A")) +
   scale_x_continuous(limits = c(2001, 2022), breaks = seq(2001, 2022, by = 3)) +
   labs(
@@ -363,7 +370,12 @@ ggplot(medianas_evolucion, aes(x = anio, y = mediana_precios, color = region)) +
   )
 
 
+cor(wdi_2001$industria_pbi, wdi_2001$indice_nivel_precios,
+    use = "complete.obs")
 
+# cor.test() agrega el test de significatividad y el intervalo de confianza
+cor.test(wdi_2001$industria_pbi, wdi_2001$indice_nivel_precios)
+#La correlacion es significativa al 1%
 
 
 
@@ -400,6 +412,36 @@ hist(baja2, breaks = 15, col = rgb(1, 0, 0, 0.5), border = "white",
      main = "2008",
      xlab = "% industria en el PBI", ylab = "Cantidad de países")
 hist(alta2, breaks = 15, col = rgb(0, 0, 1, 0.5), border = "white", add = TRUE)
+
+
+
+# Todo lo que hicimos acá es, punto por punto, lo que pide la instancia 1:
+#
+#  [ ] Dimensiones de la base            -> dim(), nrow(), ncol()          (2.1)
+#  [ ] Unidad de observación             -> duplicated(), n_distinct()     (2.1)
+#  [ ] Descripción de cada variable      -> diccionario                    (1.3)
+#  [ ] Tipo de cada variable             -> glimpse(), tipos               (2.2)
+#  [ ] Valores faltantes                 -> colSums(is.na()), faltantes    (2.3)
+#  [ ] Estadísticas descriptivas         -> summary(), skim(), descriptivas (3)
+#  [ ] Distribución de las categóricas   -> table(), prop.table()          (4)
+#  [ ] Forma de las distribuciones       -> hist()                         (5)
+#  [ ] Dispersión y atípicos             -> boxplot(), boxplot.stats()     (6)
+#  [ ] Medidas de posición y desigualdad -> quantile(), ratios             (7)
+#  [ ] Relación entre variables          -> cor(), pairs()                 (8)
+#  [ ] Periodicidad de la fuente         -> anual (WDI se actualiza ~2 veces al año)
+#
+# Tres advertencias finales, que son las que más se ven en las entregas:
+#
+# 1. Ninguna tabla ni gráfico se presenta sin una frase que lo interprete.
+#    El output de R es el insumo, no el resultado.
+# 2. Los NA y los outliers se explican, no se borran en silencio. Decir cuántos
+#    son, dónde se concentran y qué se hizo con ellos.
+# 3. Correlación no es causalidad, y el TP no es causal. Las relaciones que
+#    encontramos acá describen asociaciones entre países en un año, nada más.
+
+
+
+
 
 
 
