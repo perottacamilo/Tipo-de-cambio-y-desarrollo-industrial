@@ -47,8 +47,9 @@ wdi_limpio <- wdi |>
   "gastos_totales_gob_pbi",     "Gasto total del gobierno como % PBI (inculye subsidios)",                                                "Numérica",            "% del PBI",                      "0 a 100",        9870,              58,       46,       41,
   "valor_agregado_trabajador",  "Valor agregado del trabajador de la industria",                                                          "Numérica",            "Dolares constantes 2015",        "> 0",            8735,              61,       46,       44,
   "ied_pbi",                    "Inversion extranjera directa",                                                                           "Numérica",            "% del PBI",                      "0 a 100",        5016,              30,       23,       22,
-  "ahorro_bruto_pbi",           "Ahorro Bruto Nacional",                                                                                  "Numérica",            "% del PBI",                      "0 a 100",       7892,               89,       61,       59,
-  "credito_privado_pbi",        "Credito al sector privado",                                                                              "Numérica",            "% del PBI",                      "0 a 100",       6685,               76,       54,       58)
+  "ahorro_bruto_pbi",           "Ahorro Bruto Nacional",                                                                                  "Numérica",            "% del PBI",                      "0 a 100",        7892,              89,       61,       59,
+  "credito_privado_pbi",        "Credito al sector privado",                                                                              "Numérica",            "% del PBI",                      "0 a 100",        6685,              76,       54,       58,
+  "poblacion_mill",             "Poblacion del pais en millones de habitantes",                                                           "Numérica",            "Anual",                          "> 0",            0,                 0,        0,        0)
 
 # write_csv(diccionario, "output/tablas/diccionario.csv")
 
@@ -57,6 +58,7 @@ wdi_limpio <- wdi |>
 wdi2 <- wdi_limpio |>
   filter(anio %in% c(2001, 2008, 2022)) |> 
          arrange(pais, anio)
+
 #Filtramos por anio y por poblacion
 #Los paises con menos de un millon de habitantes no son significativos para el trabajo
 #En principio creemos que su sistema productivo no presenta una correlacion con las variables a analizar
@@ -64,7 +66,7 @@ wdi_2001 <- wdi2 |>
   filter(anio == 2001, poblacion_mill >= 1)
 wdi_2008 <- wdi2 |>
   filter(anio == 2008, poblacion_mill >= 1)
-wdi_2022 <- wdi2 |>
+wdi_2022<- wdi2 |>
   filter(anio == 2022, poblacion_mill >= 1)
 
 
@@ -89,7 +91,7 @@ vars_num <- c("crecimiento_industria", "industria_pbi", "tipo_cambio_real_efecti
               "indice_nivel_precios", "empleo_industrial", "exportacion_manufactura", 
               "gasto_gobierno_pbi", "gastos_totales_gob_pbi", "valor_agregado_trabajador", "valor_agregado_trabajador",
               "ahorro_bruto_pbi", "credito_privado_pbi", "recursos_naturales", "pbi_per_capita",
-              "pbi_millones")
+              "pbi_millones", "poblacion_mill")
 
 
 
@@ -111,7 +113,7 @@ wdi_2022 |>
 # ¿Los faltantes se reparten al azar o se concentran en algún grupo?
 # Esta pregunta es clave: si los NA se concentran en los países de ingreso bajo,
 # cualquier promedio que calculemos va a estar sesgado hacia arriba.
-wdi2 |>
+wdi_2001 |>
   group_by(ingreso, anio) |>
   summarise(
     n = n(),
@@ -122,8 +124,29 @@ wdi2 |>
     .groups = "drop"
   )
 
-wdi_analisis <- wdi2 |> filter(!is.na(industria_pbi))
-wdi_analisis2 <- wdi2 |> filter(!is.na(indice_nivel_precios))
+wdi_2008 |>
+  group_by(ingreso, anio) |>
+  summarise(
+    n = n(),
+    na_industria_pbi  = sum(is.na(industria_pbi)),
+    pct_na_ind = na_industria_pbi/n,
+    na_price_level = sum(is.na(indice_nivel_precios)),
+    pct_na_price_level = na_price_level/n,
+    .groups = "drop"
+  )
+
+wdi_2022 |>
+  group_by(ingreso, anio) |>
+  summarise(
+    n = n(),
+    na_industria_pbi  = sum(is.na(industria_pbi)),
+    pct_na_ind = na_industria_pbi/n,
+    na_price_level = sum(is.na(indice_nivel_precios)),
+    pct_na_price_level = na_price_level/n,
+    .groups = "drop"
+  )
+
+
 
 nrow(wdi_analisis)   # cuántos países quedan
 setdiff(wdi2$pais, wdi_analisis$pais)   # cuáles quedaron afuera
@@ -136,6 +159,46 @@ faltantes <- wdi_limpio |>
   pivot_longer(everything(), names_to = "variable", values_to = "pct_na") |>
   arrange(desc(pct_na))
 view(faltantes)
+
+
+
+#Proceentaje de datos faltantes por variable
+faltantes_2001 <- wdi_2001 |>
+  summarise(across(everything(), ~ mean(is.na(.x)) * 100)) |>
+  pivot_longer(everything(), names_to = "variable", values_to = "pct_na") |>
+  arrange(desc(pct_na))
+view(faltantes_2001)
+
+faltantes_2008 <- wdi_2008 |>
+  summarise(across(everything(), ~ mean(is.na(.x)) * 100)) |>
+  pivot_longer(everything(), names_to = "variable", values_to = "pct_na") |>
+  arrange(desc(pct_na))
+view(faltantes_2008)
+
+faltantes_2022 <- wdi_2022 |>
+  summarise(across(everything(), ~ mean(is.na(.x)) * 100)) |>
+  pivot_longer(everything(), names_to = "variable", values_to = "pct_na") |>
+  arrange(desc(pct_na))
+view(faltantes_2022)
+
+
+nrow(wdi_2001)   # cuántos países quedan
+setdiff(wdi_2001$pais, wdi_analisis_2001$pais)   # cuáles quedaron afuera
+
+
+wdi_analisis_2008 <- wdi_2008 |> filter(!is.na(industria_pbi))
+wdi_analisis2008 <- wdi_2008 |> filter(!is.na(indice_nivel_precios))
+
+nrow(wdi_2008)   # cuántos países quedan
+setdiff(wdi_2008$pais, wdi_analisis_2008$pais)   # cuáles quedaron afuera
+
+
+wdi_analisis_2022 <- wdi_2022 |> filter(!is.na(industria_pbi))
+wdi_analisis2022 <- wdi_2022 |> filter(!is.na(indice_nivel_precios))
+
+nrow(wdi_2022)   # cuántos países quedan
+setdiff(wdi_2022$pais, wdi_analisis_2022$pais)   # cuáles quedaron afuera
+
 
 
 skim(wdi_2001)
@@ -420,120 +483,15 @@ hist(alta2, breaks = 15, col = rgb(0, 0, 1, 0.5), border = "white", add = TRUE)
 
 
 
-# Todo lo que hicimos acá es, punto por punto, lo que pide la instancia 1:
-#
-#  [ ] Dimensiones de la base            -> dim(), nrow(), ncol()          (2.1)
-#  [ ] Unidad de observación             -> duplicated(), n_distinct()     (2.1)
-#  [ ] Descripción de cada variable      -> diccionario                    (1.3)
-#  [ ] Tipo de cada variable             -> glimpse(), tipos               (2.2)
-#  [ ] Valores faltantes                 -> colSums(is.na()), faltantes    (2.3)
-#  [ ] Estadísticas descriptivas         -> summary(), skim(), descriptivas (3)
-#  [ ] Distribución de las categóricas   -> table(), prop.table()          (4)
-#  [ ] Forma de las distribuciones       -> hist()                         (5)
-#  [ ] Dispersión y atípicos             -> boxplot(), boxplot.stats()     (6)
-#  [ ] Medidas de posición y desigualdad -> quantile(), ratios             (7)
-#  [ ] Relación entre variables          -> cor(), pairs()                 (8)
-#  [ ] Periodicidad de la fuente         -> anual (WDI se actualiza ~2 veces al año)
-#
-# Tres advertencias finales, que son las que más se ven en las entregas:
-#
-# 1. Ninguna tabla ni gráfico se presenta sin una frase que lo interprete.
-#    El output de R es el insumo, no el resultado.
-# 2. Los NA y los outliers se explican, no se borran en silencio. Decir cuántos
-#    son, dónde se concentran y qué se hizo con ellos.
-# 3. Correlación no es causalidad, y el TP no es causal. Las relaciones que
-#    encontramos acá describen asociaciones entre países en un año, nada más.
-
-
-
-
-
-
-
-
-s#ANOVA
-
-
-df_anova_1980 <- wdi2 %>%
-  filter(anio == 1980, !is.na(industria_pbi), !is.na(region)) %>%
-  select(iso3c, pais, region, industria_pbi) %>%
-  mutate(region  = factor(region),
-         log_pbi = log(industria_pbi))
-
-view(df_anova_1980)
-
-df_anova_2001 <- wdi2 %>%
-  filter(anio == 2001, !is.na(industria_pbi), !is.na(region)) %>%
-  select(iso3c, pais, region, industria_pbi) %>%
-  mutate(region  = factor(region),
-         log_pbi = log(industria_pbi))
-
-df_anova_2023 <- wdi2 %>%
-  filter(anio == 2023, !is.na(industria_pbi), !is.na(region)) %>%
-  select(iso3c, pais, region, industria_pbi) %>%
-  mutate(region  = factor(region),
-         log_pbi = log(industria_pbi))
-
-#Ver escala logaritmica
-
-         ggplot(df_anova_1980, aes(x = reorder(region, industria_pbi, FUN = median), y = industria_pbi)) +
-  geom_boxplot(outlier.shape = NA) +
-  geom_jitter(width = 0.15, alpha = 0.4) +
-  scale_y_log10(labels = scales::label_dollar()) +
-  coord_flip() +
-  labs(title = "Participacion de industria PBI por region 1980", subtitle = "Escala logarítmica",
-       x = NULL, y = "% del PBI")
-
-
-         ggplot(df_anova_2001, aes(x = reorder(region, industria_pbi, FUN = median), y = industria_pbi)) +
-  geom_boxplot(outlier.shape = NA) +
-  geom_jitter(width = 0.15, alpha = 0.4) +
-  scale_y_log10(labels = scales::label_dollar()) +
-  coord_flip() +
-  labs(title = "Participacion de industria PBI por region 2001", subtitle = "Escala logarítmica",
-       x = NULL, y = "% del PBI")
-
-         ggplot(df_anova_2023, aes(x = reorder(region, industria_pbi, FUN = median), y = industria_pbi)) +
-  geom_boxplot(outlier.shape = NA) +
-  geom_jitter(width = 0.15, alpha = 0.4) +
-  scale_y_log10(labels = scales::label_dollar()) +
-  coord_flip() +
-  labs(title = "Participacion de industria PBI por region 2023", subtitle = "Escala logarítmica",
-       x = NULL, y = "% del PBI")
-
-
-
-       oneway.test(industria_pbi ~ region, data = df_anova_1980)
-
-
-       oneway.test(industria_pbi ~ region, data = df_anova_2001)
-
-  
-       oneway.test(industria_pbi ~ region, data = df_anova_2023)
-
-
-
-
-tukey <- TukeyHSD(df_anova_1980)
-
-
-tukey <- TukeyHSD(df_anova_2001)
-
-
-tukey <- TukeyHSD(df_anova_2023)
-
-
-
-#Chi cuadrado
-
-v_cramer <- function(prueba) {
-  tabla <- prueba$observed
-  sqrt(unname(prueba$statistic) / (sum(tabla) * (min(dim(tabla)) - 1)))
-
-
-
-
-
+#Filtramos por anio y por poblacion
+#Los paises con menos de un millon de habitantes no son significativos para el trabajo
+#En principio creemos que su sistema productivo no presenta una correlacion con las variables a analizar
+wdi_2001_pobl <- wdi2 |>
+  filter(anio == 2001, poblacion_mill >= 1)
+wdi_2008_pobl <- wdi2 |>
+  filter(anio == 2008, poblacion_mill >= 1)
+wdi_2022_pobl <- wdi2 |>
+  filter(anio == 2022, poblacion_mill >= 1)
 
 
 
