@@ -6,16 +6,19 @@ library(skimr)
 library(readxl)
 
 rm(list = ls())
-
+getwd()
 options(scipen = 999)
 
 wdi <- read_csv("~/GitHub/Trabajo-Practico-Ciencia-de-Datos/raw/wdi_tabla_completa.csv")
+
+wdi <- read_csv("raw/wdi_tabla_completa.csv")
 
 wdi_limpio <- wdi |>
   filter(region != "Aggregates", !is.na(region), region != "") |>
   rename(pais = country, anio = year, ingreso = income, pbi_millones = pbi) |>
   select(-iso2c, -status, -lastupdated, -status, -lending, -latitude, -longitude, -capital) |>
   mutate(pbi_millones = pbi_millones/1000000,
+         poblacion_mill = poblacion/1000000,
     ingreso = factor(ingreso,
                    levels = c("Low income", "Lower middle income", "Upper middle income",
                               "High income", "Not classified"),
@@ -54,13 +57,15 @@ wdi_limpio <- wdi |>
 wdi2 <- wdi_limpio |>
   filter(anio %in% c(2001, 2008, 2022)) |> 
          arrange(pais, anio)
-
+#Filtramos por anio y por poblacion
+#Los paises con menos de un millon de habitantes no son significativos para el trabajo
+#En principio creemos que su sistema productivo no presenta una correlacion con las variables a analizar
 wdi_2001 <- wdi2 |>
-  filter(anio == 2001)
+  filter(anio == 2001, poblacion_mill >= 1)
 wdi_2008 <- wdi2 |>
-  filter(anio == 2008)
+  filter(anio == 2008, poblacion_mill >= 1)
 wdi_2022 <- wdi2 |>
-  filter(anio == 2022)
+  filter(anio == 2022, poblacion_mill >= 1)
 
 
 
