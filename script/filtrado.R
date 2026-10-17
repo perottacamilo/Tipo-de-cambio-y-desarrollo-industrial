@@ -83,7 +83,7 @@ gtsave(tabla_imagen, "output/tablas/diccionario_imagen.png")
 #Filtramos la base en los anios elegidos
 #Se podria elegir otro anio mas entre 2008 y 2022, por ejemplo 2015 (cada 7 anios)
 wdi2 <- wdi_limpio |>
-  filter(anio %in% c(2001, 2008, 2022)) |> 
+  filter(anio %in% c(2001, 2008, 2022), poblacion_mill >= 1) |> 
   arrange(pais, anio)
 
 
@@ -706,17 +706,52 @@ v_cramer <- function(prueba) {
          plot = grafico22, width = 12, height = 7, units = "in", dpi = 300)
   
   
-  #Filtramos por anio y por poblacion
-  #Los paises con menos de un millon de habitantes no son significativos para el trabajo
-  #En principio creemos que su sistema productivo no presenta una correlacion con las variables a analizar
-  wdi_2001_pobl <- wdi2 |>
-    filter(anio == 2001, poblacion_mill >= 1)
-  wdi_2008_pobl <- wdi2 |>
-    filter(anio == 2008, poblacion_mill >= 1)
-  wdi_2022_pobl <- wdi2 |>
-    filter(anio == 2022, poblacion_mill >= 1)
   
   
+  wdi3 <- wdi_limpio |>
+    filter(anio %in% c(2000, 2001, 2002, 2007, 2008, 2009, 2021, 2022, 2023), poblacion_mill >= 1) |> 
+    arrange(pais, anio)
   
   
+  na_2001 <- wdi3 |> 
+    filter(anio %in% c(2000, 2001, 2002))
+  
+  nanalisis_2001 <- na_2001 |> filter(!is.na(industria_pbi))
+  nanalisis2001 <- na_2001 |> filter(!is.na(indice_nivel_precios))
+  
+ a <-  nrow(na_2001)
+b <-   nrow(nanalisis_2001)   
+a-b  #Cantidad de datos faltantes para industria_pbi
+setdiff(na_2001$pais, nanalisis_2001$pais) #Que paises no tienen industria_pbi ni en 2000, 2001 y 2002   
+  
+  
+  na_2008 <- wdi3 |> 
+    filter(anio %in% c(2007, 2008, 2009))
+  
+  nanalisis_2008 <- na_2008 |> filter(!is.na(industria_pbi))
+  nanalisis2008 <- na_2008 |> filter(!is.na(indice_nivel_precios))
+  
+  c <- nrow(na_2008)
+  d <- nrow(nanalisis_2008)   
+  c-d
+  setdiff(na_2008$pais, nanalisis_2008$pais) #Que paises no tienen industria_pbi ni en 2007, 2008, 2009
+
+  
+  na_2022 <- wdi3 |> 
+    filter(anio %in% c(2021, 2022, 2023))
+  
+  nanalisis_2022 <- na_2022 |> filter(!is.na(industria_pbi))
+  nanalisis2022 <- na_2022 |> filter(!is.na(indice_nivel_precios))
+  
+  e <- nrow(na_2022)
+  f <- nrow(nanalisis_2022)   
+  e-f
+  setdiff(na_2022$pais, nanalisis_2022$pais) #Que paises no tienen industria_pbi ni en 2022, 2021, 2023  
+
+  
+  nanalisis_3 <- wdi3 |> filter(!is.na(industria_pbi))
+  nanalisis3 <- wdi3 |> filter(!is.na(indice_nivel_precios))
+  
+  nrow(nanalisis_3)   
+  setdiff(wdi3$pais, nanalisis_3$pais) #Que paises no tienen industria_pbi ni en ninguno de los 9 anios  
   
