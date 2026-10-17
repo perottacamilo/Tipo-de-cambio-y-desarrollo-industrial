@@ -1,9 +1,13 @@
-# install.packages(c("tidyverse", "WDI", "skimr"))
+# install.packages(c("tidyverse", "WDI", "skimr", "dplyr", "tidyr", "ggplot2", "gt"))
 
+library(dplyr)
+library(tidyr)
+library(ggplot2)
 library(tidyverse)
 library(WDI)
 library(skimr)
 library(readxl)
+library(gt) #Exportar imagen diccionario
 
 rm(list = ls())
 
@@ -21,7 +25,14 @@ wdi_limpio <- wdi |>
                               "High income", "Not classified"),
                    labels = c("Ingreso bajo", "Ingreso medio-bajo", "Ingreso medio-alto",
                               "Ingreso alto", "Sin clasificar")),
-         mutate(across(where(is.numeric), ~ round(.x, 3))))
+         mutate(across(where(is.numeric), ~ round(.x, 3))),
+    ingreso2 = ingreso,
+    ingreso2 = factor(ingreso2,
+                     levels = c("Ingreso bajo", "Ingreso medio-bajo", "Ingreso medio-alto",
+                                "Ingreso alto", "Sin clasificar"),
+                     labels = c("Bajo", "Medio-bajo", "Medio-alto",
+                                "Alto", "Sin clasificar"))
+    )
 
 
   diccionario <- tribble(
@@ -49,12 +60,30 @@ wdi_limpio <- wdi |>
 
 # write_csv(diccionario, "output/tablas/diccionario.csv")
 
+#Exportar imagen del diccionario  
+tabla_imagen <- diccionario |> 
+  gt() |> 
+  tab_header(
+    title = md("**Diccionario de Variables**"),
+    subtitle = "Base de datos WDI - Banco Mundial"
+    ) |> 
+    opt_stylize(style = 1, color = "blue") |>  
+    cols_align(align = "center")               
+  
+  print(tabla_imagen)
+  gtsave(tabla_imagen, "output/tablas/diccionario_imagen.png")
+  
+  
+  
 
-
+#Filtramos la base en los anios elegidos
+#Se podria elegir otro anio mas entre 2008 y 2022, por ejemplo 2015 (cada 7 anios)
 wdi2 <- wdi_limpio |>
   filter(anio %in% c(2001, 2008, 2022)) |> 
          arrange(pais, anio)
 
+
+#Creamos una base para cada anio
 wdi_2001 <- wdi2 |>
   filter(anio == 2001)
 wdi_2008 <- wdi2 |>
@@ -65,13 +94,15 @@ wdi_2022 <- wdi2 |>
 
 
 
-
+#Tabla que explica a que categoria corresponde cada variable
 tipos <- tibble(
   variable = names(wdi2),
   tipo_r   = sapply(wdi2, function(x) class(x)[1]))
 
 tipos
 
+
+#Cantidad de observaciones faltanes por variable de cada base
 colSums(is.na(wdi_limpio))
 colSums(is.na(wdi2))
 colSums(is.na(wdi_2001))
@@ -80,25 +111,35 @@ colSums(is.na(wdi_2022))
 
 
 # ¿Cuántos países tienen la información completa en las variables numéricas?
+#Vector de todas las variables
 vars_num <- c("crecimiento_industria", "industria_pbi", "tipo_cambio_real_efectivo", 
               "indice_nivel_precios", "empleo_industrial", "exportacion_manufactura", 
               "gasto_gobierno_pbi", "gastos_totales_gob_pbi", "valor_agregado_trabajador", "valor_agregado_trabajador",
               "ahorro_bruto_pbi", "credito_privado_pbi", "recursos_naturales", "pbi_per_capita",
-              "pbi_millones")
+              "pbi_millones", "ingreso2")
 
 
 
 
+#Mide cantidad de paises (n) y cantidad de variables con dato faltante (n_na)
+#Por ejemplo n_na=2 y n=129, hay 129 paises que les falta el valor de dos variables
 
 wdi2 |>
   mutate(n_na = rowSums(is.na(across(all_of(vars_num))))) |>
   count(n_na)
+
+wdi_limpio |> 
+  mutate(n_na = rowSums(is.na(across(all_of(vars_num))))) |>
+  count(n_na)
+
 wdi_2001 |>
   mutate(n_na = rowSums(is.na(across(all_of(vars_num))))) |>
   count(n_na)
+
 wdi_2008 |>
   mutate(n_na = rowSums(is.na(across(all_of(vars_num))))) |>
   count(n_na)
+
 wdi_2022 |>
   mutate(n_na = rowSums(is.na(across(all_of(vars_num))))) |>
   count(n_na)
@@ -106,6 +147,9 @@ wdi_2022 |>
 # ¿Los faltantes se reparten al azar o se concentran en algún grupo?
 # Esta pregunta es clave: si los NA se concentran en los países de ingreso bajo,
 # cualquier promedio que calculemos va a estar sesgado hacia arriba.
+
+#Ver la cantidad de datos faltantes en una variable especifica, y que porcentaje representa del total de datos
+#Separado por los tres anios elegidos, y por tipo de ingreso
 wdi2 |>
   group_by(ingreso, anio) |>
   summarise(
@@ -114,25 +158,53 @@ wdi2 |>
     pct_na_ind = na_industria_pbi/n,
     na_price_level = sum(is.na(indice_nivel_precios)),
     pct_na_price_level = na_price_level/n,
-    .groups = "drop"
-  )
+    .groups = "drop")
 
+#Eliminamos aquellos paises que no tienen el dato de una variable especifica
 wdi_analisis <- wdi2 |> filter(!is.na(industria_pbi))
 wdi_analisis2 <- wdi2 |> filter(!is.na(indice_nivel_precios))
 
-nrow(wdi_analisis)   # cuántos países quedan
-setdiff(wdi2$pais, wdi_analisis$pais)   # cuáles quedaron afuera
-#¿deberiamos borrar los paises que tengan NA en uno de los tres periodos y quedarnos con los que tienen el dato en todos?
-nrow(wdi_analisis2)   # cuántos países quedan
-setdiff(wdi2$pais, wdi_analisis2$pais)   # cuáles quedaron afuera
+# Cuántos países quedan si eliminamos aquellos aquellos que no tienen industria_pbi
+nrow(wdi_analisis)
 
+#Cuales son aquellos paises que se no tienen industria_pbi en ninguno de los tres anios
+setdiff(wdi2$pais, wdi_analisis$pais)
+
+#¿deberiamos borrar los paises que tengan NA en uno de los tres periodos y quedarnos con los que tienen el dato en todos?
+
+# Cuántos países quedan si eliminamos aquellos aquellos que no tienen indice_nivel_precios
+nrow(wdi_analisis2) 
+
+#Cuales son aquellos paises que se no tienen indice_nivel_precios en ninguno de los tres anios
+setdiff(wdi2$pais, wdi_analisis2$pais)   
+
+#Que porcentaje de na tiene cada varible (en los tres anios elegidos)
 faltantes <- wdi_limpio |>
   summarise(across(everything(), ~ mean(is.na(.x)) * 100)) |>
   pivot_longer(everything(), names_to = "variable", values_to = "pct_na") |>
   arrange(desc(pct_na))
 view(faltantes)
 
+faltantes_2001 <- wdi_2001 |>
+  summarise(across(everything(), ~ mean(is.na(.x)) * 100)) |>
+  pivot_longer(everything(), names_to = "variable", values_to = "pct_na") |>
+  arrange(desc(pct_na))
+view(faltantes_2001)
 
+faltantes_2008 <- wdi_2008 |>
+  summarise(across(everything(), ~ mean(is.na(.x)) * 100)) |>
+  pivot_longer(everything(), names_to = "variable", values_to = "pct_na") |>
+  arrange(desc(pct_na))
+view(faltantes_2008)
+
+faltantes_2022 <- wdi_2022 |>
+  summarise(across(everything(), ~ mean(is.na(.x)) * 100)) |>
+  pivot_longer(everything(), names_to = "variable", values_to = "pct_na") |>
+  arrange(desc(pct_na))
+view(faltantes_2022)
+
+
+#Visualizacion de la distribucion de cada variable
 skim(wdi_2001)
 skim(wdi_2008)
 skim(wdi_2022)
@@ -145,17 +217,19 @@ summary(wdi_analisis$industria_pbi)
 
 skim(wdi_analisis)
 
+#Tabla que muestra la cantidad de paises que pertenecen a cada tipo de nivel de ingreso por regiones
 tabla_cruzada <- table(wdi_analisis$region, wdi_analisis$ingreso)
 tabla_cruzada
 
 # Con totales de fila y columna
 addmargins(tabla_cruzada)
 
-
+#Ver como se comporta una variable (industria_pbi) por region e ingreso
 wdi_analisis |>
   group_by(region) |>
   skim(industria_pbi, ingreso)
 
+#Tabla de la distribucion de todas las variables
 tabla_skim <- wdi_analisis |>
   select(all_of(vars_num)) |>
   skim() |>
@@ -173,7 +247,7 @@ tabla_skim <- wdi_analisis |>
 view(tabla_skim)
 print(tabla_skim)
 
-#Grafico indusrtia
+#Grafico industria
 grafico1 <- ggplot(wdi_analisis, aes(x = industria_pbi)) +
   geom_histogram(bins = 30, fill = "steelblue", color = "black", alpha = 0.8) +
   facet_wrap(~ anio, ncol = 1) + # Separa el gráfico por año
@@ -183,61 +257,38 @@ grafico1 <- ggplot(wdi_analisis, aes(x = industria_pbi)) +
        y = "Cantidad de países") +
   theme_minimal()
 print(grafico1)
-png(grafico1, "output/graficos/grafico1_industria", width = 900, height = 600)
+
+#Guardar grafico
+ggsave(file.path("output/graficos", "histograma_industria.png"), plot = grafico1)
 
 
-#Tabla diccionario
-# install.packages("gt")
-library(gt)
-
-tabla_imagen <- diccionario |> 
-  gt() |> 
-  tab_header(
-    title = md("**Diccionario de Variables**"),
-    subtitle = "Base de datos WDI - Banco Mundial"
-  ) |> 
-  opt_stylize(style = 1, color = "blue") |>  
-  cols_align(align = "center")               
-
-gtsave(tabla_imagen, "output/tablas/diccionario_imagen.png")
-
-
-
-
-
-
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-
+#Tabla de variables faltantes por ingreso (igual que linea 146)
 na_por_ingreso <- wdi2 |>
-  group_by(ingreso, anio) |>
+  group_by(ingreso2, anio) |>
   summarise(
     n = n(),
     na_industria_pbi = sum(is.na(industria_pbi)),
     pct_na_ind = na_industria_pbi / n,
     na_price_level = sum(is.na(indice_nivel_precios)),
     pct_na_price_level = na_price_level / n,
-    .groups = "drop"
-  )
+    .groups = "drop")
 
 # Pasar a formato largo: una fila por ingreso-año-variable
+#Creo la variable ingreso2, que contiene menos palabras para que el grafico quede bien
+#La forma anterior esta al final del script pero creo que queda muy cargado de "ingreso" 
 na_largo <- na_por_ingreso |>
-  select(ingreso, anio, pct_na_ind, pct_na_price_level) |>
+  select(ingreso2, anio, pct_na_ind, pct_na_price_level) |>
   pivot_longer(
     cols = c(pct_na_ind, pct_na_price_level),
     names_to = "variable",
-    values_to = "pct_na"
-  ) |>
-  mutate(
-    variable = recode(variable,
-                      pct_na_ind = "industria_pbi",
-                      pct_na_price_level = "indice_nivel_precios"
-    ),
-    anio = factor(anio)
-  )
+    values_to = "pct_na") |>
+  mutate(variable = recode(variable,
+         pct_na_ind = "industria_pbi",
+         pct_na_price_level = "indice_nivel_precios"), 
+    anio = factor(anio))
 
-grafico2 <- ggplot(na_largo, aes(x = ingreso, y = pct_na, fill = anio)) +
+#Grafico datos faltantes por ingreso
+grafico2 <- ggplot(na_largo, aes(x = ingreso2, y = pct_na, fill = anio)) +
   geom_col(position = position_dodge(width = 0.8), width = 0.7) +
   facet_wrap(~variable) +
   scale_y_continuous(
@@ -254,13 +305,18 @@ grafico2 <- ggplot(na_largo, aes(x = ingreso, y = pct_na, fill = anio)) +
   ) +
   theme_minimal(base_size = 13) +
   theme(legend.position = "top")
+
 print(grafico2)
+ 
+ggsave(file.path("output/graficos", "datos_faltanes_ingreso.png"), 
+       plot = grafico2, width = 12, height = 7, units = "in", dpi = 300)
 
-gtsave(datos_faltantes_ingreso, "output/graficos/datos_faltantes_ingreso.png")
 
+#Graficos plots industria_pbi y nivel de precios para 2001
+#Plot 
+#Correr de 318 a 331 para guardar en la carpeta graficos)
+png("output/graficos/plot_2001.png", width = 8, height = 6, units = "in", res = 300)
 
-
-#Graficos plots
 grafico3 <- plot(
   wdi_2001$indice_nivel_precios, wdi_2001$industria_pbi,
   pch = 19, col = rgb(0.2, 0.4, 0.7, 0.6),
@@ -271,45 +327,54 @@ grafico3 <- plot(
 grafico3 <- abline(lm(industria_pbi ~ indice_nivel_precios, data = wdi_2001), col = "darkred", lwd = 2)
 r <- cor(wdi_2001$industria_pbi, wdi_2001$indice_nivel_precios, use = "complete.obs")
 grafico3 <- legend("topleft", legend = paste("r =", round(r, 2)), bty = "n")
-print(grafico3)
 
-plot(
+dev.off()
+
+
+#Graficos plots industria_pbi y nivel de precios para 2008
+
+png("output/graficos/plot_2008.png", width = 8, height = 6, units = "in", res = 300)
+
+grafico3.1 <- plot(
   wdi_2008$indice_nivel_precios, wdi_2008$industria_pbi,
   pch = 19, col = rgb(0.2, 0.4, 0.7, 0.6),
   main = "Relacion entre industria y el nivel de precios (2008)",
   ylab = "% industria en el PBI",
   xlab = "Indice de nivel de precios"
 )
-abline(lm(industria_pbi ~ indice_nivel_precios, data = wdi_2008), col = "darkred", lwd = 2)
-r <- cor(wdi_2008$industria_pbi, wdi_2008$indice_nivel_precios, use = "complete.obs")
-legend("topleft", legend = paste("r =", round(r, 2)), bty = "n")
+grafico3.1 <- abline(lm(industria_pbi ~ indice_nivel_precios, data = wdi_2008), col = "darkred", lwd = 2)
+r.1 <- cor(wdi_2008$industria_pbi, wdi_2008$indice_nivel_precios, use = "complete.obs")
+grafico3.1 <- legend("topleft", legend = paste("r.1 =", round(r.1, 2)), bty = "n")
 
+dev.off()
 
-plot(
+#Plots industria_pbi y nivel de precios para 2008
+
+png("output/graficos/plot_2022.png", width = 8, height = 6, units = "in", res = 300)
+
+grafico3.2 <- plot(
   wdi_2022$indice_nivel_precios, wdi_2022$industria_pbi,
   pch = 19, col = rgb(0.2, 0.4, 0.7, 0.6),
   main = "Relacion entre industria y el nivel de precios (2022)",
   ylab = "% industria en el PBI",
   xlab = "Indice de nivel de precios"
 )
-abline(lm(industria_pbi ~ indice_nivel_precios, data = wdi_2022), col = "darkred", lwd = 2)
-r <- cor(wdi_2022$industria_pbi, wdi_2022$indice_nivel_precios, use = "complete.obs")
-legend("topleft", legend = paste("r =", round(r, 2)), bty = "n")
+grafico3.2 <- abline(lm(industria_pbi ~ indice_nivel_precios, data = wdi_2022), col = "darkred", lwd = 2)
+r.2 <- cor(wdi_2022$industria_pbi, wdi_2022$indice_nivel_precios, use = "complete.obs")
+grafico3.2 <- legend("topleft", legend = paste("r.2 =", round(r.2, 2)), bty = "n")
 
-
-
+dev.off()
 
 #Boxplot ingreso-industria
-
 
 hist(
   wdi_2001$industria_pbi,
   breaks = 20, freq = FALSE,
   main = "Distribución del uso de internet",
   xlab = "% de la población que usa internet", ylab = "Densidad",
-  col = "grey90", border = "white"
-)
-lines(density(wdi_analisis$internet, na.rm = TRUE), lwd = 2, col = "darkred")
+  col = "grey90", border = "white")
+
+lines(density(wdi_analisis$industria_pbi, na.rm = TRUE), lwd = 2, col = "darkred")
 rug(wdi_2001$industria_pbi)   # marca cada observación sobre el eje
 abline(v = mean(wdi_2001$industria_pbi), col = "blue", lwd = 2, lty = 2)
 abline(v = median(wdi_2001$industria_pbi), col = "darkgreen", lwd = 2, lty = 3)
@@ -348,7 +413,6 @@ medianas_evolucion <- wdi_comparativo |>
     .groups = "drop"
   )
 
-# 4. Graficar
 ggplot(medianas_evolucion, aes(x = anio, y = mediana_precios, color = region)) +
   geom_line(linewidth = 1.2) +
   geom_point(size = 2.5) +
@@ -528,7 +592,55 @@ v_cramer <- function(prueba) {
 
 
 
-
+  #Tabla de variables faltantes por ingreso (igual que linea 146)
+  na_por_ingreso2 <- wdi2 |>
+    group_by(ingreso, anio) |>
+    summarise(
+      n = n(),
+      na_industria_pbi = sum(is.na(industria_pbi)),
+      pct_na_ind = na_industria_pbi / n,
+      na_price_level = sum(is.na(indice_nivel_precios)),
+      pct_na_price_level = na_price_level / n,
+      .groups = "drop")
+  
+  # Pasar a formato largo: una fila por ingreso-año-variable
+  #Creo la variable ingreso2, que contiene menos palabras para que el grafico quede bien
+  na_largo2 <- na_por_ingreso2 |>
+    select(ingreso, anio, pct_na_ind, pct_na_price_level) |>
+    pivot_longer(
+      cols = c(pct_na_ind, pct_na_price_level),
+      names_to = "variable",
+      values_to = "pct_na") |>
+    mutate(variable = recode(variable,
+                             pct_na_ind = "industria_pbi",
+                             pct_na_price_level = "indice_nivel_precios"), 
+           anio = factor(anio))
+  
+  #Grafico datos faltantes por ingreso
+  grafico22 <- ggplot(na_largo2, aes(x = ingreso, y = pct_na, fill = anio)) +
+    geom_col(position = position_dodge(width = 0.8), width = 0.7) +
+    facet_wrap(~variable) +
+    scale_y_continuous(
+      labels = scales::percent,
+      limits = c(0, 0.4),
+      breaks = seq(0, 1, 0.1)
+    ) +
+    labs(
+      title = "Porcentaje de valores faltantes por nivel de ingreso",
+      subtitle = "Comparación 2001 - 2008 - 2022",
+      x = "Nivel de ingreso",
+      y = "% de países sin dato",
+      fill = "Año"
+    ) +
+    theme_minimal(base_size = 13) +
+    theme(legend.position = "top")
+  
+  print(grafico22)
+  
+  ggsave(file.path("output/graficos", "datos_faltanes_ingreso2.png"), 
+         plot = grafico22, width = 12, height = 7, units = "in", dpi = 300)
+  
+  
 
 
 
