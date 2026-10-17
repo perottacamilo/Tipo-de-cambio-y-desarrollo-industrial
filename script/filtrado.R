@@ -23,22 +23,22 @@ wdi_limpio <- wdi |>
   select(-iso2c, -status, -lastupdated, -status, -lending, -latitude, -longitude, -capital) |>
   mutate(pbi_millones = pbi_millones/1000000,
          poblacion_mill = poblacion/1000000,
-    ingreso = factor(ingreso,
-                   levels = c("Low income", "Lower middle income", "Upper middle income",
-                              "High income", "Not classified"),
-                   labels = c("Ingreso bajo", "Ingreso medio-bajo", "Ingreso medio-alto",
-                              "Ingreso alto", "Sin clasificar")),
+         ingreso = factor(ingreso,
+                          levels = c("Low income", "Lower middle income", "Upper middle income",
+                                     "High income", "Not classified"),
+                          labels = c("Ingreso bajo", "Ingreso medio-bajo", "Ingreso medio-alto",
+                                     "Ingreso alto", "Sin clasificar")),
          mutate(across(where(is.numeric), ~ round(.x, 3))),
-    ingreso2 = ingreso,
-    ingreso2 = factor(ingreso2,
-                     levels = c("Ingreso bajo", "Ingreso medio-bajo", "Ingreso medio-alto",
-                                "Ingreso alto", "Sin clasificar"),
-                     labels = c("Bajo", "Medio-bajo", "Medio-alto",
-                                "Alto", "Sin clasificar"))
-    )
+         ingreso2 = ingreso,
+         ingreso2 = factor(ingreso2,
+                           levels = c("Ingreso bajo", "Ingreso medio-bajo", "Ingreso medio-alto",
+                                      "Ingreso alto", "Sin clasificar"),
+                           labels = c("Bajo", "Medio-bajo", "Medio-alto",
+                                      "Alto", "Sin clasificar"))
+  )
 
 
-  diccionario <- tribble(
+diccionario <- tribble(
   ~variable,                    ~descripcion,                                                                                             ~tipo,                 ~unidad,                          ~rango_teorico,   ~na_totales,      ~na_2001, ~na_2008, ~na_2022,
   "pais",                       "Nombre del país",                                                                                        "Categórica",          "-",                              "-",              0,                 0,        0,        0,
   "iso3c",                      "Código ISO de 3 letras (identificador único)",                                                           "Categórica",          "-",                              "-",              0,                 0,        0,        0,
@@ -70,30 +70,27 @@ tabla_imagen <- diccionario |>
   tab_header(
     title = md("**Diccionario de Variables**"),
     subtitle = "Base de datos WDI - Banco Mundial"
-    ) |> 
-    opt_stylize(style = 1, color = "blue") |>  
-    cols_align(align = "center")               
-  
-  print(tabla_imagen)
-  gtsave(tabla_imagen, "output/tablas/diccionario_imagen.png")
-  
-  
-  
+  ) |> 
+  opt_stylize(style = 1, color = "blue") |>  
+  cols_align(align = "center")               
+
+print(tabla_imagen)
+gtsave(tabla_imagen, "output/tablas/diccionario_imagen.png")
+
+
+
 
 #Filtramos la base en los anios elegidos
 #Se podria elegir otro anio mas entre 2008 y 2022, por ejemplo 2015 (cada 7 anios)
 wdi2 <- wdi_limpio |>
   filter(anio %in% c(2001, 2008, 2022)) |> 
-         arrange(pais, anio)
+  arrange(pais, anio)
 
-<<<<<<< HEAD
 
 #Creamos una base para cada anio
-=======
-#Filtramos por anio y por poblacion
-#Los paises con menos de un millon de habitantes no son significativos para el trabajo
-#En principio creemos que su sistema productivo no presenta una correlacion con las variables a analizar
->>>>>>> 299f883084895f50c73ba47a082f7f51f050bb7c
+  #Filtramos por anio y por poblacion
+  #Los paises con menos de un millon de habitantes no son significativos para el trabajo
+  #En principio creemos que su sistema productivo no presenta una correlacion con las variables a analizar
 wdi_2001 <- wdi2 |>
   filter(anio == 2001, poblacion_mill >= 1)
 wdi_2008 <- wdi2 |>
@@ -351,9 +348,9 @@ na_largo <- na_por_ingreso |>
     names_to = "variable",
     values_to = "pct_na") |>
   mutate(variable = recode(variable,
-         pct_na_ind = "industria_pbi",
-         pct_na_price_level = "indice_nivel_precios"), 
-    anio = factor(anio))
+                           pct_na_ind = "industria_pbi",
+                           pct_na_price_level = "indice_nivel_precios"), 
+         anio = factor(anio))
 
 #Grafico datos faltantes por ingreso
 grafico2 <- ggplot(na_largo, aes(x = ingreso2, y = pct_na, fill = anio)) +
@@ -375,7 +372,7 @@ grafico2 <- ggplot(na_largo, aes(x = ingreso2, y = pct_na, fill = anio)) +
   theme(legend.position = "top")
 
 print(grafico2)
- 
+
 ggsave(file.path("output/graficos", "datos_faltanes_ingreso.png"), 
        plot = grafico2, width = 12, height = 7, units = "in", dpi = 300)
 
@@ -513,7 +510,7 @@ cor.test(wdi_2001$industria_pbi, wdi_2001$indice_nivel_precios)
 
 alta  <- wdi_2001$industria_pbi[wdi_2001$region == "East Asia & Pacific"]
 baja  <- wdi_2001$industria_pbi[wdi_2001$region %in%
-                                 c("Latin America & Caribbean", "")]
+                                  c("Latin America & Caribbean", "")]
 
 hist(baja, breaks = 15, col = rgb(1, 0, 0, 0.5), border = "white",
      xlim = c(0, 100), ylim = c(0, 12),
@@ -525,7 +522,7 @@ hist(alta, breaks = 15, col = rgb(0, 0, 1, 0.5), border = "white", add = TRUE)
 
 alta1  <- wdi_2022$industria_pbi[wdi_2022$region == "East Asia & Pacific"]
 baja1  <- wdi_2022$industria_pbi[wdi_2022$region %in%
-                                  c("Latin America & Caribbean", "")]
+                                   c("Latin America & Caribbean", "")]
 
 hist(baja1, breaks = 15, col = rgb(1, 0, 0, 0.5), border = "white",
      xlim = c(0, 100), ylim = c(0, 12),
@@ -603,7 +600,7 @@ df_anova_2023 <- wdi2 %>%
 
 #Ver escala logaritmica
 
-         ggplot(df_anova_1980, aes(x = reorder(region, industria_pbi, FUN = median), y = industria_pbi)) +
+ggplot(df_anova_1980, aes(x = reorder(region, industria_pbi, FUN = median), y = industria_pbi)) +
   geom_boxplot(outlier.shape = NA) +
   geom_jitter(width = 0.15, alpha = 0.4) +
   scale_y_log10(labels = scales::label_dollar()) +
@@ -612,7 +609,7 @@ df_anova_2023 <- wdi2 %>%
        x = NULL, y = "% del PBI")
 
 
-         ggplot(df_anova_2001, aes(x = reorder(region, industria_pbi, FUN = median), y = industria_pbi)) +
+ggplot(df_anova_2001, aes(x = reorder(region, industria_pbi, FUN = median), y = industria_pbi)) +
   geom_boxplot(outlier.shape = NA) +
   geom_jitter(width = 0.15, alpha = 0.4) +
   scale_y_log10(labels = scales::label_dollar()) +
@@ -620,7 +617,7 @@ df_anova_2023 <- wdi2 %>%
   labs(title = "Participacion de industria PBI por region 2001", subtitle = "Escala logarítmica",
        x = NULL, y = "% del PBI")
 
-         ggplot(df_anova_2023, aes(x = reorder(region, industria_pbi, FUN = median), y = industria_pbi)) +
+ggplot(df_anova_2023, aes(x = reorder(region, industria_pbi, FUN = median), y = industria_pbi)) +
   geom_boxplot(outlier.shape = NA) +
   geom_jitter(width = 0.15, alpha = 0.4) +
   scale_y_log10(labels = scales::label_dollar()) +
@@ -630,13 +627,13 @@ df_anova_2023 <- wdi2 %>%
 
 
 
-       oneway.test(industria_pbi ~ region, data = df_anova_1980)
+oneway.test(industria_pbi ~ region, data = df_anova_1980)
 
 
-       oneway.test(industria_pbi ~ region, data = df_anova_2001)
+oneway.test(industria_pbi ~ region, data = df_anova_2001)
 
-  
-       oneway.test(industria_pbi ~ region, data = df_anova_2023)
+
+oneway.test(industria_pbi ~ region, data = df_anova_2023)
 
 
 
@@ -656,10 +653,10 @@ tukey <- TukeyHSD(df_anova_2023)
 v_cramer <- function(prueba) {
   tabla <- prueba$observed
   sqrt(unname(prueba$statistic) / (sum(tabla) * (min(dim(tabla)) - 1)))
-
-
-
-
+  
+  
+  
+  
   #Tabla de variables faltantes por ingreso (igual que linea 146)
   na_por_ingreso2 <- wdi2 |>
     group_by(ingreso, anio) |>
@@ -709,16 +706,17 @@ v_cramer <- function(prueba) {
          plot = grafico22, width = 12, height = 7, units = "in", dpi = 300)
   
   
-#Filtramos por anio y por poblacion
-#Los paises con menos de un millon de habitantes no son significativos para el trabajo
-#En principio creemos que su sistema productivo no presenta una correlacion con las variables a analizar
-wdi_2001_pobl <- wdi2 |>
-  filter(anio == 2001, poblacion_mill >= 1)
-wdi_2008_pobl <- wdi2 |>
-  filter(anio == 2008, poblacion_mill >= 1)
-wdi_2022_pobl <- wdi2 |>
-  filter(anio == 2022, poblacion_mill >= 1)
-
-
-
-
+  #Filtramos por anio y por poblacion
+  #Los paises con menos de un millon de habitantes no son significativos para el trabajo
+  #En principio creemos que su sistema productivo no presenta una correlacion con las variables a analizar
+  wdi_2001_pobl <- wdi2 |>
+    filter(anio == 2001, poblacion_mill >= 1)
+  wdi_2008_pobl <- wdi2 |>
+    filter(anio == 2008, poblacion_mill >= 1)
+  wdi_2022_pobl <- wdi2 |>
+    filter(anio == 2022, poblacion_mill >= 1)
+  
+  
+  
+  
+  
