@@ -10,16 +10,19 @@ library(readxl)
 library(gt) #Exportar imagen diccionario
 
 rm(list = ls())
-
+getwd()
 options(scipen = 999)
 
 wdi <- read_csv("~/GitHub/Trabajo-Practico-Ciencia-de-Datos/raw/wdi_tabla_completa.csv")
+
+wdi <- read_csv("raw/wdi_tabla_completa.csv")
 
 wdi_limpio <- wdi |>
   filter(region != "Aggregates", !is.na(region), region != "") |>
   rename(pais = country, anio = year, ingreso = income, pbi_millones = pbi) |>
   select(-iso2c, -status, -lastupdated, -status, -lending, -latitude, -longitude, -capital) |>
   mutate(pbi_millones = pbi_millones/1000000,
+         poblacion_mill = poblacion/1000000,
     ingreso = factor(ingreso,
                    levels = c("Low income", "Lower middle income", "Upper middle income",
                               "High income", "Not classified"),
@@ -55,8 +58,9 @@ wdi_limpio <- wdi |>
   "gastos_totales_gob_pbi",     "Gasto total del gobierno como % PBI (inculye subsidios)",                                                "Numérica",            "% del PBI",                      "0 a 100",        9870,              58,       46,       41,
   "valor_agregado_trabajador",  "Valor agregado del trabajador de la industria",                                                          "Numérica",            "Dolares constantes 2015",        "> 0",            8735,              61,       46,       44,
   "ied_pbi",                    "Inversion extranjera directa",                                                                           "Numérica",            "% del PBI",                      "0 a 100",        5016,              30,       23,       22,
-  "ahorro_bruto_pbi",           "Ahorro Bruto Nacional",                                                                                  "Numérica",            "% del PBI",                      "0 a 100",       7892,               89,       61,       59,
-  "credito_privado_pbi",        "Credito al sector privado",                                                                              "Numérica",            "% del PBI",                      "0 a 100",       6685,               76,       54,       58)
+  "ahorro_bruto_pbi",           "Ahorro Bruto Nacional",                                                                                  "Numérica",            "% del PBI",                      "0 a 100",        7892,              89,       61,       59,
+  "credito_privado_pbi",        "Credito al sector privado",                                                                              "Numérica",            "% del PBI",                      "0 a 100",        6685,              76,       54,       58,
+  "poblacion_mill",             "Poblacion del pais en millones de habitantes",                                                           "Numérica",            "Anual",                          "> 0",            0,                 0,        0,        0)
 
 # write_csv(diccionario, "output/tablas/diccionario.csv")
 
@@ -82,14 +86,20 @@ wdi2 <- wdi_limpio |>
   filter(anio %in% c(2001, 2008, 2022)) |> 
          arrange(pais, anio)
 
+<<<<<<< HEAD
 
 #Creamos una base para cada anio
+=======
+#Filtramos por anio y por poblacion
+#Los paises con menos de un millon de habitantes no son significativos para el trabajo
+#En principio creemos que su sistema productivo no presenta una correlacion con las variables a analizar
+>>>>>>> 299f883084895f50c73ba47a082f7f51f050bb7c
 wdi_2001 <- wdi2 |>
-  filter(anio == 2001)
+  filter(anio == 2001, poblacion_mill >= 1)
 wdi_2008 <- wdi2 |>
-  filter(anio == 2008)
-wdi_2022 <- wdi2 |>
-  filter(anio == 2022)
+  filter(anio == 2008, poblacion_mill >= 1)
+wdi_2022<- wdi2 |>
+  filter(anio == 2022, poblacion_mill >= 1)
 
 
 
@@ -116,7 +126,8 @@ vars_num <- c("crecimiento_industria", "industria_pbi", "tipo_cambio_real_efecti
               "indice_nivel_precios", "empleo_industrial", "exportacion_manufactura", 
               "gasto_gobierno_pbi", "gastos_totales_gob_pbi", "valor_agregado_trabajador", "valor_agregado_trabajador",
               "ahorro_bruto_pbi", "credito_privado_pbi", "recursos_naturales", "pbi_per_capita",
-              "pbi_millones", "ingreso2")
+              "pbi_millones", "ingreso2", "poblacion_mill")
+
 
 
 
@@ -160,6 +171,39 @@ wdi2 |>
     pct_na_price_level = na_price_level/n,
     .groups = "drop")
 
+wdi_2001 |>
+  group_by(ingreso, anio) |>
+  summarise(
+    n = n(),
+    na_industria_pbi  = sum(is.na(industria_pbi)),
+    pct_na_ind = na_industria_pbi/n,
+    na_price_level = sum(is.na(indice_nivel_precios)),
+    pct_na_price_level = na_price_level/n,
+    .groups = "drop")
+
+
+wdi_2008 |>
+  group_by(ingreso, anio) |>
+  summarise(
+    n = n(),
+    na_industria_pbi  = sum(is.na(industria_pbi)),
+    pct_na_ind = na_industria_pbi/n,
+    na_price_level = sum(is.na(indice_nivel_precios)),
+    pct_na_price_level = na_price_level/n,
+    .groups = "drop"
+  )
+
+wdi_2022 |>
+  group_by(ingreso, anio) |>
+  summarise(
+    n = n(),
+    na_industria_pbi  = sum(is.na(industria_pbi)),
+    pct_na_ind = na_industria_pbi/n,
+    na_price_level = sum(is.na(indice_nivel_precios)),
+    pct_na_price_level = na_price_level/n,
+    .groups = "drop"
+  )
+
 #Eliminamos aquellos paises que no tienen el dato de una variable especifica
 wdi_analisis <- wdi2 |> filter(!is.na(industria_pbi))
 wdi_analisis2 <- wdi2 |> filter(!is.na(indice_nivel_precios))
@@ -171,6 +215,8 @@ nrow(wdi_analisis)
 setdiff(wdi2$pais, wdi_analisis$pais)
 
 #¿deberiamos borrar los paises que tengan NA en uno de los tres periodos y quedarnos con los que tienen el dato en todos?
+
+#Lo mismo para la variable indice_nivel_precios
 
 # Cuántos países quedan si eliminamos aquellos aquellos que no tienen indice_nivel_precios
 nrow(wdi_analisis2) 
@@ -185,6 +231,8 @@ faltantes <- wdi_limpio |>
   arrange(desc(pct_na))
 view(faltantes)
 
+
+#Proceentaje de datos faltantes por variable por cada anio
 faltantes_2001 <- wdi_2001 |>
   summarise(across(everything(), ~ mean(is.na(.x)) * 100)) |>
   pivot_longer(everything(), names_to = "variable", values_to = "pct_na") |>
@@ -202,6 +250,26 @@ faltantes_2022 <- wdi_2022 |>
   pivot_longer(everything(), names_to = "variable", values_to = "pct_na") |>
   arrange(desc(pct_na))
 view(faltantes_2022)
+
+
+
+nrow(wdi_2001)   # cuántos países quedan
+setdiff(wdi_2001$pais, wdi_analisis_2001$pais)   # cuáles quedaron afuera
+
+
+wdi_analisis_2008 <- wdi_2008 |> filter(!is.na(industria_pbi))
+wdi_analisis2008 <- wdi_2008 |> filter(!is.na(indice_nivel_precios))
+
+nrow(wdi_2008)   # cuántos países quedan
+setdiff(wdi_2008$pais, wdi_analisis_2008$pais)   # cuáles quedaron afuera
+
+
+wdi_analisis_2022 <- wdi_2022 |> filter(!is.na(industria_pbi))
+wdi_analisis2022 <- wdi_2022 |> filter(!is.na(indice_nivel_precios))
+
+nrow(wdi_2022)   # cuántos países quedan
+setdiff(wdi_2022$pais, wdi_analisis_2022$pais)   # cuáles quedaron afuera
+
 
 
 #Visualizacion de la distribucion de cada variable
@@ -641,6 +709,15 @@ v_cramer <- function(prueba) {
          plot = grafico22, width = 12, height = 7, units = "in", dpi = 300)
   
   
+#Filtramos por anio y por poblacion
+#Los paises con menos de un millon de habitantes no son significativos para el trabajo
+#En principio creemos que su sistema productivo no presenta una correlacion con las variables a analizar
+wdi_2001_pobl <- wdi2 |>
+  filter(anio == 2001, poblacion_mill >= 1)
+wdi_2008_pobl <- wdi2 |>
+  filter(anio == 2008, poblacion_mill >= 1)
+wdi_2022_pobl <- wdi2 |>
+  filter(anio == 2022, poblacion_mill >= 1)
 
 
 
