@@ -1,4 +1,4 @@
-#install.packages(c("WDI","readxl"))
+# install.packages(c("WDI","readxl"))
 
 library(WDI)
 library(readxl)
@@ -7,8 +7,7 @@ rm(list = ls())
 
 getwd()
 
-wdi <- WDI(indicator = c(
-  crecimiento_industria = "NV.IND.TOTL.KD.ZG",
+wdi <- WDI(indicator = c(crecimiento_industria = "NV.IND.TOTL.KD.ZG",
   industria_pbi = "NV.IND.TOTL.ZS",
   tipo_cambio_real_efectivo = "PX.REX.REER",
   empleo_industrial = "SL.IND.EMPL.ZS",
@@ -22,7 +21,8 @@ wdi <- WDI(indicator = c(
   pbi_per_capita = "NY.GDP.PCAP.KD",
   pbi = "NY.GDP.MKTP.KD",
   indice_nivel_precios = "PA.NUS.GDP.PLI",
-  recursos_naturales = "NY.GDP.TOTL.RT.ZS"),
+  recursos_naturales = "NY.GDP.TOTL.RT.ZS",
+  poblacion = "SP.POP.TOTL"),
   country = "all",
   start = 1960,
   end = 2025,
