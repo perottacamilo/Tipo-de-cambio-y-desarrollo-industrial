@@ -127,8 +127,6 @@ vars_num <- c("crecimiento_industria", "industria_pbi", "tipo_cambio_real_efecti
 
 
 
-
-
 #Mide cantidad de paises (n) y cantidad de variables con dato faltante (n_na)
 #Por ejemplo n_na=2 y n=129, hay 129 paises que les falta el valor de dos variables
 
@@ -227,6 +225,13 @@ faltantes <- wdi_limpio |>
   pivot_longer(everything(), names_to = "variable", values_to = "pct_na") |>
   arrange(desc(pct_na))
 view(faltantes)
+
+faltantes2 <- wdi2 |>
+  summarise(across(everything(), ~ mean(is.na(.x)) * 100)) |>
+  pivot_longer(everything(), names_to = "variable", values_to = "pct_na") |>
+  arrange(desc(pct_na))
+view(faltantes2)
+
 
 
 #Proceentaje de datos faltantes por variable por cada anio
@@ -754,4 +759,294 @@ setdiff(na_2001$pais, nanalisis_2001$pais) #Que paises no tienen industria_pbi n
   
   nrow(nanalisis_3)   
   setdiff(wdi3$pais, nanalisis_3$pais) #Que paises no tienen industria_pbi ni en ninguno de los 9 anios  
+  
+  
+  
+  
+  
+  
+  
+  
+  library(dplyr)
+  library(tidyr)
+  library(ggplot2)
+  
+  # 1. Variables a analizar
+  variables <- c(
+    "crecimiento_industria",
+    "industria_pbi",
+    "tipo_cambio_real_efectivo",
+    "indice_nivel_precios",
+    "empleo_industrial",
+    "exportacion_manufactura",
+    "gasto_gobierno_pbi",
+    "gastos_totales_gob_pbi",
+    "valor_agregado_trabajador",
+    "ahorro_bruto_pbi",
+    "credito_privado_pbi",
+    "recursos_naturales",
+    "pbi_per_capita",
+    "pbi_millones",
+    "ingreso2",
+    "poblacion_mill"
+  )
+  
+  anios <- c(2001, 2008, 2022)
+  
+  # 2. Seleccionar años y variables disponibles
+  base <- wdi2 %>%
+    mutate(anio = as.integer(as.character(anio))) %>%
+    filter(anio %in% anios)
+  
+  variables <- intersect(variables, names(base))
+  
+  if (nrow(base) == 0 || length(variables) == 0) {
+    stop("No hay observaciones o variables disponibles.")
+  }
+  
+  # 3. Calcular faltantes por variable y año
+  faltantes <- base %>%
+    group_by(anio) %>%
+    summarise(
+      across(all_of(variables), ~sum(is.na(.x))),
+      .groups = "drop"
+    ) %>%
+    pivot_longer(
+      cols = -anio,
+      names_to = "variable",
+      values_to = "n_faltantes"
+    ) %>%
+    complete(
+      variable = variables,
+      anio = anios,
+      fill = list(n_faltantes = 0)
+    ) %>%
+    mutate(
+      porcentaje = 100 * n_faltantes / nrow(base)
+    )
+  
+  # 4. Porcentaje total de faltantes por variable
+  totales <- faltantes %>%
+    group_by(variable) %>%
+    summarise(
+      porcentaje_total = sum(porcentaje),
+      .groups = "drop"
+    ) %>%
+    filter(porcentaje_total > 0) %>%
+    arrange(porcentaje_total)
+  
+  # 5. Mantener solamente variables con faltantes
+  grafico_df <- faltantes %>%
+    semi_join(totales, by = "variable") %>%
+    mutate(
+      variable = factor(variable, levels = totales$variable),
+      anio = factor(anio, levels = anios)
+    )
+  
+  totales <- totales %>%
+    mutate(variable = factor(variable, levels = variable))
+  
+  # 6. Gráfico de barras horizontales apiladas
+ grafico4 <-  ggplot(
+    grafico_df,
+    aes(x = porcentaje, y = variable, fill = anio)
+  ) +
+    geom_col(
+      position = position_stack(reverse = TRUE),
+      width = 0.7,
+      color = "white",
+      linewidth = 0.4
+    ) +
+    
+    # Porcentaje de cada segmento
+    geom_text(
+      aes(label = ifelse(
+        porcentaje >= 3,
+        paste0(round(porcentaje, 1), "%"),
+        ""
+      )),
+      position = position_stack(
+        vjust = 0.5,
+        reverse = TRUE
+      ),
+      size = 3.2
+    ) +
+    
+    # Porcentaje total al final de cada barra
+    geom_text(
+      data = totales,
+      aes(
+        x = porcentaje_total,
+        y = variable,
+        label = paste0(round(porcentaje_total, 1), "%")
+      ),
+      inherit.aes = FALSE,
+      hjust = -0.2,
+      size = 3.5
+    ) +
+    
+    scale_fill_manual(
+      values = c(
+        "2001" = "#FFE89C",
+        "2008" = "#A8E7BC",
+        "2022" = "#A8D5F7"
+      )
+    ) +
+    
+    scale_x_continuous(
+      limits = c(0, 108),
+      breaks = seq(0, 100, 20),
+      labels = function(x) paste0(x, "%"),
+      expand = c(0, 0)
+    ) +
+    
+    labs(
+      title = "Porcentaje de datos faltantes por variable",
+      subtitle = "Distribución de faltantes entre 2001, 2008 y 2022",
+      x = "Porcentaje de datos faltantes",
+      y = NULL,
+      fill = "Año"
+    ) +
+    
+    theme_minimal(base_size = 12) +
+    theme(
+      panel.grid.major.y = element_blank(),
+      legend.position = "bottom",
+      plot.title = element_text(face = "bold"),
+      axis.text.y = element_text(size = 10)
+    )
+  print(grafico4)
+  ggsave(file.path("output/graficos", "datos_faltanes_vars.png"), 
+         plot = grafico4, width = 12, height = 7, units = "in", dpi = 300)
+
+  skim(faltantes_2001)  
+  
+  
+
+  
+  
+  
+  
+  
+  
+  
+  #Grafico para ver la distribucion del ingreso en la totalidad de los paises
+  library(dplyr)
+  library(ggplot2)
+  
+  # 1. Calculamos la cantidad y el porcentaje de cada categoría
+  dist_ingreso <- wdi2 |>
+    # Si wdi2 tiene datos panel (múltiples años por país), podrías querer 
+    # quedarte con un solo año o países únicos antes usando: distinct(pais, ingreso) |>
+    count(ingreso) |>
+    mutate(pct = n / sum(n))
+  
+  # 2. Creamos el gráfico de barras
+ 
+  rm(grafico11)
+  
+  grafico11 <- ggplot(dist_ingreso, aes(x = ingreso, y = pct)) +
+    geom_col(fill = "steelblue", color = "black", alpha = 0.8) +
+    scale_y_continuous(
+      labels = scales::percent_format(accuracy = 1) # Formatea el eje Y como 10%, 20%, etc.
+    ) +
+    labs(
+      title = "Distribución global por nivel de ingreso",
+      subtitle = "Porcentaje de países en cada categoría sobre el total",
+      x = "Nivel de ingreso",
+      y = "Porcentaje del total de países"
+    ) +
+    theme_minimal(base_size = 18) +
+    theme(
+      # Inclinamos el texto del eje X por si los nombres de los ingresos son muy largos
+      axis.text.x = element_text(angle = 45, hjust = 1) 
+    )
+  
+  print(grafico11)
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+
+  
+  
+  
+  
+  library(ggplot2)
+  library(dplyr)
+  library(scales)
+  
+  # 1. Calculamos los totales por variable y año para la etiqueta final (el total al final de la barra)
+  totales_na <- na_largo |>
+    group_by(anio, variable) |>
+    summarise(total_pct = sum(pct_na), .groups = "drop")
+  
+  # 2. Creamos una función que genera el gráfico individual para un año específico
+  crear_grafico_anio <- function(anio_filtro) {
+    
+    # Filtramos los datos para el año que toca
+    datos_anio <- na_largo |> filter(anio == anio_filtro)
+    totales_anio <- totales_na |> filter(anio == anio_filtro)
+    
+    # Definimos un límite x dinámico para que el total no quede cortado por el margen
+    limite_x <- max(totales_anio$total_pct) * 1.15
+    
+    ggplot(datos_anio, aes(y = reorder(variable, pct_na, sum), x = pct_na, fill = ingreso2)) +
+      
+      # Barras apiladas horizontalmente
+      geom_col(color = "white", width = 0.6) +
+      
+      # Etiquetas de porcentaje dentro de cada segmento (oculta los < 1.5% para evitar superposición)
+      geom_text(aes(label = ifelse(pct_na > 0.015, percent(pct_na, accuracy = 0.1), "")),
+                position = position_stack(vjust = 0.5), size = 3.5) +
+      
+      # Etiqueta del total al final de la barra
+      geom_text(data = totales_anio, 
+                aes(x = total_pct, y = variable, label = percent(total_pct, accuracy = 0.1), fill = NULL),
+                hjust = -0.2, size = 4) +
+      
+      # Escalas y formato (usando una paleta parecida a tu imagen de referencia)
+      scale_x_continuous(labels = percent, limits = c(0, limite_x)) +
+      scale_fill_manual(values = c("#fde293", "#a8e6b5", "#a9d0f5", "#dcdcdc")) + # Ajusta los colores según la cantidad de niveles de ingreso
+      
+      labs(
+        title = paste("Porcentaje de datos faltantes por variable - Año", anio_filtro),
+        subtitle = "Distribución de faltantes por nivel de ingreso",
+        x = "Porcentaje de datos faltantes",
+        y = "",
+        fill = "Nivel de ingreso"
+      ) +
+      theme_minimal(base_size = 13) +
+      theme(
+        legend.position = "bottom",
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        plot.title = element_text(face = "bold")
+      )
+  }
+  
+  # 3. Aplicamos la función para generar una lista con los gráficos separados
+  años_unicos <- unique(na_largo$anio)
+  graficos_separados <- lapply(años_unicos, crear_grafico_anio)
+  names(graficos_separados) <- años_unicos
+  
+  # Para visualizar cada gráfico, simplemente llámalos por su año o índice:
+  print(graficos_separados[["2001"]])
+  print(graficos_separados[["2008"]])
+  print(graficos_separados[["2022"]])
+  
+  
+  
+  
+  
+  
+  
   
