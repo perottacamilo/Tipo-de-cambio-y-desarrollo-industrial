@@ -1050,3 +1050,78 @@ setdiff(na_2001$pais, nanalisis_2001$pais) #Que paises no tienen industria_pbi n
   
   
   
+  
+  #Datos faltantes por pais
+  
+  library(dplyr)
+  library(tidyr)
+  
+  variables <- c(
+    "industria_pbi",
+    "indice_nivel_precios"
+    # Agregá las otras 13 variables
+  )
+  
+  faltantes_pais <- wdi2 |>
+    group_by(pais) |>
+    summarise(ingreso = first(ingreso2),
+      observaciones = n() * length(variables),
+      faltantes = sum(
+        across(all_of(variables), ~ sum(is.na(.x)))
+      ),
+      pct_faltantes = 100 * faltantes / observaciones,
+      .groups = "drop"
+    ) |>
+    arrange(desc(pct_faltantes))
+  
+  print(faltantes_pais, n = Inf)
+  
+  
+  
+  
+  faltantes_pais_2001 <- wdi_2001 |>
+    group_by(pais) |>
+    summarise(ingreso = first(ingreso2),
+      observaciones = n() * length(variables),
+      faltantes = sum(
+        across(all_of(variables), ~ sum(is.na(.x)))
+      ),
+      pct_faltantes = 100 * faltantes / observaciones,
+      .groups = "drop"
+    ) |>
+    arrange(desc(pct_faltantes))
+  
+  print(faltantes_pais_2001, n = Inf)
+  
+  
+  faltantes_pais_2008 <- wdi_2008 |>
+    group_by(pais) |>
+    summarise(ingreso = first(ingreso2),
+      observaciones = n() * length(variables),
+      faltantes = sum(
+        across(all_of(variables), ~ sum(is.na(.x)))
+      ),
+      pct_faltantes = 100 * faltantes / observaciones,
+      .groups = "drop"
+    ) |>
+    arrange(desc(pct_faltantes))
+  
+  print(faltantes_pais_2008, n = Inf)
+  
+  
+  
+  
+  faltantes_pais_2022 <- wdi_2022 |>
+    group_by(pais) |>
+    summarise(ingreso = first(ingreso2),
+      observaciones = n() * length(variables),
+      faltantes = sum(
+        across(all_of(variables), ~ sum(is.na(.x)))
+      ),
+      pct_faltantes = 100 * faltantes / observaciones,
+      .groups = "drop"
+    ) |>
+    arrange(desc(pct_faltantes))
+  
+  print(faltantes_pais_2022, n = Inf)
+  
