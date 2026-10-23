@@ -199,7 +199,6 @@ wdi_2022 |>
     pct_na_price_level = na_price_level/n,
     .groups = "drop"
   )
-
 #Eliminamos aquellos paises que no tienen el dato de una variable especifica
 
 #Que porcentaje de na tiene cada varible (en los tres anios elegidos)
@@ -668,7 +667,6 @@ setdiff(na_2001$pais, nanalisis2001$pais) #Que paises no tienen indice_nivel_pre
   setdiff(na_2008$pais, nanalisis_2008$pais) #Que paises no tienen industria_pbi ni en 2007, 2008, 2009
   setdiff(na_2008$pais, nanalisis2008$pais) #Que paises no tienen indice_nivel_precios ni en 2007, 2008 y 2009   
   
-  
   na_2022 <- wdi3 |> 
     filter(anio %in% c(2021, 2022, 2023))
   
@@ -870,8 +868,7 @@ setdiff(na_2001$pais, nanalisis2001$pais) #Que paises no tienen indice_nivel_pre
   
   # 2. Creamos el gráfico de barras
  
-  rm(grafico11)
-  
+
   grafico11 <- ggplot(dist_ingreso, aes(x = ingreso, y = pct)) +
     geom_col(fill = "steelblue", color = "black", alpha = 0.8) +
     scale_y_continuous(
@@ -893,7 +890,14 @@ setdiff(na_2001$pais, nanalisis2001$pais) #Que paises no tienen indice_nivel_pre
   
   
   
+ 
   
+  
+  
+  
+  
+  
+   
   
   
   
@@ -985,6 +989,7 @@ setdiff(na_2001$pais, nanalisis2001$pais) #Que paises no tienen indice_nivel_pre
   
  
   
+  
   faltantes_pais <- wdi2 |>
     group_by(pais) |>
     summarise(ingreso = first(ingreso2),
@@ -1049,8 +1054,6 @@ setdiff(na_2001$pais, nanalisis2001$pais) #Que paises no tienen indice_nivel_pre
   print(faltantes_pais_2022, n = Inf)
   
   
- paises_eliminados <- (c("Korea, Dem. People's Rep.", "South Sudan", "Somalia",
-             "Cuba", "Venezuela, RB", "Yemen", "Eritrea", "Kuwait", "Central African Republic"))
 
  
  
@@ -1058,35 +1061,271 @@ setdiff(na_2001$pais, nanalisis2001$pais) #Que paises no tienen indice_nivel_pre
  
  
  
+  rm(wdi_final, wdi_final_2001, wdi_final_2008, wdi_final_2022, wdi_filtrado, reporte_eliminados)
  
  
+ paises_eliminados <- (c("Korea, Dem. People's Rep.", "South Sudan", "Somalia",
+             "Cuba", "Venezuela, RB", "Yemen", "Eritrea", "Kuwait", "Central African Republic"))
  
+ rm(wdi_filtrada_2001, wdi_filtrada_2008, wdi_filtrada_2022)
+ library(dplyr)
+ library(tidyr)
  
+ # 1. Definir los países irrecuperables (Agujeros negros)
+ paises_eliminados <- c(
+   "Korea, Dem. People's Rep.", "Somalia, Fed. Rep.", 
+   "South Sudan", "Eritrea", "Afghanistan"
+ )
  
- wdi3 <- wdi3 |>
+ # 2. Limpieza e imputación general
+ wdi_filtrado <- wdi3 |> 
+   # Paso A: Eliminar países sin estructura de reporte
    filter(!pais %in% paises_eliminados) |> 
- select(-tipo_cambio_real_efectivo, -gastos_totales_gob_pbi) |> 
+   
+   # Paso B: Eliminar variables irrecuperables (>40% NAs)
+   select(-tipo_cambio_real_efectivo, -gastos_totales_gob_pbi) |> 
+   
    group_by(pais) |> 
    arrange(anio) |> 
-   
-   # Paso D: Interpolar. Si falta un año lindante, R deja el NA automáticamente.
    mutate(
-     ahorro_bruto_pbi = if_else(
-       condition = is.na(ahorro_bruto_pbi) & anio %in% c(2001, 2008, 2022), 
-       true = (lag(ahorro_bruto_pbi) + lead(ahorro_bruto_pbi)) / 2, 
-       false = ahorro_bruto_pbi
+     # Paso C: Interpolación masiva (lag + lead) para el bloque de variables estables
+     across(
+       .cols = c(
+         crecimiento_industria,
+         industria_pbi,
+         indice_nivel_precios,
+         empleo_industrial,
+         exportacion_manufactura,
+         gasto_gobierno_pbi,
+         valor_agregado_trabajador,
+         ahorro_bruto_pbi,
+         credito_privado_pbi,
+         recursos_naturales,
+         pbi_per_capita,
+         pbi_millones
+       ),
+       .fns = ~ if_else(
+         condition = is.na(.x) & anio %in% c(2001, 2008, 2022), 
+         true = (lag(.x) + lead(.x)) / 2, 
+         false = .x
+       )
      ),
-     credito_privado_pbi = if_else(
-       condition = is.na(credito_privado_pbi) & anio %in% c(2001, 2008, 2022), 
-       true = (lag(credito_privado_pbi) + lead(credito_privado_pbi)) / 2, 
-       false = credito_privado_pbi)) |> 
+     
+     # Paso D: Rescate asimétrico único para la variable de recursos naturales (2021 -> 2022)
+     recursos_naturales = if_else(
+       condition = is.na(recursos_naturales) & anio == 2022, 
+       true = lag(recursos_naturales, n = 1), 
+       false = recursos_naturales
+     )
+   ) |> 
    ungroup() |> 
    
-   # Paso E: Recortar la base para quedarte estrictamente con los 3 años del TP
-   filter(anio %in% c(2001, 2008, 2022)) |> 
+   # Paso E: Recortar la base a la ventana de estudio
+   filter(anio %in% c(2001, 2008, 2022))
+ 
+ # 3. Aplicar la guillotina final a todas las variables sensibles (<5% NAs o de interés)
+ wdi_final <- wdi_filtrado |> 
+   drop_na(
+     crecimiento_industria,
+     industria_pbi,
+     indice_nivel_precios,
+     empleo_industrial,
+     exportacion_manufactura,
+     gasto_gobierno_pbi,
+     valor_agregado_trabajador,
+     ahorro_bruto_pbi,
+     credito_privado_pbi,
+     recursos_naturales,
+     pbi_per_capita,
+     pbi_millones)
    
-   # Paso F: Eliminar cualquier fila que siga teniendo NAs en tus variables centrales
-   # Esto borra a los países a los que les faltó la variable dependiente 
-   # o a los que no se les pudo interpolar una variable de control.
-   drop_na(industria_pbi, indice_nivel_precios, ahorro_bruto_pbi, credito_privado_pbi) 
+ 
+ # 4. Auditoría de bajas (¿Quién cayó y por culpa de qué variable?)
+ reporte_eliminados <- anti_join(wdi_filtrado, wdi_final, by = c("pais", "anio")) |> 
+   select(pais, anio, crecimiento_industria,
+          industria_pbi,
+          indice_nivel_precios,
+          empleo_industrial,
+          exportacion_manufactura,
+          gasto_gobierno_pbi,
+          valor_agregado_trabajador,
+          ahorro_bruto_pbi,
+          credito_privado_pbi,
+          recursos_naturales,
+          pbi_per_capita,
+          pbi_millones, region, ingreso) |> 
+   arrange(pais, anio)
+ 
+ print(reporte_eliminados, n = Inf)
+show(reporte_eliminados)
+
+  wdi_final_2001 <- wdi_final |> 
+   filter(anio == 2001)
+ 
+ wdi_final_2008 <- wdi_final |> 
+   filter(anio == 2008)
+ 
+ wdi_final_2022 <- wdi_final |> 
+   filter(anio == 2022)
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ #Comparar distribucion por ingreso antes y despues de filtrar
+ #Antes de limpiar NAs
+ dist_ingreso <- wdi2 |>
+   count(ingreso) |>
+   mutate(pct = n / sum(n))
+ 
+ grafico11 <- ggplot(dist_ingreso, aes(x = ingreso, y = pct)) +
+   geom_col(fill = "steelblue", color = "black", alpha = 0.8) +
+   scale_y_continuous(
+     labels = scales::percent_format(accuracy = 1) # Formatea el eje Y como 10%, 20%, etc.
+   ) +
+   labs(
+     title = "Distribución global por nivel de ingreso",
+     subtitle = "Porcentaje de países en cada categoría sobre el total",
+     x = "Nivel de ingreso",
+     y = "Porcentaje del total de países"
+   ) +
+   theme_minimal(base_size = 18) +
+   theme(
+     axis.text.x = element_text(angle = 45, hjust = 1) 
+   )
+ 
+ print(grafico11)
+ 
+ 
+ #Despues de filtrar NAs
+ 
+ dist_ingreso_filtr <- wdi_final |>
+   count(ingreso) |>
+   mutate(pct = n / sum(n))
+ 
+ grafico12 <- ggplot(dist_ingreso_filtr, aes(x = ingreso, y = pct)) +
+   geom_col(fill = "steelblue", color = "black", alpha = 0.8) +
+   scale_y_continuous(
+     labels = scales::percent_format(accuracy = 1) # Formatea el eje Y como 10%, 20%, etc.
+   ) +
+   labs(
+     title = "Distribución global por nivel de ingreso (Base filtrada)",
+     subtitle = "Porcentaje de países en cada categoría sobre el total",
+     x = "Nivel de ingreso",
+     y = "Porcentaje del total de países"
+   ) +
+   theme_minimal(base_size = 18) +
+   theme(
+     axis.text.x = element_text(angle = 45, hjust = 1) 
+   )
+ 
+ print(grafico12)
+#Se ve un menor porcentaje de paises de menor ingreso (sesgo) 
+ 
+ 
+ 
+ 
+ #Lo mismo pero por regiones
+#Antes de filtrar 
+ 
+ dist_regiones <- wdi2 |>
+   count(region) |>
+   mutate(pct = n / sum(n))
+ 
+ grafico13 <- ggplot(dist_regiones, aes(x = region, y = pct)) +
+   geom_col(fill = "steelblue", color = "black", alpha = 0.8) +
+   scale_y_continuous(
+     labels = scales::percent_format(accuracy = 1) # Formatea el eje Y como 10%, 20%, etc.
+   ) +
+   labs(
+     title = "Distribución global por region",
+     subtitle = "Porcentaje de países en cada categoría sobre el total",
+     x = "Region",
+     y = "Porcentaje del total de países"
+   ) +
+   theme_minimal(base_size = 18) +
+   theme(
+     axis.text.x = element_text(angle = 45, hjust = 1) 
+   )
+ 
+ print(grafico13)
+ 
+ 
+ #Despues de filtrar
+ 
+ dist_regiones_filt <- wdi_final |>
+   count(region) |>
+   mutate(pct = n / sum(n))
+ 
+ grafico14 <- ggplot(dist_regiones, aes(x = region, y = pct)) +
+   geom_col(fill = "steelblue", color = "black", alpha = 0.8) +
+   scale_y_continuous(
+     labels = scales::percent_format(accuracy = 1) # Formatea el eje Y como 10%, 20%, etc.
+   ) +
+   labs(
+     title = "Distribución global por regiones (base filtrada)",
+     subtitle = "Porcentaje de países en cada categoría sobre el total",
+     x = "Region",
+     y = "Porcentaje del total de países"
+   ) +
+   theme_minimal(base_size = 18) +
+   theme(
+     axis.text.x = element_text(angle = 45, hjust = 1) 
+   )
+ 
+ print(grafico14)
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ modelo1 <- lm(industria_pbi ~ indice_nivel_precios + recursos_naturales + 
+                 credito_privado_pbi + log(pbi_per_capita) + gasto_gobierno_pbi, 
+               data = wdi_final)
+ summary(modelo1)
+ car::vif(modelo1)  # package "car" - para chequear multicolinealidad del resto
+ 
+ 
+ 
+ 
+ modelo2 <- lm(industria_pbi ~ indice_nivel_precios + recursos_naturales + 
+                 ahorro_bruto_pbi + log(pbi_per_capita) + gasto_gobierno_pbi, 
+               data = wdi_final)
+ summary(modelo2)
+ car::vif(modelo1)  # package "car" - para chequear multicolinealidad del resto
+ 
+ 
+ 
+ 
+ modelo3 <- lm(industria_pbi ~ indice_nivel_precios + recursos_naturales + 
+                 credito_privado_pbi + log(pbi_per_capita), 
+               data = wdi_final)
+ summary(modelo3)
+ car::vif(modelo1)  # package "car" - para chequear multicolinealidad del resto
+ 
+ 
+ 
+ 
+ modelo4 <- lm(industria_pbi ~ indice_nivel_precios + recursos_naturales + 
+                 ahorro_bruto_pbi + log(pbi_per_capita), 
+               data = wdi_final)
+ summary(modelo4)
+ car::vif(modelo4)  # package "car" - para chequear multicolinealidad del resto
  
