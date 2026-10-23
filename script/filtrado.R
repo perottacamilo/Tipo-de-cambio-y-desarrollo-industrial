@@ -7,7 +7,7 @@ library(tidyverse)
 library(WDI)
 library(skimr)
 library(readxl)
-library(gt) #Exportar imagen diccionario
+library(gt) 
 
 rm(list = ls())
 getwd()
@@ -34,7 +34,8 @@ wdi_limpio <- wdi |>
                            levels = c("Ingreso bajo", "Ingreso medio-bajo", "Ingreso medio-alto",
                                       "Ingreso alto", "Sin clasificar"),
                            labels = c("Bajo", "Medio-bajo", "Medio-alto",
-                                      "Alto", "Sin clasificar"))
+                                      "Alto", "Sin clasificar")), 
+      
   )
 
 
@@ -81,7 +82,7 @@ gtsave(tabla_imagen, "output/tablas/diccionario_imagen.png")
 
 
 #Filtramos la base en los anios elegidos
-#Se podria elegir otro anio mas entre 2008 y 2022, por ejemplo 2015 (cada 7 anios)
+#Se podria elegir otro anio mas entre 2008 y 2022, por ejemplo 2015 (quedaria cada 7 anios)
 wdi2 <- wdi_limpio |>
   filter(anio %in% c(2001, 2008, 2022), poblacion_mill >= 1) |> 
   arrange(pais, anio)
@@ -200,24 +201,6 @@ wdi_2022 |>
   )
 
 #Eliminamos aquellos paises que no tienen el dato de una variable especifica
-wdi_analisis <- wdi2 |> filter(!is.na(industria_pbi))
-wdi_analisis2 <- wdi2 |> filter(!is.na(indice_nivel_precios))
-
-# Cuántos países quedan si eliminamos aquellos aquellos que no tienen industria_pbi
-nrow(wdi_analisis)
-
-#Cuales son aquellos paises que se no tienen industria_pbi en ninguno de los tres anios
-setdiff(wdi2$pais, wdi_analisis$pais)
-
-#¿deberiamos borrar los paises que tengan NA en uno de los tres periodos y quedarnos con los que tienen el dato en todos?
-
-#Lo mismo para la variable indice_nivel_precios
-
-# Cuántos países quedan si eliminamos aquellos aquellos que no tienen indice_nivel_precios
-nrow(wdi_analisis2) 
-
-#Cuales son aquellos paises que se no tienen indice_nivel_precios en ninguno de los tres anios
-setdiff(wdi2$pais, wdi_analisis2$pais)   
 
 #Que porcentaje de na tiene cada varible (en los tres anios elegidos)
 faltantes <- wdi_limpio |>
@@ -254,6 +237,29 @@ faltantes_2022 <- wdi_2022 |>
 view(faltantes_2022)
 
 
+
+wdi_analisis <- wdi2 |> filter(!is.na(industria_pbi))
+wdi_analisis2 <- wdi2 |> filter(!is.na(indice_nivel_precios))
+
+# Cuántos países quedan si eliminamos aquellos aquellos que no tienen industria_pbi
+nrow(wdi_analisis)
+
+#Cuales son aquellos paises que se no tienen industria_pbi en ninguno de los tres anios
+setdiff(wdi2$pais, wdi_analisis$pais)
+
+#¿deberiamos borrar los paises que tengan NA en uno de los tres periodos y quedarnos con los que tienen el dato en todos?
+
+#Lo mismo para la variable indice_nivel_precios
+
+# Cuántos países quedan si eliminamos aquellos aquellos que no tienen indice_nivel_precios
+nrow(wdi_analisis2) 
+
+#Cuales son aquellos paises que se no tienen indice_nivel_precios en ninguno de los tres anios
+setdiff(wdi2$pais, wdi_analisis2$pais)   
+
+
+wdi_analisis_2001 <- wdi_2001 |> filter(!is.na(industria_pbi))
+wdi_analisis2001 <- wdi_2001 |> filter(!is.na(indice_nivel_precios))
 
 nrow(wdi_2001)   # cuántos países quedan
 setdiff(wdi_2001$pais, wdi_analisis_2001$pais)   # cuáles quedaron afuera
@@ -580,87 +586,6 @@ hist(alta2, breaks = 15, col = rgb(0, 0, 1, 0.5), border = "white", add = TRUE)
 
 
 
-s#ANOVA
-
-
-df_anova_1980 <- wdi2 %>%
-  filter(anio == 1980, !is.na(industria_pbi), !is.na(region)) %>%
-  select(iso3c, pais, region, industria_pbi) %>%
-  mutate(region  = factor(region),
-         log_pbi = log(industria_pbi))
-
-view(df_anova_1980)
-
-df_anova_2001 <- wdi2 %>%
-  filter(anio == 2001, !is.na(industria_pbi), !is.na(region)) %>%
-  select(iso3c, pais, region, industria_pbi) %>%
-  mutate(region  = factor(region),
-         log_pbi = log(industria_pbi))
-
-df_anova_2023 <- wdi2 %>%
-  filter(anio == 2023, !is.na(industria_pbi), !is.na(region)) %>%
-  select(iso3c, pais, region, industria_pbi) %>%
-  mutate(region  = factor(region),
-         log_pbi = log(industria_pbi))
-
-#Ver escala logaritmica
-
-ggplot(df_anova_1980, aes(x = reorder(region, industria_pbi, FUN = median), y = industria_pbi)) +
-  geom_boxplot(outlier.shape = NA) +
-  geom_jitter(width = 0.15, alpha = 0.4) +
-  scale_y_log10(labels = scales::label_dollar()) +
-  coord_flip() +
-  labs(title = "Participacion de industria PBI por region 1980", subtitle = "Escala logarítmica",
-       x = NULL, y = "% del PBI")
-
-
-ggplot(df_anova_2001, aes(x = reorder(region, industria_pbi, FUN = median), y = industria_pbi)) +
-  geom_boxplot(outlier.shape = NA) +
-  geom_jitter(width = 0.15, alpha = 0.4) +
-  scale_y_log10(labels = scales::label_dollar()) +
-  coord_flip() +
-  labs(title = "Participacion de industria PBI por region 2001", subtitle = "Escala logarítmica",
-       x = NULL, y = "% del PBI")
-
-ggplot(df_anova_2023, aes(x = reorder(region, industria_pbi, FUN = median), y = industria_pbi)) +
-  geom_boxplot(outlier.shape = NA) +
-  geom_jitter(width = 0.15, alpha = 0.4) +
-  scale_y_log10(labels = scales::label_dollar()) +
-  coord_flip() +
-  labs(title = "Participacion de industria PBI por region 2023", subtitle = "Escala logarítmica",
-       x = NULL, y = "% del PBI")
-
-
-
-oneway.test(industria_pbi ~ region, data = df_anova_1980)
-
-
-oneway.test(industria_pbi ~ region, data = df_anova_2001)
-
-
-oneway.test(industria_pbi ~ region, data = df_anova_2023)
-
-
-
-
-tukey <- TukeyHSD(df_anova_1980)
-
-
-tukey <- TukeyHSD(df_anova_2001)
-
-
-tukey <- TukeyHSD(df_anova_2023)
-
-
-
-#Chi cuadrado
-
-v_cramer <- function(prueba) {
-  tabla <- prueba$observed
-  sqrt(unname(prueba$statistic) / (sum(tabla) * (min(dim(tabla)) - 1)))
-  
-  
-  
   
   #Tabla de variables faltantes por ingreso (igual que linea 146)
   na_por_ingreso2 <- wdi2 |>
@@ -728,7 +653,8 @@ v_cramer <- function(prueba) {
 b <-   nrow(nanalisis_2001)   
 a-b  #Cantidad de datos faltantes para industria_pbi
 setdiff(na_2001$pais, nanalisis_2001$pais) #Que paises no tienen industria_pbi ni en 2000, 2001 y 2002   
-  
+setdiff(na_2001$pais, nanalisis2001$pais) #Que paises no tienen indice_nivel_precios ni en 2000, 2001 y 2002   
+
   
   na_2008 <- wdi3 |> 
     filter(anio %in% c(2007, 2008, 2009))
@@ -740,7 +666,8 @@ setdiff(na_2001$pais, nanalisis_2001$pais) #Que paises no tienen industria_pbi n
   d <- nrow(nanalisis_2008)   
   c-d
   setdiff(na_2008$pais, nanalisis_2008$pais) #Que paises no tienen industria_pbi ni en 2007, 2008, 2009
-
+  setdiff(na_2008$pais, nanalisis2008$pais) #Que paises no tienen indice_nivel_precios ni en 2007, 2008 y 2009   
+  
   
   na_2022 <- wdi3 |> 
     filter(anio %in% c(2021, 2022, 2023))
@@ -752,7 +679,8 @@ setdiff(na_2001$pais, nanalisis_2001$pais) #Que paises no tienen industria_pbi n
   f <- nrow(nanalisis_2022)   
   e-f
   setdiff(na_2022$pais, nanalisis_2022$pais) #Que paises no tienen industria_pbi ni en 2022, 2021, 2023  
-
+  setdiff(na_2022$pais, nanalisis2022$pais) #Que paises no tienen indice_nivel_precios ni en 2021, 2022 y 2023   
+  
   
   nanalisis_3 <- wdi3 |> filter(!is.na(industria_pbi))
   nanalisis3 <- wdi3 |> filter(!is.na(indice_nivel_precios))
@@ -919,8 +847,7 @@ setdiff(na_2001$pais, nanalisis_2001$pais) #Que paises no tienen industria_pbi n
   ggsave(file.path("output/graficos", "datos_faltanes_vars.png"), 
          plot = grafico4, width = 12, height = 7, units = "in", dpi = 300)
 
-  skim(faltantes_2001)  
-  
+
   
 
   
@@ -1056,11 +983,7 @@ setdiff(na_2001$pais, nanalisis_2001$pais) #Que paises no tienen industria_pbi n
   library(dplyr)
   library(tidyr)
   
-  variables <- c(
-    "industria_pbi",
-    "indice_nivel_precios"
-    # Agregá las otras 13 variables
-  )
+ 
   
   faltantes_pais <- wdi2 |>
     group_by(pais) |>
@@ -1125,3 +1048,45 @@ setdiff(na_2001$pais, nanalisis_2001$pais) #Que paises no tienen industria_pbi n
   
   print(faltantes_pais_2022, n = Inf)
   
+  
+ paises_eliminados <- (c("Korea, Dem. People's Rep.", "South Sudan", "Somalia",
+             "Cuba", "Venezuela, RB", "Yemen", "Eritrea", "Kuwait", "Central African Republic"))
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ wdi3 <- wdi3 |>
+   filter(!pais %in% paises_eliminados) |> 
+ select(-tipo_cambio_real_efectivo, -gastos_totales_gob_pbi) |> 
+   group_by(pais) |> 
+   arrange(anio) |> 
+   
+   # Paso D: Interpolar. Si falta un año lindante, R deja el NA automáticamente.
+   mutate(
+     ahorro_bruto_pbi = if_else(
+       condition = is.na(ahorro_bruto_pbi) & anio %in% c(2001, 2008, 2022), 
+       true = (lag(ahorro_bruto_pbi) + lead(ahorro_bruto_pbi)) / 2, 
+       false = ahorro_bruto_pbi
+     ),
+     credito_privado_pbi = if_else(
+       condition = is.na(credito_privado_pbi) & anio %in% c(2001, 2008, 2022), 
+       true = (lag(credito_privado_pbi) + lead(credito_privado_pbi)) / 2, 
+       false = credito_privado_pbi)) |> 
+   ungroup() |> 
+   
+   # Paso E: Recortar la base para quedarte estrictamente con los 3 años del TP
+   filter(anio %in% c(2001, 2008, 2022)) |> 
+   
+   # Paso F: Eliminar cualquier fila que siga teniendo NAs en tus variables centrales
+   # Esto borra a los países a los que les faltó la variable dependiente 
+   # o a los que no se les pudo interpolar una variable de control.
+   drop_na(industria_pbi, indice_nivel_precios, ahorro_bruto_pbi, credito_privado_pbi) 
+ 
