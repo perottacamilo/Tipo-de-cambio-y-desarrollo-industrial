@@ -1,4 +1,4 @@
-# install.packages(c("tidyverse", "WDI", "skimr", "dplyr", "tidyr", "ggplot2", "gt"))
+#install.packages(c("tidyverse", "readxl", "WDI", "skimr", "dplyr", "tidyr", "ggplot2", "gt"))
 
 library(dplyr)
 library(tidyr)
@@ -35,6 +35,8 @@ wdi_limpio <- wdi |>
                                       "Ingreso alto", "Sin clasificar"),
                            labels = c("Bajo", "Medio-bajo", "Medio-alto",
                                       "Alto", "Sin clasificar")),)
+write.csv(wdi_limpio, "output/data/wdi_limpio.csv")
+
 
 #Tabla que explica a que categoria corresponde cada variable
 tipos <- tibble(
@@ -82,20 +84,17 @@ gtsave(tabla_imagen, "output/tablas/diccionario_imagen.png")
 
 
 
-
 #Filtramos la base en los anios elegidos
 #Se podria elegir otro anio mas entre 2008 y 2022, por ejemplo 2015 (quedaria cada 7 anios)
 #Filtramos por anio y por poblacion
 #Los paises con menos de un millon de habitantes no son significativos para el trabajo
 #En principio creemos que su sistema productivo no presenta una correlacion con las variables a analizar
 
-wdi2 <- wdi_limpio |>
-  filter(anio %in% c(2001, 2008, 2022), poblacion_mill >= 1) |> 
-  arrange(pais, anio)
 
+wdi2 <- wdi_limpio |> 
+  filter(anio %in% c(2001, 2008, 2022))
+  
 write.csv(wdi2, "output/data/wdi2.csv")
-
-
 
   wdi3 <- wdi_limpio |>
     filter(anio %in% c(2000, 2001, 2002, 2007, 2008, 2009, 2021, 2022, 2023), poblacion_mill >= 1) |> 
@@ -110,11 +109,11 @@ write.csv(wdi2, "output/data/wdi2.csv")
 
 #Creamos una base para cada anio
 wdi_2001 <- wdi2 |>
-  filter(anio == 2001, poblacion_mill >= 1)
+  filter(anio == 2001)
 wdi_2008 <- wdi2 |>
-  filter(anio == 2008, poblacion_mill >= 1)
+  filter(anio == 2008)
 wdi_2022<- wdi2 |>
-  filter(anio == 2022, poblacion_mill >= 1)
+  filter(anio == 2022)
 
 #Hasta aca haria yo el primer Script
 #Luego pasaria a "Script Datos Faltantes"
@@ -372,6 +371,7 @@ na_largo <- na_por_ingreso |>
 grafico2 <- ggplot(na_largo, aes(x = ingreso2, y = pct_na, fill = anio)) +
   geom_col(position = position_dodge(width = 0.8), width = 0.7) +
   facet_wrap(~variable) +
+  scale_x_discrete(limits = c("Bajo", "Medio-bajo", "Medio-alto", "Alto")) +
   scale_y_continuous(
     labels = scales::percent,
     limits = c(0, 0.4),
