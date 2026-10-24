@@ -10,7 +10,7 @@ library(readxl)
 library(gt) 
 
 rm(list = ls())
-getwd()
+
 options(scipen = 999)
 
 wdi <- read_csv("~/GitHub/Trabajo-Practico-Ciencia-de-Datos/raw/wdi_tabla_completa.csv")
@@ -34,10 +34,14 @@ wdi_limpio <- wdi |>
                            levels = c("Ingreso bajo", "Ingreso medio-bajo", "Ingreso medio-alto",
                                       "Ingreso alto", "Sin clasificar"),
                            labels = c("Bajo", "Medio-bajo", "Medio-alto",
-                                      "Alto", "Sin clasificar")), 
-      
-  )
+                                      "Alto", "Sin clasificar")),)
 
+#Tabla que explica a que categoria corresponde cada variable
+tipos <- tibble(
+  variable = names(wdi_limpio),
+  tipo_r   = sapply(wdi_limpio, function(x) class(x)[1]))
+
+tipos
 
 diccionario <- tribble(
   ~variable,                    ~descripcion,                                                                                             ~tipo,                 ~unidad,                          ~rango_teorico,   ~na_totales,      ~na_2001, ~na_2008, ~na_2022,
@@ -63,9 +67,6 @@ diccionario <- tribble(
   "credito_privado_pbi",        "Credito al sector privado",                                                                              "Numérica",            "% del PBI",                      "0 a 100",        6685,              76,       54,       58,
   "poblacion_mill",             "Poblacion del pais en millones de habitantes",                                                           "Numérica",            "Anual",                          "> 0",            0,                 0,        0,        0)
 
-# write_csv(diccionario, "output/tablas/diccionario.csv")
-
-#Exportar imagen del diccionario  
 tabla_imagen <- diccionario |> 
   gt() |> 
   tab_header(
@@ -76,6 +77,7 @@ tabla_imagen <- diccionario |>
   cols_align(align = "center")               
 
 print(tabla_imagen)
+
 gtsave(tabla_imagen, "output/tablas/diccionario_imagen.png")
 
 
@@ -83,15 +85,30 @@ gtsave(tabla_imagen, "output/tablas/diccionario_imagen.png")
 
 #Filtramos la base en los anios elegidos
 #Se podria elegir otro anio mas entre 2008 y 2022, por ejemplo 2015 (quedaria cada 7 anios)
+#Filtramos por anio y por poblacion
+#Los paises con menos de un millon de habitantes no son significativos para el trabajo
+#En principio creemos que su sistema productivo no presenta una correlacion con las variables a analizar
+
 wdi2 <- wdi_limpio |>
   filter(anio %in% c(2001, 2008, 2022), poblacion_mill >= 1) |> 
   arrange(pais, anio)
 
+write.csv(wdi2, "output/data/wdi2.csv")
+
+
+
+  wdi3 <- wdi_limpio |>
+    filter(anio %in% c(2000, 2001, 2002, 2007, 2008, 2009, 2021, 2022, 2023), poblacion_mill >= 1) |> 
+    arrange(pais, anio)
+
+  write.csv(wdi3, "output/data/wdi3.csv")
+  
+  
+  
+  
+
 
 #Creamos una base para cada anio
-  #Filtramos por anio y por poblacion
-  #Los paises con menos de un millon de habitantes no son significativos para el trabajo
-  #En principio creemos que su sistema productivo no presenta una correlacion con las variables a analizar
 wdi_2001 <- wdi2 |>
   filter(anio == 2001, poblacion_mill >= 1)
 wdi_2008 <- wdi2 |>
@@ -99,19 +116,15 @@ wdi_2008 <- wdi2 |>
 wdi_2022<- wdi2 |>
   filter(anio == 2022, poblacion_mill >= 1)
 
+#Hasta aca haria yo el primer Script
+#Luego pasaria a "Script Datos Faltantes"
 
 
 
-#Tabla que explica a que categoria corresponde cada variable
-tipos <- tibble(
-  variable = names(wdi2),
-  tipo_r   = sapply(wdi2, function(x) class(x)[1]))
-
-tipos
 
 
-#Cantidad de observaciones faltanes por variable de cada base
-colSums(is.na(wdi_limpio))
+
+#Cantidad de observaciones faltanes (NA) por variable de cada base
 colSums(is.na(wdi2))
 colSums(is.na(wdi_2001))
 colSums(is.na(wdi_2008))
@@ -124,7 +137,7 @@ vars_num <- c("crecimiento_industria", "industria_pbi", "tipo_cambio_real_efecti
               "indice_nivel_precios", "empleo_industrial", "exportacion_manufactura", 
               "gasto_gobierno_pbi", "gastos_totales_gob_pbi", "valor_agregado_trabajador", "valor_agregado_trabajador",
               "ahorro_bruto_pbi", "credito_privado_pbi", "recursos_naturales", "pbi_per_capita",
-              "pbi_millones", "ingreso2", "poblacion_mill")
+              "pbi_millones", "poblacion_mill")
 
 
 
@@ -186,8 +199,7 @@ wdi_2008 |>
     pct_na_ind = na_industria_pbi/n,
     na_price_level = sum(is.na(indice_nivel_precios)),
     pct_na_price_level = na_price_level/n,
-    .groups = "drop"
-  )
+    .groups = "drop")
 
 wdi_2022 |>
   group_by(ingreso, anio) |>
@@ -197,22 +209,16 @@ wdi_2022 |>
     pct_na_ind = na_industria_pbi/n,
     na_price_level = sum(is.na(indice_nivel_precios)),
     pct_na_price_level = na_price_level/n,
-    .groups = "drop"
-  )
-#Eliminamos aquellos paises que no tienen el dato de una variable especifica
+    .groups = "drop")
 
-#Que porcentaje de na tiene cada varible (en los tres anios elegidos)
-faltantes <- wdi_limpio |>
+
+#Que porcentaje de NA tiene cada varible (en los tres anios elegidos)
+
+faltantes <- wdi2 |>
   summarise(across(everything(), ~ mean(is.na(.x)) * 100)) |>
   pivot_longer(everything(), names_to = "variable", values_to = "pct_na") |>
   arrange(desc(pct_na))
 view(faltantes)
-
-faltantes2 <- wdi2 |>
-  summarise(across(everything(), ~ mean(is.na(.x)) * 100)) |>
-  pivot_longer(everything(), names_to = "variable", values_to = "pct_na") |>
-  arrange(desc(pct_na))
-view(faltantes2)
 
 
 
@@ -637,55 +643,9 @@ hist(alta2, breaks = 15, col = rgb(0, 0, 1, 0.5), border = "white", add = TRUE)
   
   
   
-  wdi3 <- wdi_limpio |>
-    filter(anio %in% c(2000, 2001, 2002, 2007, 2008, 2009, 2021, 2022, 2023), poblacion_mill >= 1) |> 
-    arrange(pais, anio)
   
   
-  na_2001 <- wdi3 |> 
-    filter(anio %in% c(2000, 2001, 2002))
-  
-  nanalisis_2001 <- na_2001 |> filter(!is.na(industria_pbi))
-  nanalisis2001 <- na_2001 |> filter(!is.na(indice_nivel_precios))
-  
- a <-  nrow(na_2001)
-b <-   nrow(nanalisis_2001)   
-a-b  #Cantidad de datos faltantes para industria_pbi
-setdiff(na_2001$pais, nanalisis_2001$pais) #Que paises no tienen industria_pbi ni en 2000, 2001 y 2002   
-setdiff(na_2001$pais, nanalisis2001$pais) #Que paises no tienen indice_nivel_precios ni en 2000, 2001 y 2002   
 
-  
-  na_2008 <- wdi3 |> 
-    filter(anio %in% c(2007, 2008, 2009))
-  
-  nanalisis_2008 <- na_2008 |> filter(!is.na(industria_pbi))
-  nanalisis2008 <- na_2008 |> filter(!is.na(indice_nivel_precios))
-  
-  c <- nrow(na_2008)
-  d <- nrow(nanalisis_2008)   
-  c-d
-  setdiff(na_2008$pais, nanalisis_2008$pais) #Que paises no tienen industria_pbi ni en 2007, 2008, 2009
-  setdiff(na_2008$pais, nanalisis2008$pais) #Que paises no tienen indice_nivel_precios ni en 2007, 2008 y 2009   
-  
-  na_2022 <- wdi3 |> 
-    filter(anio %in% c(2021, 2022, 2023))
-  
-  nanalisis_2022 <- na_2022 |> filter(!is.na(industria_pbi))
-  nanalisis2022 <- na_2022 |> filter(!is.na(indice_nivel_precios))
-  
-  e <- nrow(na_2022)
-  f <- nrow(nanalisis_2022)   
-  e-f
-  setdiff(na_2022$pais, nanalisis_2022$pais) #Que paises no tienen industria_pbi ni en 2022, 2021, 2023  
-  setdiff(na_2022$pais, nanalisis2022$pais) #Que paises no tienen indice_nivel_precios ni en 2021, 2022 y 2023   
-  
-  
-  nanalisis_3 <- wdi3 |> filter(!is.na(industria_pbi))
-  nanalisis3 <- wdi3 |> filter(!is.na(indice_nivel_precios))
-  
-  nrow(nanalisis_3)   
-  setdiff(wdi3$pais, nanalisis_3$pais) #Que paises no tienen industria_pbi ni en ninguno de los 9 anios  
-  
   
   
   
@@ -1138,7 +1098,7 @@ setdiff(na_2001$pais, nanalisis2001$pais) #Que paises no tienen indice_nivel_pre
      recursos_naturales,
      pbi_per_capita,
      pbi_millones)
-   
+ 
  
  # 4. Auditoría de bajas (¿Quién cayó y por culpa de qué variable?)
  reporte_eliminados <- anti_join(wdi_filtrado, wdi_final, by = c("pais", "anio")) |> 
@@ -1157,7 +1117,7 @@ setdiff(na_2001$pais, nanalisis2001$pais) #Que paises no tienen indice_nivel_pre
    arrange(pais, anio)
  
  print(reporte_eliminados, n = Inf)
-show(reporte_eliminados)
+ show(reporte_eliminados)
 
   wdi_final_2001 <- wdi_final |> 
    filter(anio == 2001)

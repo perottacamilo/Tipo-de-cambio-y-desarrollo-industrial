@@ -1,0 +1,391 @@
+#Script Datos Faltantes (NAs)
+# install.packages(c("dplyr", "tidyr", "readxl"))
+
+library(dplyr)
+library(tidyr)
+library(readxl)
+
+
+rm(list = ls())
+
+wdi2 <- read.csv("output/data/wdi2.csv")
+
+wdi3 <- read.csv("output/data/wdi3.csv")
+
+#Creamos una base para cada anio
+
+wdi_2001 <- wdi2 |>
+  filter(anio == 2001)
+wdi_2008 <- wdi2 |>
+  filter(anio == 2008)
+wdi_2022<- wdi2 |>
+  filter(anio == 2022)
+
+
+#Creamos bases para los bloques de tres anios
+na_2001 <- wdi3 |> 
+  filter(anio %in% c(2000, 2001, 2002))
+  
+na_2008 <- wdi3 |> 
+  filter(anio %in% c(2007, 2008, 2009))
+
+na_2022 <- wdi3 |> 
+  filter(anio %in% c(2021, 2022, 2023))
+
+variables <- c(
+  "crecimiento_industria",
+  "industria_pbi",
+  "tipo_cambio_real_efectivo",
+  "indice_nivel_precios",
+  "empleo_industrial",
+  "exportacion_manufactura",
+  "gasto_gobierno_pbi",
+  "gastos_totales_gob_pbi",
+  "valor_agregado_trabajador",
+  "ahorro_bruto_pbi",
+  "credito_privado_pbi",
+  "recursos_naturales",
+  "pbi_per_capita",
+  "pbi_millones")
+
+
+
+
+
+#Que porcentaje de NA tiene cada varible (en los tres anios elegidos)
+faltantes <- wdi2 |>
+  summarise(across(everything(), ~ mean(is.na(.x)) * 100)) |>
+  pivot_longer(everything(), names_to = "variable", values_to = "pct_na") |>
+  arrange(desc(pct_na))
+view(faltantes)
+
+
+
+#Proceentaje de datos faltantes por variable por cada anio
+faltantes_2001 <- wdi_2001 |>
+  summarise(across(everything(), ~ mean(is.na(.x)) * 100)) |>
+  pivot_longer(everything(), names_to = "variable", values_to = "pct_na") |>
+  arrange(desc(pct_na))
+view(faltantes_2001)
+
+faltantes_2008 <- wdi_2008 |>
+  summarise(across(everything(), ~ mean(is.na(.x)) * 100)) |>
+  pivot_longer(everything(), names_to = "variable", values_to = "pct_na") |>
+  arrange(desc(pct_na))
+view(faltantes_2008)
+
+faltantes_2022 <- wdi_2022 |>
+  summarise(across(everything(), ~ mean(is.na(.x)) * 100)) |>
+  pivot_longer(everything(), names_to = "variable", values_to = "pct_na") |>
+  arrange(desc(pct_na))
+view(faltantes_2022)
+
+#De la tabla "faltantes" vemos que hay dos variables que les falta mas del 40% de los datos
+#tipo_cambio_real_efectivo -> 51.2%
+#gastos_totales_gob_pbi -> 41.86%
+#La segunda variable puede ser prescindible, aparte de sus datos faltantes, por ser muy parecida
+#A otra variable tambien incluida, gasto_gobierno_pbi, que tiene menos cantidad de datos faltantes
+#En cuanto a tipo_cambio_real_efectivo es necesaria su eliminacion ya que requeriria interpolar mas de la
+#Mitad de los datos, lo cual implicaria que la mitad de los datos no serian "verdaderos" 
+#Por lo que es mejor eliminarla, ademas de que no es escencial en nuestro analisis posterior
+
+
+
+
+
+
+
+
+
+
+
+
+
+#Analisis de Paises sin datos en las variables seleccionadas -> industria_pbi e indice_nivel_precios
+wdi_analisis <- wdi2 |> filter(!is.na(industria_pbi))
+wdi_analisis2 <- wdi2 |> filter(!is.na(indice_nivel_precios))
+
+# Cuántos países quedan si eliminamos aquellos aquellos que no tienen industria_pbi
+nrow(wdi_analisis)
+
+#Cuales son aquellos paises que se no tienen industria_pbi en ninguno de los tres anios
+setdiff(wdi2$pais, wdi_analisis$pais)
+
+#¿deberiamos borrar los paises que tengan NA en uno de los tres periodos y quedarnos con los que tienen el dato en todos?
+
+#Lo mismo para la variable indice_nivel_precios
+
+# Cuántos países quedan si eliminamos aquellos aquellos que no tienen indice_nivel_precios
+nrow(wdi_analisis2) 
+
+#Cuales son aquellos paises que se no tienen indice_nivel_precios en ninguno de los tres anios
+setdiff(wdi2$pais, wdi_analisis2$pais)   
+
+
+wdi_analisis_2001 <- wdi_2001 |> filter(!is.na(industria_pbi))
+wdi_analisis2001 <- wdi_2001 |> filter(!is.na(indice_nivel_precios))
+
+wdi_analisis_2008 <- wdi_2008 |> filter(!is.na(industria_pbi))
+wdi_analisis2008 <- wdi_2008 |> filter(!is.na(indice_nivel_precios))
+
+wdi_analisis_2022 <- wdi_2022 |> filter(!is.na(industria_pbi))
+wdi_analisis2022 <- wdi_2022 |> filter(!is.na(indice_nivel_precios))
+
+
+
+nrow(wdi_analisis_2001)   # Cuántos países quedan sacando los que no tienen industria_pbi en 2001
+setdiff(wdi_2001$pais, wdi_analisis_2001$pais)   # Cuáles quedaron afuera
+
+nrow(wdi_analisis_2008)  # Cuántos países quedan sacando los que no tienen industria_pbi en 2008
+setdiff(wdi_2008$pais, wdi_analisis_2008$pais)   # Cuáles quedaron afuera
+
+nrow(wdi_analisis_2022)   # Cuántos países quedan sacando los que no tienen industria_pbi en 2001
+setdiff(wdi_2022$pais, wdi_analisis_2022$pais)   # Cuáles quedaron afuera
+
+setdiff(wdi_2001$pais, wdi_analisis2001$pais)   # Cuáles quedaron afuera de indice_nivel_precios
+setdiff(wdi_2008$pais, wdi_analisis2008$pais)   # Cuáles quedaron afuera de indice_nivel_precios
+setdiff(wdi_2022$pais, wdi_analisis2022$pais)   # Cuáles quedaron afuera de indice_nivel_precios
+
+
+
+
+
+#Mismo analisis pero para cada anio mas sus anios lindantes
+na_analisis_2001_ipbi <- na_2001 |> filter(!is.na(industria_pbi))
+na_analisis_2001_inp <- na_2001 |> filter(!is.na(indice_nivel_precios))
+  
+na_analisis_2008_ipbi <- na_2008 |> filter(!is.na(industria_pbi))
+na_analisis_2008_inp <- na_2008 |> filter(!is.na(indice_nivel_precios))
+
+na_analisis_2022_ipbi <- na_2022 |> filter(!is.na(industria_pbi))
+na_analisis_2022_inp <- na_2022 |> filter(!is.na(indice_nivel_precios))
+
+na_analisis_3_ipbi <- wdi3 |> filter(!is.na(industria_pbi))
+na_analisis_3_inp <- wdi3 |> filter(!is.na(indice_nivel_precios))
+
+
+
+setdiff(na_2001$pais, na_analisis_2001_ipbi$pais) #Que paises no tienen industria_pbi ni en 2000, 2001 y 2002   
+setdiff(na_2001$pais, na_analisis_2001_inp$pais) #Que paises no tienen indice_nivel_precios ni en 2000, 2001 y 2002   
+
+setdiff(na_2008$pais, na_analisis_2008_ipbi$pais) #Que paises no tienen industria_pbi ni en 2007, 2008, 2009
+setdiff(na_2008$pais, na_analisis_2008_inp$pais) #Que paises no tienen indice_nivel_precios ni en 2007, 2008 y 2009   
+  
+setdiff(na_2022$pais, na_analisis_2022_ipbi$pais) #Que paises no tienen industria_pbi ni en 2022, 2021, 2023  
+setdiff(na_2022$pais, na_analisis_2022_inp$pais) #Que paises no tienen indice_nivel_precios ni en 2021, 2022 y 2023   
+  
+ 
+setdiff(wdi3$pais, na_analisis_3_ipbi$pais) #Que paises no tienen industria_pbi ni en ninguno de los 9 anios  
+setdiff(wdi3$pais, na_analisis_3_inp$pais) #Que paises no tienen indice_nivel_precios ni en ninguno de los 9 anios  
+
+#En primer lugar creo que podriamos quedarnos solo con los comandos que agrupan tanto (2001,2008,2022) como los otros 9 anios a la vez, en vez de analizar por separado anio a anio
+#Ya que el pais resulta problematico si le falta tanto en los 3 como en los 9, no en uno en especifico
+#El analisis en bloque como en los anios particulares arroja los mismos resultados
+#Corea del Norte y Somalia no tienen datos de industria_pbi en ninguno de los 9 anios
+#Por lo que no se puede interpolar sus datos usando los anios cercanos
+#En cuanto a indice_nivel_precios ni Corea del Norte ni Cuba tienen datos en esos 9 anios
+#Por lo tanto decidimos eliminarlos de la base
+
+
+#Eliminando tipo_cambio_real_efectivo y gastos_totales_gob_pbi
+
+wdi2.1 <- wdi2 |> 
+  select(-tipo_cambio_real_efectivo, -gastos_totales_gob_pbi) |> 
+  filter(!pais %in% c("Korea, Dem. People's Rep.", "Cuba", "Somalia, Fed. Rep."))
+
+wdi3.1 <- wdi3 |> 
+  select(-tipo_cambio_real_efectivo, -gastos_totales_gob_pbi) |> 
+  filter(!pais %in% c("Korea, Dem. People's Rep.", "Cuba", "Somalia, Fed. Rep."))
+
+
+wdi_2001.1 <- wdi2.1 |>
+  filter(anio == 2001)
+wdi_2008.1 <- wdi2.1 |>
+  filter(anio == 2008)
+wdi_2022.1<- wdi2.1 |>
+  filter(anio == 2022)
+
+
+na_2001.1 <- wdi3.1 |> 
+  filter(anio %in% c(2000, 2001, 2002))
+
+na_2008.1 <- wdi3.1 |> 
+  filter(anio %in% c(2007, 2008, 2009))
+
+na_2022.1 <- wdi3.1 |> 
+  filter(anio %in% c(2021, 2022, 2023))
+
+
+
+variables2 <- c(
+  "crecimiento_industria",
+  "industria_pbi",
+  "indice_nivel_precios",
+  "empleo_industrial",
+  "exportacion_manufactura",
+  "gasto_gobierno_pbi",
+  "valor_agregado_trabajador",
+  "ahorro_bruto_pbi",
+  "credito_privado_pbi",
+  "recursos_naturales",
+  "pbi_per_capita",
+  "pbi_millones")
+
+
+
+
+
+#Cantidad de variables faltantes por pais por cada anio (2001, 2008, 2022)
+#Luego de eliminar las variables y los paises anteriores
+
+faltantes_pais_2001 <- wdi_2001.1 |>
+group_by(pais) |>
+summarise(ingreso = first(ingreso2),
+    observaciones = n() * length(variables2),
+    faltantes = sum(
+          across(all_of(variables2), ~ sum(is.na(.x)))),
+          pct_faltantes = 100 * faltantes / observaciones,
+          .groups = "drop") |>
+arrange(desc(pct_faltantes))
+
+print(faltantes_pais_2001, n = Inf)
+
+
+
+faltantes_pais_2008 <- wdi_2008.1 |>
+group_by(pais) |>
+summarise(ingreso = first(ingreso2),
+      observaciones = n() * length(variables2),
+      faltantes = sum(
+            across(all_of(variables2), ~ sum(is.na(.x)))),
+            pct_faltantes = 100 * faltantes / observaciones,
+            .groups = "drop") |>
+  arrange(desc(pct_faltantes))
+
+print(faltantes_pais_2008, n = Inf)
+
+
+
+
+faltantes_pais_2022 <- wdi_2022.1 |>
+group_by(pais) |>
+summarise(ingreso = first(ingreso2),
+      observaciones = n() * length(variables2),
+      faltantes = sum(
+            across(all_of(variables2), ~ sum(is.na(.x)))),
+            pct_faltantes = 100 * faltantes / observaciones,
+            .groups = "drop") |>
+  arrange(desc(pct_faltantes))
+
+print(faltantes_pais_2022, n = Inf)
+
+#Aquellos paises que tengan un porcentaje alto de faltantes es necesario eliminarlo ya que implicaria
+#Tener que interpolar una gran cantidad de datos del pais, lo que haria algo "artifical" al pais
+#Para eso decidimos descartar aquellos paises con 6 o mas faltantes, lo que significa el 50% de las varibles
+#En el caso del anio 2001 aquellos paises son Kosovo, Sudan del Sur, Afghanistan y Angola
+#Para el anio 2008 todos los paise superan ese humbral, es decir, tienen como maximo 5 faltantes
+#En 2022, quienes lo superan son Eritrea, Yemen, Sudan del Sur y Venezuela
+#No incluyo Puerto Rico porque en este anio todos tienen faltante la variable recursos naturales
+#Por un problema del World Bank, por lo que en realidad solo tendria 5 faltantes
+
+
+wdi2.2 <- wdi2.1 |> 
+  filter(!pais %in% c("Kosovo", "South Sudan", "Afghanistan", "Angola", "Yemen", "Eritrea", "Venezuela, RB"))
+
+wdi3.2 <- wdi3.1 |> 
+  filter(!pais %in% c("Kosovo", "South Sudan", "Afghanistan", "Angola", "Yemen", "Eritrea", "Venezuela, RB"))
+
+
+wdi_2001.2 <- wdi2.2 |>
+  filter(anio == 2001)
+wdi_2008.2 <- wdi2.2 |>
+  filter(anio == 2008)
+wdi_2022.2<- wdi2.2 |>
+  filter(anio == 2022)
+
+
+na_2001.2 <- wdi3.2 |> 
+  filter(anio %in% c(2000, 2001, 2002))
+
+na_2008.2 <- wdi3.2 |> 
+  filter(anio %in% c(2007, 2008, 2009))
+
+na_2022.2 <- wdi3.2 |> 
+  filter(anio %in% c(2021, 2022, 2023))
+
+#Con el resto de NAs vamos a interpolar los anios de interes con el promedio de los anios lindantes
+#Si alguno de los dos anios lindantes llegara a tener tambien NA, entonces la observacion va a ser descartada
+  
+
+
+
+
+
+
+
+wdi_filtrado <- wdi3.2 |> 
+  group_by(pais) |> 
+  arrange(anio) |> 
+  mutate(
+    across(
+      .cols = c(
+        crecimiento_industria,
+        industria_pbi,
+        indice_nivel_precios,
+        empleo_industrial,
+        exportacion_manufactura,
+        gasto_gobierno_pbi,
+        valor_agregado_trabajador,
+        ahorro_bruto_pbi,
+        credito_privado_pbi,
+        recursos_naturales,
+        pbi_per_capita,
+        pbi_millones),
+      .fns = ~ if_else(
+        condition = is.na(.x) & anio %in% c(2001, 2008, 2022), 
+        true = (lag(.x) + lead(.x)) / 2, 
+        false = .x)),
+    recursos_naturales = if_else(
+      condition = is.na(recursos_naturales) & anio == 2022, 
+      true = lag(recursos_naturales, n = 1), 
+      false = recursos_naturales)) |> 
+  ungroup() |> 
+  filter(anio %in% c(2001, 2008, 2022))
+
+wdi_final <- wdi_filtrado |> 
+  drop_na(
+    crecimiento_industria,
+    industria_pbi,
+    indice_nivel_precios,
+    empleo_industrial,
+    exportacion_manufactura,
+    gasto_gobierno_pbi,
+    valor_agregado_trabajador,
+    ahorro_bruto_pbi,
+    credito_privado_pbi,
+    recursos_naturales,
+    pbi_per_capita,
+    pbi_millones)
+
+
+reporte_eliminados <- anti_join(wdi_filtrado, wdi_final, by = c("pais", "anio")) |> 
+  select(pais, anio, 
+         crecimiento_industria,
+         industria_pbi,
+         indice_nivel_precios,
+         empleo_industrial,
+         exportacion_manufactura,
+         gasto_gobierno_pbi,
+         valor_agregado_trabajador,
+         ahorro_bruto_pbi,
+         credito_privado_pbi,
+         recursos_naturales,
+         pbi_per_capita,
+         pbi_millones, 
+         region, 
+         ingreso) |> 
+  arrange(pais, anio)
+
+print(reporte_eliminados, n = Inf)
+
+write.csv(wdi_final, "output/data/wdi_final.csv")
