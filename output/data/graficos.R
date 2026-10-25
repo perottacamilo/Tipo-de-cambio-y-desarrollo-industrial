@@ -96,14 +96,13 @@ grafico2 <- ggplot(wdi_analisis, aes(x = industria_pbi)) +
   theme_minimal()
 print(grafico2)
 
-#Guardar grafico
 ggsave(file.path("output/graficos", "histograma_industria.png"), plot = grafico2)
 
 
 #Graficos plots industria_pbi y nivel de precios para 2001
 #Plot 
 #Correr de 90 a 103 para guardar en la carpeta graficos)
-png("output/graficos/plot_2001.png", width = 8, height = 6, units = "in", res = 300)
+# png("output/graficos/plot_2001.png", width = 8, height = 6, units = "in", res = 300)
 
 grafico3 <- plot(
   wdi_2001$indice_nivel_precios, wdi_2001$industria_pbi,
@@ -116,12 +115,12 @@ grafico3 <- abline(lm(industria_pbi ~ indice_nivel_precios, data = wdi_2001), co
 r <- cor(wdi_2001$industria_pbi, wdi_2001$indice_nivel_precios, use = "complete.obs")
 grafico3 <- legend("topleft", legend = paste("r =", round(r, 2)), bty = "n")
 
-dev.off()
+# dev.off()
 
 
 #Graficos plots industria_pbi y nivel de precios para 2008
 
-png("output/graficos/plot_2008.png", width = 8, height = 6, units = "in", res = 300)
+# png("output/graficos/plot_2008.png", width = 8, height = 6, units = "in", res = 300)
 
 grafico3.1 <- plot(
   wdi_2008$indice_nivel_precios, wdi_2008$industria_pbi,
@@ -134,11 +133,11 @@ grafico3.1 <- abline(lm(industria_pbi ~ indice_nivel_precios, data = wdi_2008), 
 r.1 <- cor(wdi_2008$industria_pbi, wdi_2008$indice_nivel_precios, use = "complete.obs")
 grafico3.1 <- legend("topleft", legend = paste("r.1 =", round(r.1, 2)), bty = "n")
 
-dev.off()
+# dev.off()
 
 #Plots industria_pbi y nivel de precios para 2008
 
-png("output/graficos/plot_2022.png", width = 8, height = 6, units = "in", res = 300)
+# png("output/graficos/plot_2022.png", width = 8, height = 6, units = "in", res = 300)
 
 grafico3.2 <- plot(
   wdi_2022$indice_nivel_precios, wdi_2022$industria_pbi,
@@ -151,10 +150,7 @@ grafico3.2 <- abline(lm(industria_pbi ~ indice_nivel_precios, data = wdi_2022), 
 r.2 <- cor(wdi_2022$industria_pbi, wdi_2022$indice_nivel_precios, use = "complete.obs")
 grafico3.2 <- legend("topleft", legend = paste("r.2 =", round(r.2, 2)), bty = "n")
 
-dev.off()
-
-##Notar que cambian los plots respecto a la primer entrega porque se eliminaron paises con < 1m. habitantes
-
+# dev.off()
 
 
 
@@ -226,7 +222,7 @@ cor.test(wdi_2001$industria_pbi, wdi_2001$indice_nivel_precios)
 alta  <- wdi_2001$industria_pbi[wdi_2001$region == "East Asia & Pacific"]
 baja  <- wdi_2001$industria_pbi[wdi_2001$region %in% c("Latin America & Caribbean", "")]
 
-png("output/graficos/histograma_industria_regiones_2001.png", width = 8, height = 6, units = "in", res = 300)
+# png("output/graficos/histograma_industria_regiones_2001.png", width = 8, height = 6, units = "in", res = 300)
 
 hist(baja, breaks = 15, col = rgb(1, 0, 0, 0.5), border = "white",
      xlim = c(0, 100), ylim = c(0, 12),
@@ -234,7 +230,7 @@ hist(baja, breaks = 15, col = rgb(1, 0, 0, 0.5), border = "white",
      xlab = "% industria en el PBI", ylab = "Cantidad de países")
 hist(alta, breaks = 15, col = rgb(0, 0, 1, 0.5), border = "white", add = TRUE)
 
-dev.off()
+# dev.off()
 
 
 
@@ -243,7 +239,7 @@ dev.off()
 alta1  <- wdi_2008$industria_pbi[wdi_2008$region == "East Asia & Pacific"]
 baja1  <- wdi_2008$industria_pbi[wdi_2008$region %in% c("Latin America & Caribbean", "")]
 
-png("output/graficos/histograma_industria_regiones_2008.png", width = 8, height = 6, units = "in", res = 300)
+# png("output/graficos/histograma_industria_regiones_2008.png", width = 8, height = 6, units = "in", res = 300)
 
 hist(baja1, breaks = 15, col = rgb(1, 0, 0, 0.5), border = "white",
      xlim = c(0, 100), ylim = c(0, 12),
@@ -251,13 +247,13 @@ hist(baja1, breaks = 15, col = rgb(1, 0, 0, 0.5), border = "white",
      xlab = "% industria en el PBI", ylab = "Cantidad de países")
 hist(alta1, breaks = 15, col = rgb(0, 0, 1, 0.5), border = "white", add = TRUE)
 
-dev.off()
+# dev.off()
 
 
 alta2  <- wdi_2022$industria_pbi[wdi_2022$region == "East Asia & Pacific"]
 baja2  <- wdi_2022$industria_pbi[wdi_2022$region %in% c("Latin America & Caribbean", "")]
 
-png("output/graficos/histograma_industria_regiones_2022.png", width = 8, height = 6, units = "in", res = 300)
+# png("output/graficos/histograma_industria_regiones_2022.png", width = 8, height = 6, units = "in", res = 300)
 
 hist(baja2, breaks = 15, col = rgb(1, 0, 0, 0.5), border = "white",
      xlim = c(0, 100), ylim = c(0, 12),
@@ -265,7 +261,7 @@ hist(baja2, breaks = 15, col = rgb(1, 0, 0, 0.5), border = "white",
      xlab = "% industria en el PBI", ylab = "Cantidad de países")
 hist(alta2, breaks = 15, col = rgb(0, 0, 1, 0.5), border = "white", add = TRUE)
 
-dev.off()
+# dev.off()
 
 
 
@@ -380,7 +376,7 @@ print(grafico5)
 ggsave(file.path("output/graficos", "datos_faltanes_vars.png"), 
        plot = grafico5, width = 12, height = 7, units = "in", dpi = 300)
 
-
+#Ver que es distinto a "faltantes"
 
 
 

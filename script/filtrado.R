@@ -105,8 +105,29 @@ write.csv(wdi2, "output/data/wdi2.csv")
   
   
   
+  
+  
 
 
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 #Creamos una base para cada anio
 wdi_2001 <- wdi2 |>
   filter(anio == 2001)

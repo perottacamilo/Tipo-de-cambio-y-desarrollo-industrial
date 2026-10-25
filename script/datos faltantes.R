@@ -13,7 +13,7 @@ wdi3 <- read.csv("output/data/wdi3.csv")
 
 #Creamos una base para cada anio
 #Y eliminamos a los paises con menos de un millon de habitantes
-#Debido a que incluye a muchos paises que no son significativos para el trabajo
+#Debido a que incluye a muchos paises que no son relevantes para el trabajo (por que?)
 
 wdi2 <- wdi2 |> 
   filter(poblacion_mill > 1)
@@ -399,3 +399,29 @@ reporte_eliminados <- anti_join(wdi_filtrado, wdi_final, by = c("pais", "anio"))
 print(reporte_eliminados, n = Inf)
 
 write.csv(wdi_final, "output/data/wdi_final.csv")
+
+colSums(is.na(wdi_filtrado))
+
+
+
+
+#Filtramos (drop.na) solo en las variables que ustilizamos en la regresion
+#Para quedarnos con la mayor cantidad de observaciones posibles
+
+#Elegir vars regresion
+wdi_regresion <- wdi_filtrado |> 
+  drop_na(
+    crecimiento_industria,
+    industria_pbi,
+    indice_nivel_precios,
+    empleo_industrial,
+    exportacion_manufactura,
+    gasto_gobierno_pbi,
+    valor_agregado_trabajador,
+    ahorro_bruto_pbi,
+    credito_privado_pbi,
+    recursos_naturales,
+    pbi_per_capita,
+    pbi_millones)
+
+write.csv(wdi_regresion, "output/data/wdi_regresion.csv")

@@ -19,21 +19,85 @@ library(modelsummary)
 
 rm(list = ls())
 
+wdi_final <- read.csv("output/data/wdi_final.csv")
+
+wdi_final_2022 <- wdi_final |> 
+  filter(anio == 2022)
 
 #Regresiones
 
 #Primero aplicar sobre una variable sola
 
+r1_2022 <- lm(industria_pbi ~ indice_nivel_precios, data = wdi_final_2022)
+
+summary(r1_2022)
+ggplot(r1_2022)
+
+r2_2022 <- lm(industria_pbi ~ indice_nivel_precios + recursos_naturales + 
+                credito_privado_pbi + log(pbi_per_capita) + gasto_gobierno_pbi, data = wdi_final_2022)
+summary(r2_2022)
+
+r3_2022 <- lm(industria_pbi ~ indice_nivel_precios + recursos_naturales + 
+                ahorro_bruto_pbi + log(pbi_per_capita) + gasto_gobierno_pbi, data = wdi_final_2022)
+
+summary(r3_2022)
+
+r4_2022 <- lm(industria_pbi ~ indice_nivel_precios + recursos_naturales + 
+                ahorro_bruto_pbi + log(pbi_per_capita) +I(log(pbi_per_capita)^2), data = wdi_final_2022)
+
+summary(r4_2022)
+
+r6_2022 <- lm(industria_pbi ~ recursos_naturales + ahorro_bruto_pbi + log(pbi_per_capita) +I(log(pbi_per_capita)^2), data = wdi_final_2022)
+summary(r5_2022)
+
+
+
+
+variables2 <- c(
+  "crecimiento_industria",
+  "industria_pbi",
+  "indice_nivel_precios",
+  "empleo_industrial",
+  "exportacion_manufactura",
+  "gasto_gobierno_pbi",
+  "valor_agregado_trabajador",
+  "ahorro_bruto_pbi",
+  "credito_privado_pbi",
+  "recursos_naturales",
+  "pbi_per_capita",
+  "pbi_millones")
+
+modelplot(r3_2022, vcov = "HC1", coef_omit = "Intercept|edad") +
+  geom_vline(xintercept = 0, linetype = 2) +
+  labs(x = "Coeficiente (log-puntos)", title = "log(ingreso horario), EPH 1T2026")
+
+
+r6_2022 <- lm(industria_pbi ~ log(pbi_per_capita) + I(log(pbi_per_capita)^2), data = wdi_final_2022)
+
+summary(r6_2022)
+
+avPlots(r6_2022, terms = ~ log(pbi_per_capita))
+
+
+library(car)
+
+avPlots(r1_2022, terms = ~ indice_nivel_precios)
+
+avPlots(r2_2022, terms = ~ indice_nivel_precios)
+
+avPlots(r3_2022, terms = ~ indice_nivel_precios)
+
+avPlots(r4_2022, terms = ~ indice_nivel_precios)
+
 #Despues agregar los controles
 
 #Significativo no es lo mismo que importante. 
-#Con casi 14 mil observaciones, efectos chicos salen significativos. 
 #Mirar siempre la magnitud y preguntarse si es económicamente relevante.
 
 
 ## 1.8 Diagnóstico: chequear los supuestos y corregir
 
-# | Problema | Qué rompe | Test en R | Solución |
+#  | Problema | Qué rompe | Test en R | Solución |
 #  |:--|:--|:--|:--|
 #  | Forma funcional incorrecta | Coeficientes (sesgo) | `resettest()` | Logs, cuadrados, interacciones |
 #  | Multicolinealidad | Nada, pero infla los EE | `vif()` | Quitar o combinar variables |
@@ -50,7 +114,7 @@ plot(regresion, pch = 16, col = rgb(0, 0, 1, 0.1))
 par(mfrow = c(1, 1))
 ```
 
-#| Gráfico | Qué mirar |
+#  | Gráfico | Qué mirar |
 #  |:--|:--|
 #  | Residuals vs Fitted | Nube sin forma alrededor de 0. Una curva sugiere mala forma funcional |
 #  | Normal Q-Q | Puntos sobre la diagonal: residuos aproximadamente normales |
@@ -65,7 +129,10 @@ par(mfrow = c(1, 1))
 #los errores estándar se inflan. Regla práctica: VIF > 10 merece atención.
 
 
-vif(regresion)
+vif(r4_2022)
+vif(r5_2022)
+vif(r6_2022)
+
 
 
 
@@ -77,8 +144,8 @@ vif(regresion)
 #Los coeficientes siguen bien, pero **los errores estándar están mal**, 
 #y con ellos los tests y los intervalos.
 
-{r fig.height=3.5}
-plot(fitted(regresion), residuals(regresion), pch = 16, col = rgb(0, 0, 1, 0.1),
+{r6_2022 fig.height=3.5}
+plot(fitted(r6_2022), residuals(r6_2022), pch = 16, col = rgb(0, 0, 1, 0.1),
      xlab = "Valores predichos", ylab = "Residuos")
 abline(h = 0, lty = 2)
 
@@ -91,7 +158,10 @@ abline(h = 0, lty = 2)
 
 **Test de Breusch-Pagan**: regresa los residuos al cuadrado contra las regresoras. $H_0$: varianza constante.
 
-bptest(regresion)
+bptest(r6_2022)
+
+bptest(r5_2022)
+
 
 ### Heteroscedasticidad: corregir con errores robustos
 
@@ -113,9 +183,9 @@ coeftest(regresion, vcov = vcovHC(regresion, type = "HC1"))       # errores robu
 #con más de 100 o 200 observaciones funcionan bien igual (teorema central del límite).
 
 {r fig.height=3.5}
-qqnorm(residuals(e1), pch = 16, col = rgb(0, 0, 1, 0.1))
-qqline(residuals(e1), col = "firebrick", lwd = 2)
-tseries::jarque.bera.test(residuals(e1))
+qqnorm(residuals(r4_2022), pch = 16, col = rgb(0, 0, 1, 0.1))
+qqline(residuals(r4_2022), col = "firebrick", lwd = 2)
+tseries::jarque.bera.test(residuals(r4_2022))
 
 
 
@@ -143,7 +213,7 @@ modelplot(e1, vcov = "HC1", coef_omit = "Intercept|edad") +
 ```
 
 
-
+aa
 
 # **Errores frecuentes de interpretación**
   
@@ -152,55 +222,6 @@ modelplot(e1, vcov = "HC1", coef_omit = "Intercept|edad") +
 #  - Confundir significancia estadística con magnitud relevante.
 #  - Leer un coeficiente con interacción como si fuera el efecto general (en `e2`, `sexoVaron` es la brecha solo en "hasta primario").
 #  - Leer solo el término lineal cuando hay un cuadrado.
-
-
-
-
-
-
-
-modelo1 <- lm(industria_pbi ~ indice_nivel_precios + recursos_naturales + 
-                credito_privado_pbi + log(pbi_per_capita) + gasto_gobierno_pbi, 
-              data = wdi_final)
-summary(modelo1)
-car::vif(modelo1)  # package "car" - para chequear multicolinealidad del resto
-
-
-
-
-modelo2 <- lm(industria_pbi ~ indice_nivel_precios + recursos_naturales + 
-                ahorro_bruto_pbi + log(pbi_per_capita) + gasto_gobierno_pbi, 
-              data = wdi_final)
-summary(modelo2)
-car::vif(modelo1)  # package "car" - para chequear multicolinealidad del resto
-
-
-
-
-modelo3 <- lm(industria_pbi ~ indice_nivel_precios + recursos_naturales + 
-                credito_privado_pbi + log(pbi_per_capita), 
-              data = wdi_final)
-summary(modelo3)
-car::vif(modelo1)  # package "car" - para chequear multicolinealidad del resto
-
-
-
-
-modelo4 <- lm(industria_pbi ~ indice_nivel_precios + recursos_naturales + 
-                ahorro_bruto_pbi + log(pbi_per_capita), 
-              data = wdi_final)
-summary(modelo4)
-car::vif(modelo4)  # package "car" - para chequear multicolinealidad del resto
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -494,7 +515,7 @@ sensibilidad
 #Elegimos 11 variables (sacamos pbi_millones, preferimos pbi_pc)
 #Aplicamos log a pbi_pc y valor_agregado_trabajador para que no alteren el analisis
 #Estandarizamos variables
-#Los primeros 4 PC capturan el 88% de la variabilidad
+#Los primeros 4 PC capturan el 79% de la variabilidad
 #Ademas los 4 tienen eugenvalues mayores a 1
 #Debemos ponerle nombre/identificar cada PC por la varianza de las variables
 #Ver varios graficos de paises y regiones (similitud/cercania)
@@ -559,7 +580,7 @@ sensibilidad
 
 
 # ---- 0. Preparacion ------------------------------------------------------
-
+rm(list = ls())
 library(tidyverse)
 library(FactoMineR)
 library(factoextra)
