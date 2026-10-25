@@ -1,5 +1,4 @@
 #Script Datos Faltantes (NAs)
-# install.packages(c("dplyr", "tidyr", "readxl"))
 
 library(dplyr)
 library(tidyr)

@@ -1,6 +1,15 @@
-#Script Analisis cuantitativo - Regresiones y Clustering
+# Script Analisis cuantitativo - Regresiones y Clustering
+
+# install.packages(c("FactoMineR", "factoextra", "ggrepel", "cluster", "mclust"))
 
 library(readxl)
+library(tidyverse)
+library(FactoMineR)
+library(factoextra)
+library(cluster)      
+library(FactoMineR)
+library(factoextra)
+library(ggrepel)   
 
 rm(list = ls())
 

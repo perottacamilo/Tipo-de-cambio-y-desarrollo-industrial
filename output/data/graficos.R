@@ -1,5 +1,7 @@
 #Script Graficos
 
+# install.packages("scales")
+
 library(readxl)
 library(ggplot2)
 library(tidyverse)

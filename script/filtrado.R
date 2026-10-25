@@ -1,4 +1,4 @@
-#install.packages(c("tidyverse", "readxl", "WDI", "skimr", "dplyr", "tidyr", "ggplot2", "gt"))
+# install.packages(c("tidyverse", "skimr", "dplyr", "tidyr", "ggplot2", "gt"))
 
 library(dplyr)
 library(tidyr)
