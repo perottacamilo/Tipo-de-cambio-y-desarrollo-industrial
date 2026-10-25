@@ -1256,36 +1256,3 @@ hist(alta2, breaks = 15, col = rgb(0, 0, 1, 0.5), border = "white", add = TRUE)
  
  
  
- modelo1 <- lm(industria_pbi ~ indice_nivel_precios + recursos_naturales + 
-                 credito_privado_pbi + log(pbi_per_capita) + gasto_gobierno_pbi, 
-               data = wdi_final)
- summary(modelo1)
- car::vif(modelo1)  # package "car" - para chequear multicolinealidad del resto
- 
- 
- 
- 
- modelo2 <- lm(industria_pbi ~ indice_nivel_precios + recursos_naturales + 
-                 ahorro_bruto_pbi + log(pbi_per_capita) + gasto_gobierno_pbi, 
-               data = wdi_final)
- summary(modelo2)
- car::vif(modelo1)  # package "car" - para chequear multicolinealidad del resto
- 
- 
- 
- 
- modelo3 <- lm(industria_pbi ~ indice_nivel_precios + recursos_naturales + 
-                 credito_privado_pbi + log(pbi_per_capita), 
-               data = wdi_final)
- summary(modelo3)
- car::vif(modelo1)  # package "car" - para chequear multicolinealidad del resto
- 
- 
- 
- 
- modelo4 <- lm(industria_pbi ~ indice_nivel_precios + recursos_naturales + 
-                 ahorro_bruto_pbi + log(pbi_per_capita), 
-               data = wdi_final)
- summary(modelo4)
- car::vif(modelo4)  # package "car" - para chequear multicolinealidad del resto
- 
