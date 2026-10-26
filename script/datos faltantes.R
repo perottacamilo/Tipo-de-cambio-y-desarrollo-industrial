@@ -16,7 +16,7 @@ wdi3 <- read.csv("output/data/wdi3.csv")
 #Debido a que incluye a muchos paises que no son relevantes para el trabajo (por que?)
 
 wdi2 <- wdi2 |> 
-  filter(poblacion_mill > 1)
+filter(poblacion_mill > 1)
 
 base_2001 <- wdi2 |>
   filter(anio == 2001)
@@ -61,6 +61,7 @@ faltantes <- wdi2 |>
   summarise(across(everything(), ~ mean(is.na(.x)) * 100)) |>
   pivot_longer(everything(), names_to = "variable", values_to = "pct_na") |>
   arrange(desc(pct_na))
+
 view(faltantes)
 
 
@@ -108,79 +109,20 @@ view(faltantes_2022)
 #Analisis de Paises sin datos en las variables seleccionadas -> industria_pbi e indice_nivel_precios
 wdi_analisis <- wdi2 |> filter(!is.na(industria_pbi))
 wdi_analisis2 <- wdi2 |> filter(!is.na(indice_nivel_precios))
+wdi_analisis_3_ipbi <- wdi3 |> filter(!is.na(industria_pbi))
+wdi_analisis_3_inp <- wdi3 |> filter(!is.na(indice_nivel_precios))
 
-# Cuántos países quedan si eliminamos aquellos aquellos que no tienen industria_pbi
-nrow(wdi_analisis)
 
 #Cuales son aquellos paises que se no tienen industria_pbi en ninguno de los tres anios
 setdiff(wdi2$pais, wdi_analisis$pais)
 
-#¿deberiamos borrar los paises que tengan NA en uno de los tres periodos y quedarnos con los que tienen el dato en todos?
-
-#Lo mismo para la variable indice_nivel_precios
-
-# Cuántos países quedan si eliminamos aquellos aquellos que no tienen indice_nivel_precios
-nrow(wdi_analisis2) 
-
 #Cuales son aquellos paises que se no tienen indice_nivel_precios en ninguno de los tres anios
-setdiff(wdi2$pais, wdi_analisis2$pais)   
+setdiff(wdi2$pais, wdi_analisis2$pais) 
+
+setdiff(wdi3$pais, wdi_analisis_3_ipbi$pais) #Que paises no tienen industria_pbi ni en ninguno de los 9 anios  
+setdiff(wdi3$pais, wdi_analisis_3_inp$pais) #Que paises no tienen indice_nivel_precios ni en ninguno de los 9 anios  
 
 
-wdi_analisis_2001 <- base_2001 |> filter(!is.na(industria_pbi))
-wdi_analisis2001 <- base_2001 |> filter(!is.na(indice_nivel_precios))
-
-wdi_analisis_2008 <- base_2008 |> filter(!is.na(industria_pbi))
-wdi_analisis2008 <- base_2008 |> filter(!is.na(indice_nivel_precios))
-
-wdi_analisis_2022 <- base_2022 |> filter(!is.na(industria_pbi))
-wdi_analisis2022 <- base_2022 |> filter(!is.na(indice_nivel_precios))
-
-
-
-nrow(wdi_analisis_2001)   # Cuántos países quedan sacando los que no tienen industria_pbi en 2001
-setdiff(base_2001$pais, wdi_analisis_2001$pais)   # Cuáles quedaron afuera
-
-nrow(wdi_analisis_2008)  # Cuántos países quedan sacando los que no tienen industria_pbi en 2008
-setdiff(base_2008$pais, wdi_analisis_2008$pais)   # Cuáles quedaron afuera
-
-nrow(wdi_analisis_2022)   # Cuántos países quedan sacando los que no tienen industria_pbi en 2001
-setdiff(base_2022$pais, wdi_analisis_2022$pais)   # Cuáles quedaron afuera
-
-setdiff(base_2001$pais, wdi_analisis2001$pais)   # Cuáles quedaron afuera de indice_nivel_precios
-setdiff(base_2008$pais, wdi_analisis2008$pais)   # Cuáles quedaron afuera de indice_nivel_precios
-setdiff(base_2022$pais, wdi_analisis2022$pais)   # Cuáles quedaron afuera de indice_nivel_precios
-
-
-
-
-
-#Mismo analisis pero para cada anio mas sus anios lindantes
-na_analisis_2001_ipbi <- na_2001 |> filter(!is.na(industria_pbi))
-na_analisis_2001_inp <- na_2001 |> filter(!is.na(indice_nivel_precios))
-  
-na_analisis_2008_ipbi <- na_2008 |> filter(!is.na(industria_pbi))
-na_analisis_2008_inp <- na_2008 |> filter(!is.na(indice_nivel_precios))
-
-na_analisis_2022_ipbi <- na_2022 |> filter(!is.na(industria_pbi))
-na_analisis_2022_inp <- na_2022 |> filter(!is.na(indice_nivel_precios))
-
-na_analisis_3_ipbi <- wdi3 |> filter(!is.na(industria_pbi))
-na_analisis_3_inp <- wdi3 |> filter(!is.na(indice_nivel_precios))
-
-
-
-setdiff(na_2001$pais, na_analisis_2001_ipbi$pais) #Que paises no tienen industria_pbi ni en 2000, 2001 y 2002   
-setdiff(na_2001$pais, na_analisis_2001_inp$pais) #Que paises no tienen indice_nivel_precios ni en 2000, 2001 y 2002   
-
-setdiff(na_2008$pais, na_analisis_2008_ipbi$pais) #Que paises no tienen industria_pbi ni en 2007, 2008, 2009
-setdiff(na_2008$pais, na_analisis_2008_inp$pais) #Que paises no tienen indice_nivel_precios ni en 2007, 2008 y 2009   
-  
-setdiff(na_2022$pais, na_analisis_2022_ipbi$pais) #Que paises no tienen industria_pbi ni en 2022, 2021, 2023  
-setdiff(na_2022$pais, na_analisis_2022_inp$pais) #Que paises no tienen indice_nivel_precios ni en 2021, 2022 y 2023   
-  
- 
-setdiff(wdi3$pais, na_analisis_3_ipbi$pais) #Que paises no tienen industria_pbi ni en ninguno de los 9 anios  
-setdiff(wdi3$pais, na_analisis_3_inp$pais) #Que paises no tienen indice_nivel_precios ni en ninguno de los 9 anios  
 
 #En primer lugar creo que podriamos quedarnos solo con los comandos que agrupan tanto (2001,2008,2022) como los otros 9 anios a la vez, en vez de analizar por separado anio a anio
 #Ya que el pais resulta problematico si le falta tanto en los 3 como en los 9, no en uno en especifico
@@ -195,7 +137,8 @@ setdiff(wdi3$pais, na_analisis_3_inp$pais) #Que paises no tienen indice_nivel_pr
 
 wdi2.1 <- wdi2 |> 
   select(-tipo_cambio_real_efectivo, -gastos_totales_gob_pbi) |> 
-  filter(!pais %in% c("Korea, Dem. People's Rep.", "Cuba", "Somalia, Fed. Rep."))
+  filter(!pais %in% c("Korea, Dem. People's Rep.", "Cuba", "Somalia, Fed. Rep."),
+         poblacion_mill > 1)
 
 wdi3.1 <- wdi3 |> 
   select(-tipo_cambio_real_efectivo, -gastos_totales_gob_pbi) |> 
@@ -212,10 +155,8 @@ base_2022.1<- wdi2.1 |>
 
 na_2001.1 <- wdi3.1 |> 
   filter(anio %in% c(2000, 2001, 2002))
-
 na_2008.1 <- wdi3.1 |> 
   filter(anio %in% c(2007, 2008, 2009))
-
 na_2022.1 <- wdi3.1 |> 
   filter(anio %in% c(2021, 2022, 2023))
 
@@ -253,7 +194,7 @@ summarise(ingreso = first(ingreso2),
 arrange(desc(pct_faltantes))
 
 print(faltantes_pais_2001, n = Inf)
-
+head(faltantes_pais_2001)
 
 
 faltantes_pais_2008 <- base_2008.1 |>
@@ -270,7 +211,6 @@ print(faltantes_pais_2008, n = Inf)
 
 
 
-
 faltantes_pais_2022 <- base_2022.1 |>
 group_by(pais) |>
 summarise(ingreso = first(ingreso2),
@@ -282,6 +222,12 @@ summarise(ingreso = first(ingreso2),
   arrange(desc(pct_faltantes))
 
 print(faltantes_pais_2022, n = Inf)
+
+head(faltantes_pais_2001)
+head(faltantes_pais_2008)
+head(faltantes_pais_2022)
+
+
 
 #Aquellos paises que tengan un porcentaje alto de faltantes es necesario eliminarlo ya que implicaria
 #Tener que interpolar una gran cantidad de datos del pais, lo que haria algo "artifical" al pais
@@ -310,10 +256,8 @@ base_2022.2<- wdi2.2 |>
 
 na_2001.2 <- wdi3.2 |> 
   filter(anio %in% c(2000, 2001, 2002))
-
 na_2008.2 <- wdi3.2 |> 
   filter(anio %in% c(2007, 2008, 2009))
-
 na_2022.2 <- wdi3.2 |> 
   filter(anio %in% c(2021, 2022, 2023))
 
@@ -402,7 +346,7 @@ write.csv(wdi_final, "output/data/wdi_final.csv")
 
 colSums(is.na(wdi_filtrado))
 
-
+head(reporte_eliminados$region[["East Asia & Pacific"]])
 
 
 #Filtramos (drop.na) solo en las variables que ustilizamos en la regresion

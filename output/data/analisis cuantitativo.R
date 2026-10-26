@@ -335,7 +335,7 @@ rownames(X) <- wdi_pca$pais
 round(cor(X), 2)
 
 # Version grafica: un heatmap con ggplot.
-cor(X) |>
+heatmap <- cor(X) |>
   as_tibble(rownames = "v1") |>
   pivot_longer(-v1, names_to = "v2", values_to = "r") |>
   ggplot(aes(v1, v2, fill = r)) +
@@ -344,6 +344,11 @@ cor(X) |>
   scale_fill_gradient2(low = "firebrick", mid = "white", high = "steelblue", limits = c(-1, 1)) +
   labs(x = NULL, y = NULL, title = "Correlaciones entre las variables activas") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggsave(file.path("output/graficos", "heatmap.png"), 
+       plot = heatmap, width = 12, height = 7, units = "in", dpi = 300)
+
+
 # ==============================================================================
 # ==============================================================================
 # ==============================================================================
@@ -387,10 +392,21 @@ res$var$contrib[, 1:4]   # % con que cada variable construye cada componente
 fviz_pca_var(res, repel = TRUE, col.var = "contrib",
              gradient.cols = c("gray70", "steelblue", "firebrick"))
 
-fviz_contrib(res, choice = "var", axes = 1)   # quien arma PC1
-fviz_contrib(res, choice = "var", axes = 2)   # quien arma PC2
-fviz_contrib(res, choice = "var", axes = 3)   # quien arma PC3
-fviz_contrib(res, choice = "var", axes = 4)   # quien arma PC4
+pc1 <- fviz_contrib(res, choice = "var", axes = 1)   # quien arma PC1
+pc2 <- fviz_contrib(res, choice = "var", axes = 2)   # quien arma PC2
+pc3 <- fviz_contrib(res, choice = "var", axes = 3)   # quien arma PC3
+pc4 <- fviz_contrib(res, choice = "var", axes = 4)   # quien arma PC4
+
+ggsave(file.path("output/graficos", "pc1.png"), 
+       plot = pc1, width = 12, height = 7, units = "in", dpi = 300)
+ggsave(file.path("output/graficos", "pc2.png"), 
+       plot = pc2, width = 12, height = 7, units = "in", dpi = 300)
+ggsave(file.path("output/graficos", "pc3.png"), 
+       plot = pc3, width = 12, height = 7, units = "in", dpi = 300)
+ggsave(file.path("output/graficos", "pc4.png"), 
+       plot = pc4, width = 12, height = 7, units = "in", dpi = 300)
+
+
 
 #Tratar de pensar que representa cada PCA, es decir darle un nombre
 #Para facilitar la interpretabilidad, sobretodo en los primeros dos
@@ -412,8 +428,10 @@ dimdesc(res, axes = 1:4)
 # 5. LAS OBSERVACIONES: EL MAPA DE PAISES
 # ==============================================================================
 
-fviz_pca_ind(res, repel = TRUE, labelsize = 3, col.ind = "cos2",
+mapa_paises <- fviz_pca_ind(res, repel = TRUE, labelsize = 3, col.ind = "cos2",
              gradient.cols = c("gray80", "steelblue", "firebrick"))
+ggsave(file.path("output/graficos", "mapa_paises.png"), 
+       plot = mapa_paises, width = 12, height = 7, units = "in", dpi = 300)
 
 
 #Grafico importante, ayuda a ver a que PCA esta mas cerca cada pais
@@ -442,7 +460,7 @@ wdi_pca <- wdi_pca |>
       TRUE ~ "Otros"))
 
 
-fviz_pca_ind(
+mapa_regiones <- fviz_pca_ind(
   res, 
   label = "none", 
   habillage = factor(wdi_pca$region_resaltada),
@@ -453,10 +471,25 @@ fviz_pca_ind(
   palette = c("#1B9E77", "#D95F02", "gray85", "#7570B3") 
 )
 
+ggsave(file.path("output/graficos", "mapa_regiones.png"), 
+       plot = mapa_regiones, width = 12, height = 7, units = "in", dpi = 300)
 
 
 
 
+
+
+
+# Filtramos solo las regiones que nos interesan y cruzamos con el cluster asignado
+distribucion_regional <- wdi_pca |>
+  mutate(cluster = res_hcpc$data.clust$clust) |>
+  filter(region %in% c("Latin America & Caribbean", "East Asia & Pacific", "South Asia")) |>
+  count(region, cluster) |>
+  group_by(region) |>
+  mutate(porcentaje = round(n / sum(n) * 100, 1))
+
+# Ver el resultado
+print(distribucion_regional)
 
 
 
@@ -469,20 +502,6 @@ fviz_pca_ind(
 
 
 
-
-
-
-
-# ==============================================================================
-# 6. BIPLOT: VARIABLES Y OBSERVACIONES JUNTAS
-# ==============================================================================
-
-fviz_pca_biplot(res, repel = TRUE, labelsize = 3, col.var = "firebrick",
-                col.ind = "gray50", select.ind = list(cos2 = 80))
-
-# COMO SE LEE: un pais ubicado en la direccion de una flecha tiene valores
-# altos en esa variable. select.ind = list(cos2 = 40) muestra solo los 40
-# paises mejor representados, para que se pueda leer.
 
 
 
@@ -650,7 +669,7 @@ length(d)
 
 # Quien se parece mas a Argentina?
 as.matrix(d)["Argentina", ] |> sort() |> head(6)
-
+# Quien se parece mas a China?
 as.matrix(d)["China", ] |> sort() |> head(6)
 
 # COMO SE LEE: el primer valor es 0 (Argentina consigo misma). Los siguientes
@@ -717,7 +736,11 @@ split(wdi_pca$pais, grupos)
 
 # Silueta de cada pais: quien esta "en el borde" entre dos grupos?
 sil <- silhouette(grupos, d)
-fviz_silhouette(sil, label = FALSE)
+
+silhouette <- fviz_silhouette(sil, label = FALSE)
+
+ggsave(file.path("output/graficos", "silhouette.png"), 
+       plot = silhouette, width = 12, height = 7, units = "in", dpi = 300)
 
 #Se ve cmo en general el segundo y cuarto parecen estar bien
 #El tercero es un poco mas disperso, no sabria decir que criterio tiene
@@ -782,15 +805,26 @@ res_hcpc <- HCPC(res_pca, nb.clust = 4, consol = TRUE, graph = FALSE)
 
 res_hcpc <- HCPC(res_pca)
 
-plot(res_hcpc, choice = "tree") #CLUSTER         # dendrograma con el corte
+rm(dendograma)
+# png("output/graficos/dendograma.png", width = 8, height = 6, units = "in", res = 300)
+
+dendograma <- plot(res_hcpc, choice = "tree") #CLUSTER         # dendrograma con el corte
+
+
+# dev.off()
+
 plot(res_hcpc, choice = "bar")           # ganancia de inercia por cada fusion
 #La incercia nos diria que debemos elegir 9 clusters
 #Lo cual por un lado puede indicar por que no es facil identificar a los
 #grupos de los paises del componente 1 y 3, sin embargo agregar muchos
 #tambien puede dificultar la interpretabilidad de los grupos
 
-fviz_cluster(res_hcpc, repel = TRUE, labelsize = 7, show.clust.cent = TRUE,
+hcpc4 <- fviz_cluster(res_hcpc, repel = TRUE, labelsize = 7, show.clust.cent = TRUE,
              main = "HCPC: 4 grupos en el plano PC1-PC2")
+
+ggsave(file.path("output/graficos", "hcpc4.png"), 
+       plot = hcpc4, width = 12, height = 7, units = "in", dpi = 300)
+
 
 #Interesantes graphs
 

@@ -265,7 +265,7 @@ hist(alta2, breaks = 15, col = rgb(0, 0, 1, 0.5), border = "white", add = TRUE)
 
 
 
-
+ 
 variables <- c(
   "crecimiento_industria",
   "industria_pbi",
@@ -284,13 +284,16 @@ variables <- c(
   "ingreso2",
   "poblacion_mill")
 
-variables <- intersect(variables, names(wdi2))
+wdi_2 <- wdi2 |> 
+  filter(poblacion_mill > 1)
 
-if (nrow(wdi2) == 0 || length(variables) == 0) {
+variables <- intersect(variables, names(wdi_2))
+
+if (nrow(wdi_2) == 0 || length(variables) == 0) {
   stop("No hay observaciones o variables disponibles.")
 }
 
-faltantes <- wdi2 %>%
+faltantes <- wdi_2 %>%
   group_by(anio) %>%
   summarise(
     across(all_of(variables), ~sum(is.na(.x))),
@@ -303,7 +306,7 @@ faltantes <- wdi2 %>%
     variable = variables,
     fill = list(n_faltantes = 0)) %>%
   mutate(
-    porcentaje = 100 * n_faltantes / nrow(wdi2))
+    porcentaje = 100 * n_faltantes / nrow(wdi_2))
 
 totales <- faltantes %>%
   group_by(variable) %>%
@@ -376,7 +379,6 @@ print(grafico5)
 ggsave(file.path("output/graficos", "datos_faltanes_vars.png"), 
        plot = grafico5, width = 12, height = 7, units = "in", dpi = 300)
 
-#Ver que es distinto a "faltantes"
 
 
 

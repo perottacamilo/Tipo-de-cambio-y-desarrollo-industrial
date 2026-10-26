@@ -100,7 +100,7 @@ write.csv(wdi2, "output/data/wdi2.csv")
     filter(anio %in% c(2000, 2001, 2002, 2007, 2008, 2009, 2021, 2022, 2023), poblacion_mill >= 1) |> 
     arrange(pais, anio)
 
-  write.csv(wdi3, "output/data/wdi3.csv")
+write.csv(wdi3, "output/data/wdi3.csv")
   
   
   
