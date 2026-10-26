@@ -1,11 +1,14 @@
 #Script Graficos
 
 # install.packages("scales")
+#install.packages(c("gt", "webshot2"))
 
 library(readxl)
 library(ggplot2)
 library(tidyverse)
 library(scales)
+library(modelsummary)
+library(dplyr)
 
 rm(list = ls())
 
@@ -18,9 +21,48 @@ wdi_final <- read.csv("output/data/wdi_final.csv")
 wdi_analisis <- wdi2 |> 
   filter(!is.na(industria_pbi))
 
+anios <- c(2001, 2008, 2022)
 
+# Crear la lista asignando nombres según el año
+tablas_anios <- setNames(
+  lapply(anios, function(a) {
+    df_anio <- wdi2 |> filter(anio == a)
+    
+    mod1 <- lm(industria_pbi ~ indice_nivel_precios, data = df_anio)
+    mod2 <- lm(exportacion_manufactura ~ indice_nivel_precios, data = df_anio)
+    
+    modelsummary(
+      list(
+        "Industria (% PBI)" = mod1,
+        "Exportaciones Manufacturas" = mod2
+      ),
+      title = paste0("Tabla: Regresiones simples para el nivel de precios (", a, ")"),
+      stars = TRUE,
+      statistic = "std.error",
+      fmt = 3,
+      coef_rename = c(
+        "(Intercept)" = "Constante",
+        "indice_nivel_precios" = "Índice de nivel de precios"
+      ),
+      gof_map = list(
+        list("raw" = "nobs", "clean" = "N", "fmt" = 0),
+        list("raw" = "r.squared", "clean" = "R²", "fmt" = 3),
+        list("raw" = "adj.r.squared", "clean" = "R² ajustado", "fmt" = 3)
+      ),
+      output = "gt"
+    )
+  }),
+  nm = paste0("anio_", anios)
+)
 
+# Ver la tabla del año 2001
+tablas_anios$anio_2001
 
+# Ver la tabla del año 2008
+tablas_anios$anio_2008
+
+# Ver la tabla del año 2022
+tablas_anios$anio_2022
 
 wdi_2001 <- wdi2 |>
   filter(anio == 2001)
@@ -29,8 +71,41 @@ wdi_2008 <- wdi2 |>
 wdi_2022<- wdi2 |>
   filter(anio == 2022)
 
+library(modelsummary)
+library(dplyr)
 
+# Estimación de todos los modelos
+mod1_2001 <- lm(industria_pbi ~ indice_nivel_precios, data = wdi2 |> filter(anio == 2001))
+mod2_2001 <- lm(exportacion_manufactura ~ indice_nivel_precios, data = wdi2 |> filter(anio == 2001))
 
+mod1_2008 <- lm(industria_pbi ~ indice_nivel_precios, data = wdi2 |> filter(anio == 2008))
+mod2_2008 <- lm(exportacion_manufactura ~ indice_nivel_precios, data = wdi2 |> filter(anio == 2008))
+
+mod1_2022 <- lm(industria_pbi ~ indice_nivel_precios, data = wdi2 |> filter(anio == 2022))
+mod2_2022 <- lm(exportacion_manufactura ~ indice_nivel_precios, data = wdi2 |> filter(anio == 2022))
+
+# Muestra la tabla visualmente en la pestaña Viewer (al costado)
+modelsummary(
+  list(
+    "Ind 2001" = mod1_2001, "Exp 2001" = mod2_2001,
+    "Ind 2008" = mod1_2008, "Exp 2008" = mod2_2008,
+    "Ind 2022" = mod1_2022, "Exp 2022" = mod2_2022
+  ),
+  title = "Tabla Comparativa: Regresiones simples (2001, 2008, 2022)",
+  stars = TRUE,
+  statistic = "std.error",
+  fmt = 3,
+  coef_rename = c(
+    "(Intercept)" = "Constante",
+    "indice_nivel_precios" = "Índice de nivel de precios"
+  ),
+  gof_map = list(
+    list("raw" = "nobs", "clean" = "N", "fmt" = 0),
+    list("raw" = "r.squared", "clean" = "R²", "fmt" = 3),
+    list("raw" = "adj.r.squared", "clean" = "R² ajustado", "fmt" = 3)
+  ),
+  output = "gt" # <--- Se renderiza visualmente en la pestaña Viewer
+)
 
 #Tabla de variables faltantes por ingreso 
 na_por_ingreso <- wdi2 |>
@@ -150,6 +225,7 @@ grafico3.2 <- abline(lm(industria_pbi ~ indice_nivel_precios, data = wdi_2022), 
 r.2 <- cor(wdi_2022$industria_pbi, wdi_2022$indice_nivel_precios, use = "complete.obs")
 grafico3.2 <- legend("topleft", legend = paste("r.2 =", round(r.2, 2)), bty = "n")
 
+summary(lm(industria_pbi ~ indice_nivel_precios, data = wdi_2022))
 # dev.off()
 
 

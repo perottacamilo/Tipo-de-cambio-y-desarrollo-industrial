@@ -1,5 +1,5 @@
 # Script Analisis cuantitativo - Regresiones y Clustering
-
+#options(timeout = 600)
 # install.packages(c("FactoMineR", "factoextra", "ggrepel", "cluster", "mclust", "lmtest", "sandwich", "car", "modelsummary" ))
 
 library(readxl)
@@ -20,37 +20,101 @@ library(modelsummary)
 rm(list = ls())
 
 wdi_final <- read.csv("output/data/wdi_final.csv")
+wdi_regresion <- read.csv("output/data/wdi_filtrado.csv")
 
-wdi_final_2022 <- wdi_final |> 
+wdi_regresion_2022 <- wdi_regresion |> 
   filter(anio == 2022)
 
+wdi_regresion_2001 <- wdi_regresion |> 
+  filter(anio == 2001)
 #Regresiones
 
 #Primero aplicar sobre una variable sola
 
-r1_2022 <- lm(industria_pbi ~ indice_nivel_precios, data = wdi_final_2022)
+r1_2022 <- lm(industria_pbi ~ indice_nivel_precios, data = wdi_regresion_2022)
+r1.1_2022 <- lm(exportacion_manufactura ~ indice_nivel_precios, data = wdi_regresion_2022)
 
+r1_2022 <- lm(industria_pbi ~ indice_nivel_precios, data = wdi_regresion_2022)
+r1.1_2022 <- lm(exportacion_manufactura ~ indice_nivel_precios, data = wdi_regresion_2022)
+
+# 2. Generar y exportar la tabla a HTML
+modelsummary(
+  list(
+    "Industria (% PBI)" = r1_2022,
+    "Exportaciones Manufacturas" = r1.1_2022
+  ),
+  title = "Tabla 1: Regresiones simples para el nivel de precios (2022)",
+  stars = TRUE,
+  statistic = "std.error",
+  fmt = 3,
+  coef_rename = c(
+    "(Intercept)" = "Constante",
+    "indice_nivel_precios" = "Índice de nivel de precios"
+  ),
+  gof_map = list(
+    list("raw" = "nobs", "clean" = "N", "fmt" = 0),
+    list("raw" = "r.squared", "clean" = "R²", "fmt" = 3),
+    list("raw" = "adj.r.squared", "clean" = "R² ajustado", "fmt" = 3)
+  ),
+  output = "output/tablas/tabla_regresion_2022.html"
+)
 summary(r1_2022)
+summary(r1.1_2022)
+grafico3 <- plot(
+  wdi_regresion_2022$indice_nivel_precios, wdi_regresion_2022$industria_pbi,
+  pch = 19, col = rgb(0.2, 0.4, 0.7, 0.6),
+  main = "Relacion entre industria y el nivel de precios (2001)",
+  ylab = "% industria en el PBI",
+  xlab = "Indice de nivel de precios"
+)
+grafico3 <- abline(lm(industria_pbi ~ indice_nivel_precios, data = wdi_regresion_2022), col = "darkred", lwd = 2)
+r <- cor(wdi_regresion_2022$industria_pbi, wdi_regresion_2022$indice_nivel_precios, use = "complete.obs")
+grafico3 <- legend("topleft", legend = paste("r =", round(r, 2)), bty = "n")
+
 ggplot(r1_2022)
 
 r2_2022 <- lm(industria_pbi ~ indice_nivel_precios + recursos_naturales + 
-                credito_privado_pbi + log(pbi_per_capita) + gasto_gobierno_pbi, data = wdi_final_2022)
+                credito_privado_pbi + log(pbi_per_capita) + gasto_gobierno_pbi, data = wdi_regresion_2022)
+r2.2_2022 <- lm(exportacion_manufactura ~ indice_nivel_precios + recursos_naturales + 
+                credito_privado_pbi + log(pbi_per_capita) + gasto_gobierno_pbi, data = wdi_regresion_2022)
 summary(r2_2022)
-
+summary(r2.2_2022)
 r3_2022 <- lm(industria_pbi ~ indice_nivel_precios + recursos_naturales + 
-                ahorro_bruto_pbi + log(pbi_per_capita) + gasto_gobierno_pbi, data = wdi_final_2022)
+                ahorro_bruto_pbi + log(pbi_per_capita) + gasto_gobierno_pbi, data = wdi_regresion_2022)
 
 summary(r3_2022)
 
 r4_2022 <- lm(industria_pbi ~ indice_nivel_precios + recursos_naturales + 
-                ahorro_bruto_pbi + log(pbi_per_capita) +I(log(pbi_per_capita)^2), data = wdi_final_2022)
-
+                ahorro_bruto_pbi + log(pbi_per_capita) +I(log(pbi_per_capita)^2), data = wdi_regresion_2022)
+r4.2_2022 <- lm(exportacion_manufactura ~ indice_nivel_precios + recursos_naturales + 
+                ahorro_bruto_pbi + gasto_gobierno_pbi + log(pbi_per_capita) +I(log(pbi_per_capita)^2 ), data = wdi_regresion_2022)
+summary(r4.2_2022)
 summary(r4_2022)
+r4.3_2022 <- lm(exportacion_manufactura ~ indice_nivel_precios + recursos_naturales + 
+                  ahorro_bruto_pbi + gasto_gobierno_pbi + log(pbi_per_capita), data = wdi_regresion_2022)
+car::linearHypothesis(r4.2_2022, c("log(pbi_per_capita)=0", "I(log(pbi_per_capita)^2)=0"),
+                      vcov = sandwich::vcovHC(r4.2_2022, type = "HC1"))
+#por separado log pbi_pc no da significativo pero el test de significatividad conjunta si da significativo,
+#por lo que no se pueden eliminar
 
-r6_2022 <- lm(industria_pbi ~ recursos_naturales + ahorro_bruto_pbi + log(pbi_per_capita) +I(log(pbi_per_capita)^2), data = wdi_final_2022)
+
+summary(r4.3_2022)
+r6_2022 <- lm(industria_pbi ~ recursos_naturales + ahorro_bruto_pbi + log(pbi_per_capita) +I(log(pbi_per_capita)^2), data = wdi_regresion_2022)
 summary(r5_2022)
 
+r1_2001 <- lm(industria_pbi ~ indice_nivel_precios, data = wdi_regresion_2001)
 
+summary(r1_2001)
+grafico3 <- plot(
+  wdi_regresion_2001$indice_nivel_precios, wdi_regresion_2001$industria_pbi,
+  pch = 19, col = rgb(0.2, 0.4, 0.7, 0.6),
+  main = "Relacion entre industria y el nivel de precios (2001)",
+  ylab = "% industria en el PBI",
+  xlab = "Indice de nivel de precios"
+)
+grafico3 <- abline(lm(industria_pbi ~ indice_nivel_precios, data = wdi_regresion_2001), col = "darkred", lwd = 2)
+r <- cor(wdi_regresion_2001$industria_pbi, wdi_regresion_2001$indice_nivel_precios, use = "complete.obs")
+grafico3 <- legend("topleft", legend = paste("r =", round(r, 2)), bty = "n")
 
 
 variables2 <- c(
@@ -72,7 +136,7 @@ modelplot(r3_2022, vcov = "HC1", coef_omit = "Intercept|edad") +
   labs(x = "Coeficiente (log-puntos)", title = "log(ingreso horario), EPH 1T2026")
 
 
-r6_2022 <- lm(industria_pbi ~ log(pbi_per_capita) + I(log(pbi_per_capita)^2), data = wdi_final_2022)
+r6_2022 <- lm(industria_pbi ~ log(pbi_per_capita) + I(log(pbi_per_capita)^2), data = wdi_regresion_2022)
 
 summary(r6_2022)
 

@@ -369,3 +369,4 @@ wdi_regresion <- wdi_filtrado |>
     pbi_millones)
 
 write.csv(wdi_regresion, "output/data/wdi_regresion.csv")
+write.csv(wdi_filtrado, "output/data/wdi_filtrado.csv")
