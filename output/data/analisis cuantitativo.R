@@ -28,8 +28,6 @@ wdi_regresion_2022 <- wdi_regresion |>
 
 wdi_regresion_2001 <- wdi_regresion |> 
   filter(anio == 2001)
-#Regresiones
-#*/
 anios <- c(2001, 2008, 2022)
 
 modelos_por_anio <- list()
@@ -63,6 +61,7 @@ for (a in anios) {
   # 3. Generar la tabla comparativa para el Viewer
   tablas_por_anio[[paste0("anio_", a)]] <- modelsummary(
     mods,
+    vcov = "HC1", # <--- ESTA ES LA LÍNEA QUE APLICA LA CORRECCIÓN ROBUSTA
     title = paste0("Regresiones para Industria y Exportaciones (", a, ")"),
     stars = TRUE,
     statistic = "std.error",
@@ -90,6 +89,62 @@ tablas_por_anio$anio_2008
 gtsave(tablas_por_anio$anio_2001, filename = "output/tablas/tabla_2001.html")
 gtsave(tablas_por_anio$anio_2008, filename = "output/tablas/tabla_2008.html")
 gtsave(tablas_por_anio$anio_2022, filename = "output/tablas/tabla_2022.html")
+#####tests de Breusch-Pagan#####
+# 1. Creamos un data.frame vacío para ir guardando los resultados
+resultados_bp <- data.frame()
+
+# 2. Bucle para calcular el test en cada año y modelo
+for (a in c(2001, 2008, 2022)) {
+  
+  # Extraemos los modelos
+  mod_ind <- modelos_por_anio[[paste0("anio_", a)]][["Ind: Control"]]
+  mod_exp <- modelos_por_anio[[paste0("anio_", a)]][["Exp: Control"]]
+  
+  # Aplicamos el test de Breusch-Pagan
+  bp_ind <- lmtest::bptest(mod_ind)
+  bp_exp <- lmtest::bptest(mod_exp)
+  
+  # Guardamos los resultados temporalmente
+  temp_df <- data.frame(
+    Año = c(a, a),
+    Modelo = c("Industria (% PBI)", "Exportaciones Manufactureras"),
+    BP_Stat = c(bp_ind$statistic, bp_exp$statistic),
+    p_valor = c(bp_ind$p.value, bp_exp$p.value)
+  )
+  
+  # Unimos con el data.frame principal
+  resultados_bp <- rbind(resultados_bp, temp_df)
+}
+
+# 3. Formateamos y generamos la tabla visual
+tabla_bp_final <- resultados_bp |> 
+  mutate(
+    # Si el p-valor es menor a 0.05, rechazamos H0 (homocedasticidad)
+    `Diagnóstico` = ifelse(p_valor < 0.05, "Heteroscedasticidad", "Homocedasticidad")
+  ) |> 
+  gt() |> 
+  tab_header(
+    title = "Test de Breusch-Pagan para Heteroscedasticidad",
+    subtitle = "H0: Varianza constante (Homocedasticidad)"
+  ) |> 
+  cols_label(
+    BP_Stat = "Estadístico BP",
+    p_valor = "p-valor"
+  ) |> 
+  fmt_number(
+    columns = BP_Stat,
+    decimals = 2
+  ) |> 
+  fmt_number(
+    columns = p_valor,
+    decimals = 4
+  )
+
+# Imprimimos la tabla
+tabla_bp_final
+#Regresiones
+#*/
+
 
 tests_pbi_por_anio <- list()
 
@@ -143,6 +198,96 @@ tabla_tests_pbi |>
     p_valor = "p-valor"
   )
 
+library(lmtest)
+library(sandwich)
+library(car)
+library(tseries)
+library(modelsummary)
+library(ggplot2)
+library(dplyr)
+# ==============================================================================
+# DIAGNÓSTICOS ECONOMÉTRICOS PARA CADA AÑO
+# ==============================================================================
+
+# ==============================================================================
+# 1. MULTICOLINEALIDAD (VIF) PARA TODOS LOS AÑOS Y MODELOS
+# ==============================================================================
+library(car)
+
+# Creamos una lista para almacenar los resultados
+vifs_por_anio <- list()
+
+for (a in c(2001, 2008, 2022)) {
+  
+  # Extraemos los modelos de control para cada año
+  mod_ind <- modelos_por_anio[[paste0("anio_", a)]][["Ind: Control"]]
+  mod_exp <- modelos_por_anio[[paste0("anio_", a)]][["Exp: Control"]]
+  
+  # Calculamos el VIF
+  vif_ind <- car::vif(mod_ind)
+  vif_exp <- car::vif(mod_exp)
+  
+  # Guardamos en la lista
+  vifs_por_anio[[paste0("anio_", a)]] <- list(
+    VIF_Industria = vif_ind,
+    VIF_Exportaciones = vif_exp
+  )
+}
+
+# Consultar los resultados
+print("--- VIF Año 2001 ---")
+print(vifs_por_anio$anio_2001)
+
+print("--- VIF Año 2008 ---")
+print(vifs_por_anio$anio_2008)
+
+print("--- VIF Año 2022 ---")
+print(vifs_por_anio$anio_2022)
+
+library(dplyr)
+library(gt)
+
+# Extraemos los nombres de las variables del primer VIF guardado
+nombres_vars <- names(vifs_por_anio$anio_2001$VIF_Industria)
+
+# Armamos el dataframe juntando los años
+tabla_vif <- data.frame(
+  Variable = nombres_vars,
+  VIF_2001 = vifs_por_anio$anio_2001$VIF_Industria,
+  VIF_2008 = vifs_por_anio$anio_2008$VIF_Industria,
+  VIF_2022 = vifs_por_anio$anio_2022$VIF_Industria
+) |> 
+  # Renombramos las variables para que queden presentables
+  mutate(
+    Variable = case_match(
+      Variable,
+      "indice_nivel_precios" ~ "Índice de nivel de precios",
+      "recursos_naturales" ~ "Rentas rec. naturales (% PBI)",
+      "ahorro_bruto_pbi" ~ "Ahorro bruto (% PBI)",
+      "gasto_gobierno_pbi" ~ "Gasto público (% PBI)",
+      "log(pbi_per_capita)" ~ "log(PBI pc)",
+      "I(log(pbi_per_capita)^2)" ~ "log(PBI pc)^2",
+      .default = Variable
+    )
+  )
+
+# Generamos la tabla con formato
+tabla_vif |> 
+  gt() |> 
+  tab_header(
+    title = "Factor de Inflación de la Varianza (VIF)",
+    subtitle = "Idéntico para los modelos de Industria y Exportaciones"
+  ) |> 
+  cols_label(
+    VIF_2001 = "VIF (2001)",
+    VIF_2008 = "VIF (2008)",
+    VIF_2022 = "VIF (2022)"
+  ) |> 
+  fmt_number(
+    columns = starts_with("VIF"),
+    decimals = 2
+  )
+
 variables2 <- c(
   "crecimiento_industria",
   "industria_pbi",
@@ -156,7 +301,25 @@ variables2 <- c(
   "recursos_naturales",
   "pbi_per_capita",
   "pbi_millones")
+# 1. Extraemos el modelo de la lista
+mod_exp_2022 <- modelos_por_anio$anio_2022[["Exp: Control"]]
 
+# 2. Dividimos la ventana en 4 (2 filas x 2 columnas)
+par(mfrow = c(2, 2))
+
+# 3. Generamos los gráficos con el color transparente
+plot(mod_exp_2022, pch = 16, col = rgb(0, 0, 1, 0.1))
+
+
+# 4. Volvemos la ventana a la normalidad (1 gráfico a la vez)
+par(mfrow = c(1, 1))
+
+head(sort(cooks.distance(modelos_por_anio$anio_2022[["Exp: Control"]]), decreasing = TRUE), 5)
+# Asumiendo que tu dataframe filtrado por año se llama df_sub
+# Cambiá "pais" por el nombre exacto de la columna que identifica a los países en tu base
+paises_grafico <- df_sub[c(77, 28, 65, 141, 102), c("pais", "exportacion_manufactura")]
+
+print(paises_grafico)
 
 r6_2022 <- lm(industria_pbi ~ log(pbi_per_capita) + I(log(pbi_per_capita)^2), data = wdi_regresion_2022)
 
