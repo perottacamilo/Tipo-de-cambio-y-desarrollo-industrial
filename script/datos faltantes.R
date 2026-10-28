@@ -309,7 +309,7 @@ wdi_filtrado <- wdi3.2 |>
 
 
 
-wdi_filtrado2<- wdi3.2 |> 
+# wdi_filtrado2<- wdi3.2 |> 
   group_by(pais) |> 
   arrange(anio) |> 
   mutate(
