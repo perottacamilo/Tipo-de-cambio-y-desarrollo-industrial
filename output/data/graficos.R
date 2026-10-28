@@ -543,7 +543,6 @@ print(graficos_separados[["2022"]])
 
 
 
-
 #Comparar distribucion por ingreso antes y despues de filtrar
 #Antes de limpiar NAs
 dist_ingreso <- wdi2 |>
@@ -654,3 +653,57 @@ ggsave(file.path("output/graficos", "distribucion_region_crudo.png"),
        plot = grafico8, width = 12, height = 7, units = "in", dpi = 300)
 ggsave(file.path("output/graficos", "distribucion_region_filtro.png"), 
        plot = grafico9, width = 12, height = 7, units = "in", dpi = 300)
+
+
+
+
+
+
+
+
+
+
+
+
+
+library(dplyr)
+library(ggplot2)
+
+dist_regiones <- wdi2 |>
+  mutate(region = as.character(unlist(region))) |> # Rompe la lista y asegura que sea texto
+  count(region) |>
+  mutate(pct = n / sum(n),
+         base = "Original") 
+
+# Y aplicá la misma corrección exacta para tu base filtrada:
+dist_regiones_filt <- wdi_final |>
+  mutate(region = as.character(unlist(region))) |> 
+  count(region) |>
+  mutate(pct = n / sum(n),
+         base = "Filtrada")
+
+# 3. Unir ambas bases verticalmente
+df_combinada <- bind_rows(dist_regiones, dist_regiones_filt)
+
+# 4. Crear el gráfico combinado (usando position = "dodge")
+grafico_combinado <- ggplot(df_combinada, aes(x = reorder(region, pct), y = pct, fill = base)) +
+  # position = "dodge" coloca las barras lado a lado en lugar de apilarlas
+  geom_col(position = "dodge", color = "black", alpha = 0.8) +
+  scale_y_continuous(limits = c(0, 0.35),
+                     labels = scales::percent_format(accuracy = 1)) +
+  # Podés personalizar los colores de cada base
+  scale_fill_manual(values = c("Original" = "steelblue", "Filtrada" = "darkorange")) +
+  labs(
+    title = "Distribución global por región: Original vs. Filtrada",
+    subtitle = "Porcentaje de países en cada categoría sobre el total",
+    x = "Región",
+    y = "Porcentaje del total de países",
+    fill = "Muestra" # Título de la leyenda
+  ) +
+  theme_minimal(base_size = 18) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "top" # Mueve la leyenda arriba para no quitar espacio horizontal
+  )
+
+print(grafico_combinado)

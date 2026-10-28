@@ -157,6 +157,8 @@ dimdesc(res, axes = 1:4)
 
 mapa_paises <- fviz_pca_ind(res, repel = TRUE, labelsize = 3, col.ind = "cos2",
                             gradient.cols = c("gray80", "steelblue", "firebrick"))
+print(mapa_paises)
+
 ggsave(file.path("output/graficos", "mapa_paises.png"), 
        plot = mapa_paises, width = 12, height = 7, units = "in", dpi = 300)
 
@@ -337,54 +339,6 @@ theme_set(theme_minimal(base_size = 12))
 set.seed(2026)
 
 
-# ==============================================================================
-# 1. LA BASE (la misma del script 01)
-# ==============================================================================
-
-base_ad   <- "https://raw.githubusercontent.com/argendatafundar/data/main/"
-carpeta_ad <- file.path("..", "diapositivas", "datos", "argendata")
-leer_ad <- function(ruta) {
-  local <- file.path(carpeta_ad, basename(ruta))
-  if (!file.exists(local)) {
-    dir.create(carpeta_ad, recursive = TRUE, showWarnings = FALSE)
-    download.file(paste0(base_ad, ruta), local, mode = "wb", quiet = TRUE)
-  }
-  read_csv(local, show_col_types = FALSE)
-}
-anio_ref <- 2022
-corte <- function(d, ...) d |> filter(anio == anio_ref) |> select(iso = geocodigoFundar, ...)
-
-fec <- leer_ad("DEMOGR/tasa_fecundidad_adolescente_paises.csv") |>
-  filter(anio == anio_ref) |>
-  group_by(iso = geocodigoFundar) |>
-  arrange(fuente != "World Population Prospects (UN)", .by_group = TRUE) |>
-  slice(1) |> ungroup() |>
-  select(iso, fec_adol = tgf_adolescente)
-
-paises <- leer_ad("DESHUM/expectativa_vida.csv") |>
-  filter(es_agregacion == 0, anio == anio_ref) |>
-  select(iso = geocodigoFundar, pais = geonombreFundar,
-         continente = continente_fundar, esp_vida = expectativa_vida) |>
-  inner_join(corte(leer_ad("DESHUM/expectativa_educ.csv"), esc_esperada = expectativa_educ), by = "iso") |>
-  inner_join(corte(leer_ad("DESHUM/anios_prom_educ.csv"),  esc_promedio = anios_prom_educ),  by = "iso") |>
-  inner_join(corte(leer_ad("DESHUM/inb_pc.csv"), inb_pc), by = "iso") |>
-  left_join(leer_ad("DESIGU/ISA_mundo_i1.csv") |>
-              transmute(iso = geocodigoFundar, gini = as.numeric(gini)), by = "iso") |>
-  left_join(leer_ad("CAMCLI/emisiones_per_cap.csv") |> filter(anio == anio_ref) |>
-              transmute(iso = geocodigoFundar, emis_pc = as.numeric(valor_per_cap)), by = "iso") |>
-  left_join(fec, by = "iso") |>
-  drop_na(esp_vida, esc_esperada, esc_promedio, inb_pc, gini, emis_pc, fec_adol) |>
-  mutate(log_inb = log(inb_pc), log_emis = log(emis_pc))
-
-vars <- c("esp_vida", "esc_esperada", "esc_promedio", "log_inb", "gini", "log_emis", "fec_adol")
-X <- paises |> select(all_of(vars)) |> as.data.frame()
-rownames(X) <- paises$pais
-
-
-# ==============================================================================
-# PARTE A: CLUSTER JERARQUICO "A MANO"
-# ==============================================================================
-
 # ---- A.1 Estandarizar y calcular distancias ----
 # QUE HACE: scale() resta la media y divide por el desvio cada columna.
 #   dist() calcula la distancia euclidea entre cada par de paises.
@@ -466,6 +420,7 @@ sil <- silhouette(grupos, d)
 
 silhouette <- fviz_silhouette(sil, label = FALSE)
 
+print(silhouette)
 ggsave(file.path("output/graficos", "silhouette.png"), 
        plot = silhouette, width = 12, height = 7, units = "in", dpi = 300)
 
@@ -549,6 +504,8 @@ plot(res_hcpc, choice = "bar")           # ganancia de inercia por cada fusion
 hcpc4 <- fviz_cluster(res_hcpc, repel = TRUE, labelsize = 7, show.clust.cent = TRUE,
                       main = "HCPC: 4 grupos en el plano PC1-PC2")
 
+
+print(hcpc4)
 ggsave(file.path("output/graficos", "hcpc4.png"), 
        plot = hcpc4, width = 12, height = 7, units = "in", dpi = 300)
 
