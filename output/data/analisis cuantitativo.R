@@ -44,15 +44,13 @@ for (a in anios) {
     "Ind: Simple"  = lm(industria_pbi ~ indice_nivel_precios, data = df_sub),
     
     "Ind: Control" = lm(industria_pbi ~ indice_nivel_precios + recursos_naturales + 
-                          ahorro_bruto_pbi + gasto_gobierno_pbi + log(pbi_per_capita) + 
-                          I(log(pbi_per_capita)^2), data = df_sub),
+                          ahorro_bruto_pbi + gasto_gobierno_pbi + log(pbi_per_capita), data = df_sub),
     
     # --- EXPORTACIONES MANUFACTURERAS ---
     "Exp: Simple"  = lm(exportacion_manufactura ~ indice_nivel_precios, data = df_sub),
     
     "Exp: Control" = lm(exportacion_manufactura ~ indice_nivel_precios + recursos_naturales + 
-                          ahorro_bruto_pbi + gasto_gobierno_pbi + log(pbi_per_capita) + 
-                          I(log(pbi_per_capita)^2), data = df_sub)
+                          ahorro_bruto_pbi + gasto_gobierno_pbi + log(pbi_per_capita), data = df_sub)
   )
   
   # Guardar modelos
@@ -72,8 +70,7 @@ for (a in anios) {
       "recursos_naturales"       = "Rentas rec. naturales (% PBI)",
       "ahorro_bruto_pbi"         = "Ahorro bruto (% PBI)",
       "gasto_gobierno_pbi"       = "Gasto público (% PBI)",
-      "log(pbi_per_capita)"      = "log(PBI pc)",
-      "I(log(pbi_per_capita)^2)" = "log(PBI pc)^2"
+      "log(pbi_per_capita)"      = "log(PBI pc)"
     ),
     gof_map = list(
       list("raw" = "nobs", "clean" = "N", "fmt" = 0),

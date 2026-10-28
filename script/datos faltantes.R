@@ -263,15 +263,53 @@ na_2022.2 <- wdi3.2 |>
 
 #Con el resto de NAs vamos a interpolar los anios de interes con el promedio de los anios lindantes
 #Si alguno de los dos anios lindantes llegara a tener tambien NA, entonces la observacion va a ser descartada
-  
-
-
-
-
-
-
+# Promedio de vecinos; si falta uno, usa el otro; si faltan ambos, NA
+#nuevo
+imputar_vecinos <- function(x, anio) {
+  ant <- if_else(lag(anio) == anio - 1, lag(x), NA_real_)
+  sig <- if_else(lead(anio) == anio + 1, lead(x), NA_real_)
+  case_when(
+    !is.na(ant) & !is.na(sig) ~ (ant + sig) / 2,
+    !is.na(ant)               ~ ant,
+    !is.na(sig)               ~ sig,
+    TRUE                      ~ NA_real_
+  )
+}
 
 wdi_filtrado <- wdi3.2 |> 
+  group_by(pais) |> 
+  arrange(pais, anio) |> 
+  mutate(
+    # Todas las variables menos recursos_naturales
+    across(
+      .cols = c(
+        crecimiento_industria,
+        industria_pbi,
+        indice_nivel_precios,
+        empleo_industrial,
+        exportacion_manufactura,
+        gasto_gobierno_pbi,
+        valor_agregado_trabajador,
+        ahorro_bruto_pbi,
+        credito_privado_pbi,
+        pbi_per_capita,
+        pbi_millones),
+      .fns = ~ if_else(
+        condition = is.na(.x) & anio %in% c(2001, 2008, 2022),
+        true = imputar_vecinos(.x, anio),
+        false = .x)),
+    # recursos_naturales: 2022 copia 2021; 2001 y 2008 usan la regla de vecinos
+    recursos_naturales = case_when(
+      anio == 2022 ~ if_else(lag(anio) == anio - 1, lag(recursos_naturales), NA_real_),
+      is.na(recursos_naturales) & anio %in% c(2001, 2008) ~ imputar_vecinos(recursos_naturales, anio),
+      TRUE ~ recursos_naturales)) |> 
+  ungroup() |> 
+  filter(anio %in% c(2001, 2008, 2022))
+
+
+
+
+wdi_filtrado2<- wdi3.2 |> 
   group_by(pais) |> 
   arrange(anio) |> 
   mutate(
@@ -300,6 +338,16 @@ wdi_filtrado <- wdi3.2 |>
   ungroup() |> 
   filter(anio %in% c(2001, 2008, 2022))
 
+
+
+colSums(is.na(wdi_filtrado))
+colSums(is.na(wdi_filtrado2))
+
+
+
+
+
+
 wdi_final <- wdi_filtrado |> 
   drop_na(
     crecimiento_industria,
@@ -314,6 +362,27 @@ wdi_final <- wdi_filtrado |>
     recursos_naturales,
     pbi_per_capita,
     pbi_millones)
+
+
+
+
+wdi_final2 <- wdi_filtrado2 %>% 
+  drop_na(
+    crecimiento_industria,
+    industria_pbi,
+    indice_nivel_precios,
+    empleo_industrial,
+    exportacion_manufactura,
+    gasto_gobierno_pbi,
+    valor_agregado_trabajador,
+    ahorro_bruto_pbi,
+    credito_privado_pbi,
+    recursos_naturales,
+    pbi_per_capita,
+    pbi_millones)
+
+
+
 
 
 reporte_eliminados <- anti_join(wdi_filtrado, wdi_final, by = c("pais", "anio")) |> 
