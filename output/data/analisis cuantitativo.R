@@ -4,7 +4,7 @@
 
 library(readxl)
 library(tidyverse)
-library(FactoMineR)
+#library(FactoMineR)
 library(factoextra)
 library(cluster)      
 library(factoextra)
@@ -19,24 +19,34 @@ library(dplyr)
 
 rm(list = ls())
 
-wdi_final <- read.csv("output/data/wdi_final.csv")
+
 wdi_regresion <- read.csv("output/data/wdi_filtrado.csv")
 
+
 #/*
-wdi_regresion_2022 <- wdi_regresion |> 
+wdi_2022 <- wdi_regresion |> 
   filter(anio == 2022)
 
-wdi_regresion_2001 <- wdi_regresion |> 
+wdi_2001 <- wdi_regresion |> 
   filter(anio == 2001)
+wdi_2008 <- wdi_regresion |> 
+  filter(anio == 2008)
 anios <- c(2001, 2008, 2022)
 
 modelos_por_anio <- list()
 tablas_por_anio  <- list()
+# Vector con los países a excluir para el chequeo de robustez en 2022
+outliers_2022 <- c("Lebanon", "Congo, Dem. Rep.", "Ukraine", "Zimbabwe", "Libya", "Zambia")
 
 for (a in anios) {
   
   # 1. Filtrar datos del año
   df_sub <- wdi_regresion |> filter(anio == a)
+  
+  # 1b. Excluir outliers solo para la estimación de 2022
+  if (a == 2022) {
+    df_sub <- df_sub |> filter(!pais %in% outliers_2022)
+  }
   
   # 2. Estimación de los 4 modelos seleccionados
   mods <- list(
@@ -59,7 +69,7 @@ for (a in anios) {
   # 3. Generar la tabla comparativa para el Viewer
   tablas_por_anio[[paste0("anio_", a)]] <- modelsummary(
     mods,
-    vcov = "HC1", # <--- ESTA ES LA LÍNEA QUE APLICA LA CORRECCIÓN ROBUSTA
+    vcov = "HC1",
     title = paste0("Regresiones para Industria y Exportaciones (", a, ")"),
     stars = TRUE,
     statistic = "std.error",
@@ -143,58 +153,6 @@ tabla_bp_final
 #*/
 
 
-tests_pbi_por_anio <- list()
-
-for (a in c(2001, 2008, 2022)) {
-  mod_target <- modelos_por_anio[[paste0("anio_", a)]][["Exp: Control"]]
-  
-  tests_pbi_por_anio[[paste0("anio_", a)]] <- car::linearHypothesis(
-    mod_target,
-    c("log(pbi_per_capita)=0", "I(log(pbi_per_capita)^2)=0"),
-    vcov = sandwich::vcovHC(mod_target, type = "HC1")
-  )
-}
-
-# Consultar cualquiera:
-tests_pbi_por_anio$anio_2001
-tests_pbi_por_anio$anio_2008
-tests_pbi_por_anio$anio_2022
-
-
-
-# 1. Extraer los resultados de los tests
-tabla_tests_pbi <- data.frame(
-  Año = c(2001, 2008, 2022),
-  F_stat = c(
-    tests_pbi_por_anio$anio_2001$F[2],
-    tests_pbi_por_anio$anio_2008$F[2],
-    tests_pbi_por_anio$anio_2022$F[2]
-  ),
-  p_valor = c(
-    tests_pbi_por_anio$anio_2001$`Pr(>F)`[2],
-    tests_pbi_por_anio$anio_2008$`Pr(>F)`[2],
-    tests_pbi_por_anio$anio_2022$`Pr(>F)`[2]
-  )
-) |> 
-  mutate(
-    `Rechaza H0 (5%)` = ifelse(p_valor < 0.05, "Sí", "No"),
-    F_stat = round(F_stat, 4),
-    p_valor = round(p_valor, 5)
-  )
-
-# 2. Ver la tabla en la consola
-print(tabla_tests_pbi)
-tabla_tests_pbi |> 
-  gt() |> 
-  tab_header(
-    title = "Test de Significatividad Conjunta (HC1)",
-    subtitle = "H0: log(pbi_per_capita) = 0 y I(log(pbi_per_capita)^2) = 0"
-  ) |> 
-  cols_label(
-    F_stat = "Estadístico F",
-    p_valor = "p-valor"
-  )
-
 library(lmtest)
 library(sandwich)
 library(car)
@@ -263,7 +221,6 @@ tabla_vif <- data.frame(
       "ahorro_bruto_pbi" ~ "Ahorro bruto (% PBI)",
       "gasto_gobierno_pbi" ~ "Gasto público (% PBI)",
       "log(pbi_per_capita)" ~ "log(PBI pc)",
-      "I(log(pbi_per_capita)^2)" ~ "log(PBI pc)^2",
       .default = Variable
     )
   )
@@ -300,40 +257,53 @@ variables2 <- c(
   "pbi_millones")
 # 1. Extraemos el modelo de la lista
 mod_exp_2022 <- modelos_por_anio$anio_2022[["Exp: Control"]]
+mod_exp_2001 <- modelos_por_anio$anio_2001[["Exp: Control"]]
+mod_exp_2008 <- modelos_por_anio$anio_2008[["Exp: Control"]]
 
+mod_ind_2022 <- modelos_por_anio$anio_2022[["Ind: Control"]]
+mod_ind_2001 <- modelos_por_anio$anio_2001[["Ind: Control"]]
+mod_ind_2008 <- modelos_por_anio$anio_2008[["Ind: Control"]]
 # 2. Dividimos la ventana en 4 (2 filas x 2 columnas)
 par(mfrow = c(2, 2))
 
 # 3. Generamos los gráficos con el color transparente
 plot(mod_exp_2022, pch = 16, col = rgb(0, 0, 1, 0.1))
+plot(mod_exp_2008, pch = 16, col = rgb(0, 0, 1, 0.1))
+plot(mod_exp_2001, pch = 16, col = rgb(0, 0, 1, 0.1))
 
+
+plot(mod_ind_2022, pch = 16, col = rgb(0, 0, 1, 0.1))
+plot(mod_ind_2008, pch = 16, col = rgb(0, 0, 1, 0.1))
+plot(mod_ind_2001, pch = 16, col = rgb(0, 0, 1, 0.1))
 
 # 4. Volvemos la ventana a la normalidad (1 gráfico a la vez)
 par(mfrow = c(1, 1))
 
 head(sort(cooks.distance(modelos_por_anio$anio_2022[["Exp: Control"]]), decreasing = TRUE), 5)
+head(sort(cooks.distance(modelos_por_anio$anio_2022[["Ind: Control"]]), decreasing = TRUE), 5)
+
+head(sort(cooks.distance(modelos_por_anio$anio_2001[["Exp: Control"]]), decreasing = TRUE), 5)
+head(sort(cooks.distance(modelos_por_anio$anio_2001[["Ind: Control"]]), decreasing = TRUE), 5)
+
+head(sort(cooks.distance(modelos_por_anio$anio_2008[["Exp: Control"]]), decreasing = TRUE), 5)
+head(sort(cooks.distance(modelos_por_anio$anio_2008[["Ind: Control"]]), decreasing = TRUE), 5)
+
 # Asumiendo que tu dataframe filtrado por año se llama df_sub
 # Cambiá "pais" por el nombre exacto de la columna que identifica a los países en tu base
-paises_grafico <- df_sub[c(77, 28, 65, 141, 102), c("pais", "exportacion_manufactura")]
+paises_grafico_2022 <- wdi_2022[c(77, 28, 141,151,80,150), c("pais", "exportacion_manufactura")]
+paises_grafico_2008 <- wdi_2008[c(98, 19, 8, 28, 76,50), c("pais", "exportacion_manufactura")]
+paises_grafico_2001 <- wdi_2001[c(77,57, 19, 8), c("pais", "exportacion_manufactura")]
+print(paises_grafico_2022)
+print(paises_grafico_2008)
+print(paises_grafico_2001)
+#eliminamos ukraine(141) por estar en guerra y ser outlier 
+#a el congo(28) por ser un pais particular con una estructura productiva rara
+#lebanon lo eliminamos por estar en una crisis macroeconomica fuerte en ese año
 
-print(paises_grafico)
+#eliminamos a Zimbabwe por su situacion macro
+#
 
-r6_2022 <- lm(industria_pbi ~ log(pbi_per_capita) + I(log(pbi_per_capita)^2), data = wdi_regresion_2022)
-
-summary(r6_2022)
-
-avPlots(r6_2022, terms = ~ log(pbi_per_capita))
-
-
-library(car)
-
-avPlots(r1_2022, terms = ~ indice_nivel_precios)
-
-avPlots(r2_2022, terms = ~ indice_nivel_precios)
-
-avPlots(r3_2022, terms = ~ indice_nivel_precios)
-
-avPlots(r4_2022, terms = ~ indice_nivel_precios)
+#avPlots(r4_2022, terms = ~ indice_nivel_precios)
 
 #Despues agregar los controles
 
