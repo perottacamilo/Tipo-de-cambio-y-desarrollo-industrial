@@ -627,7 +627,7 @@ dist_regiones_filt <- wdi_final |>
   count(region) |>
   mutate(pct = n / sum(n))
 
-grafico9 <- ggplot(dist_regiones, aes(x = reorder(region, pct), y = pct)) +
+grafico9 <- ggplot(dist_regiones_filt, aes(x = reorder(region, pct), y = pct)) +
   geom_col(fill = "steelblue", color = "black", alpha = 0.8) +
   scale_y_continuous(limits = c(0, 0.35),
     labels = scales::percent_format(accuracy = 1) # Formatea el eje Y como 10%, 20%, etc.
@@ -658,6 +658,95 @@ ggsave(file.path("output/graficos", "distribucion_region_filtro.png"),
 
 
 
+alta  <- wdi_2001$industria_pbi[wdi_2001$region == "East Asia & Pacific"]
+baja  <- wdi_2001$industria_pbi[wdi_2001$region %in% c("Latin America & Caribbean", "")]
+
+# png("output/graficos/histograma_industria_regiones_2001.png", width = 8, height = 6, units = "in", res = 300)
+
+hist(baja, breaks = 15, col = rgb(1, 0, 0, 0.5), border = "white",
+     xlim = c(0, 100), ylim = c(0, 12),
+     main = "2001",
+     xlab = "% industria en el PBI", ylab = "Cantidad de países")
+hist(alta, breaks = 15, col = rgb(0, 0, 1, 0.5), border = "white", add = TRUE)
+
+
+
+
+library(dplyr)
+library(ggplot2)
+# library(scales) # Opcional, para dar formato de porcentaje al eje Y
+
+# 1. Calcular porcentajes para la primera base (ej: wdi_2001)
+final <- wdi2 %>%
+  count(region) %>%
+  mutate(porcentaje = (n / sum(n)) * 100,
+         base = "Antes de filtrar") # Creamos una etiqueta para identificar estos datos
+
+# 2. Calcular porcentajes para la segunda base (ej: wdi_2023)
+filtrado <- wdi_final %>%
+  count(region) %>%
+  mutate(porcentaje = (n / sum(n)) * 100,
+         base = "Base filtrada") # Etiqueta para la segunda base
+
+# 3. Unir ambos dataframes verticalmente
+datos_combinados <- bind_rows(final, filtrado)
+
+# 4. Graficar comparando ambas bases
+ggplot(datos_combinados, aes(x = reorder(region, -porcentaje), y = porcentaje, fill = base)) +
+  # position = "dodge" es la clave: pone las barras lado a lado en lugar de apilarlas
+  geom_bar(stat = "identity", position = "dodge", color = "black") + 
+  
+  # Estética general replicando tu imagen
+  labs(title = "Distribución global por región",
+       subtitle = "Porcentaje de países en cada categoría sobre el total",
+       x = "Región",
+       y = "Porcentaje del total de países",
+       fill = "Año de la base") + # Título de la leyenda
+  
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+
+
+
+
+
+
+ingreso1 <- wdi2 %>%
+  count(ingreso) %>%
+  mutate(porcentaje = (n / sum(n)) * 100,
+         base = "Antes de filtrar") # Creamos una etiqueta para identificar estos datos
+
+# 2. Calcular porcentajes para la segunda base (ej: wdi_2023)
+ingreso2 <- wdi_final %>%
+  count(ingreso) %>%
+  mutate(porcentaje = (n / sum(n)) * 100,
+         base = "Base filtrada") # Etiqueta para la segunda base
+
+# 3. Unir ambos dataframes verticalmente
+datos_combinados <- bind_rows(ingreso1, ingreso2)
+
+# 4. Graficar comparando ambas bases
+ggplot(datos_combinados, aes(x = reorder(ingreso, -porcentaje), y = porcentaje, fill = base)) +
+  # position = "dodge" es la clave: pone las barras lado a lado en lugar de apilarlas
+  geom_bar(stat = "identity", position = "dodge", color = "black") + 
+  
+  # Estética general replicando tu imagen
+  labs(title = "Distribución de los ingresos",
+       subtitle = "Porcentaje de países en cada categoría sobre el total",
+       x = "Región",
+       y = "Porcentaje del total de países",
+       fill = "Año de la base") + # Título de la leyenda
+  
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+
+
+
+
 
 
 
@@ -667,43 +756,84 @@ ggsave(file.path("output/graficos", "distribucion_region_filtro.png"),
 
 
 library(dplyr)
+library(tidyr)
 library(ggplot2)
 
-dist_regiones <- wdi2 |>
-  mutate(region = as.character(unlist(region))) |> # Rompe la lista y asegura que sea texto
-  count(region) |>
-  mutate(pct = n / sum(n),
-         base = "Original") 
+# Asumiendo que tu base se llama 'wdi' y tienes columnas como 'pais', 'region', 'pbi', 'pct_industria', etc.
 
-# Y aplicá la misma corrección exacta para tu base filtrada:
-dist_regiones_filt <- wdi_final |>
-  mutate(region = as.character(unlist(region))) |> 
-  count(region) |>
-  mutate(pct = n / sum(n),
-         base = "Filtrada")
+# 1. Transformar los datos de formato "ancho" a "largo"
+datos_largos <- wdi2 %>%
+  # Selecciona las variables que quieres graficar (además de país o región si las necesitas para agrupar)
+  select(pais, region, crecimiento_industria,
+         industria_pbi,
+         tipo_cambio_real_efectivo,
+         indice_nivel_precios,
+         empleo_industrial,
+         exportacion_manufactura,
+         gasto_gobierno_pbi,
+         gastos_totales_gob_pbi,
+         valor_agregado_trabajador,
+         ahorro_bruto_pbi,
+         credito_privado_pbi,
+         recursos_naturales,
+         pbi_per_capita,
+         pbi_millones) %>%
+  # pivot_longer apila todas las variables en dos columnas: una con el nombre y otra con el valor
+  pivot_longer(
+    cols = c(crecimiento_industria,
+             industria_pbi,
+             tipo_cambio_real_efectivo,
+             indice_nivel_precios,
+             empleo_industrial,
+             exportacion_manufactura,
+             gasto_gobierno_pbi,
+             gastos_totales_gob_pbi,
+             valor_agregado_trabajador,
+             ahorro_bruto_pbi,
+             credito_privado_pbi,
+             recursos_naturales,
+             pbi_per_capita,
+             pbi_millones), # Las columnas numéricas a apilar
+    names_to = "variable",                       # Nombre de la nueva columna identificadora
+    values_to = "valor"                          # Nombre de la nueva columna numérica
+  ) %>%
+  # Filtrar NAs si es necesario para que no molesten en el gráfico
+  filter(!is.na(valor))
 
-# 3. Unir ambas bases verticalmente
-df_combinada <- bind_rows(dist_regiones, dist_regiones_filt)
+# 2. Crear el gráfico con paneles (facet_wrap)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
 
-# 4. Crear el gráfico combinado (usando position = "dodge")
-grafico_combinado <- ggplot(df_combinada, aes(x = reorder(region, pct), y = pct, fill = base)) +
-  # position = "dodge" coloca las barras lado a lado en lugar de apilarlas
-  geom_col(position = "dodge", color = "black", alpha = 0.8) +
-  scale_y_continuous(limits = c(0, 0.35),
-                     labels = scales::percent_format(accuracy = 1)) +
-  # Podés personalizar los colores de cada base
-  scale_fill_manual(values = c("Original" = "steelblue", "Filtrada" = "darkorange")) +
+# Gráfico global sin agrupar por región
+grafico_macro_global <- ggplot(datos_largos, aes(x = valor, y = "")) +
+  # Boxplot general
+  geom_boxplot(fill = "steelblue", alpha = 0.5, color = "black", outlier.shape = NA) +
+  # Puntos de todos los países
+  geom_jitter(color = "black", alpha = 0.2, height = 0.2, size = 1) +
+  
+  # Dividir por variable en 3 columnas
+  facet_wrap(~ variable, scales = "free_x", ncol = 3) + 
+  
   labs(
-    title = "Distribución global por región: Original vs. Filtrada",
-    subtitle = "Porcentaje de países en cada categoría sobre el total",
-    x = "Región",
-    y = "Porcentaje del total de países",
-    fill = "Muestra" # Título de la leyenda
+    title = "Distribución global de indicadores macroeconómicos",
+    subtitle = "Todos los países agregados",
+    x = "Valor (escala propia de cada variable)",
+    y = ""
   ) +
-  theme_minimal(base_size = 18) +
+  theme_minimal(base_size = 12) +
   theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.position = "top" # Mueve la leyenda arriba para no quitar espacio horizontal
+    strip.text = element_text(face = "bold", size = 10),
+    # Ocultar las marcas y el texto del eje Y ya que no hay categorías
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank()
   )
 
-print(grafico_combinado)
+# Guardar con dimensiones adecuadas
+ggsave("output/graficos/distribucion_global_macro.png", 
+       plot = grafico_macro_global, 
+       width = 12,   # Al no tener múltiples regiones, requiere menos altura
+       height = 8, 
+       dpi = 300)
+
+print(grafico_macro_global)
