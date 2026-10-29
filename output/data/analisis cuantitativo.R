@@ -373,6 +373,25 @@ mod_exp_2008 <- modelos_por_anio$anio_2008[["Exp: Control"]]
 mod_ind_2022 <- modelos_por_anio$anio_2022[["Ind: Control"]]
 mod_ind_2001 <- modelos_por_anio$anio_2001[["Ind: Control"]]
 mod_ind_2008 <- modelos_por_anio$anio_2008[["Ind: Control"]]
+
+mod_exp_2022_so <- modelos_por_anio_sin_outliers$anio_2022[["Exp: Control"]]
+mod_ind_2022_so <- modelos_por_anio_sin_outliers$anio_2022[["Ind: Control"]]
+mod_ind_2008_so <- modelos_por_anio_sin_outliers$anio_2008[["Ind: Control"]]
+mod_ind_2001_so <- modelos_por_anio_sin_outliers$anio_2001[["Ind: Control"]]
+resettest(mods_exp_2022)#sin outliers
+
+resettest(mod_exp_2022)
+resettest(mod_exp_2008)
+resettest(mod_exp_2001)
+
+resettest(mod_ind_2022)
+resettest(mod_ind_2008)
+resettest(mod_ind_2001)
+# 1. Definir lista de modelos
+
+
+# Guardar a PNG
+ggsave("tabla_reset_test.png", tabla_grafica, width = 7, height = 3, dpi = 300)
 # 2. Dividimos la ventana en 4 (2 filas x 2 columnas)
 par(mfrow = c(2, 2))
 
@@ -398,7 +417,7 @@ head(sort(cooks.distance(modelos_por_anio$anio_2001[["Ind: Control"]]), decreasi
 head(sort(cooks.distance(modelos_por_anio$anio_2008[["Exp: Control"]]), decreasing = TRUE), 5)
 head(sort(cooks.distance(modelos_por_anio$anio_2008[["Ind: Control"]]), decreasing = TRUE), 5)
 
-# Asumiendo que tu dataframe filtrado por año se llama df_sub
+
 # Cambiá "pais" por el nombre exacto de la columna que identifica a los países en tu base
 paises_grafico_2022 <- wdi_2022[c(77, 28, 141,151,80,150), c("pais", "exportacion_manufactura","industria_pbi")]
 paises_grafico_2008 <- wdi_2008[c(77, 57, 19, 145), c("pais", "exportacion_manufactura")]
@@ -431,7 +450,8 @@ plot(
   id.n = 2,                     # Etiqueta los 5 casos más extremos
   col = colores_puntos,         # Aplica color rojo a los outliers
   pch = 16,
-  main = "Exportaciones Manufactureras 2022"
+  main = "Exportaciones Manufactureras 2022",
+  sub = ""
 )
 # ==============================================================================
 # 1. INDUSTRIA 2001
@@ -452,7 +472,8 @@ plot(
   id.n = 3,
   col = colores_2001,
   pch = 16,
-  main = "Residuals vs Leverage - Industria 2001"
+  main = "Industria 2001",
+  sub = ""
 )
 # ==============================================================================
 # 2. INDUSTRIA 2008
@@ -472,7 +493,8 @@ plot(
   id.n = 3,
   col = colores_2008,
   pch = 16,
-  main = "Residuals vs Leverage - Industria 2008"
+  main = "Industria 2008",
+  sub = ""
 )
 
 # ==============================================================================
@@ -493,7 +515,8 @@ plot(
   id.n = 2,
   col = colores_2022,
   pch = 16,
-  main = "Residuals vs Leverage - Industria 2022"
+  main = "Industria 2022",
+  sub = ""
 )
 
 library(modelsummary)
@@ -512,7 +535,7 @@ modelplot(
     subtitle = "Intervalos de confianza al 95% con errores robustos (HC1)"
   ) +
   theme_minimal()
-#avPlots(r4_2022, terms = ~ indice_nivel_precios)
+#avPlots(modelos_por_anio$anio_2022[["Exp: Control"]], terms = ~ indice_nivel_precios)
 
 #Despues agregar los controles
 
