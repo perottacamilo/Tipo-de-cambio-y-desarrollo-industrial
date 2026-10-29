@@ -552,3 +552,18 @@ res_hcpc$desc.ind$dist
 #    sensibilidad (otro k u otro ncp).
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
