@@ -34,7 +34,7 @@ tablas_anios <- setNames(
     modelsummary(
       list(
         "Industria (% PBI)" = mod1,
-        "Exportaciones Manufacturas" = mod2
+        "exportacion manufactura" = mod2
       ),
       title = paste0("Tabla: Regresiones simples para el nivel de precios (", a, ")"),
       stars = TRUE,
@@ -862,7 +862,7 @@ wdi_limpio <- read.csv("output/data/wdi_limpio.csv")
 wdi_limpio_2 <- wdi_limpio |> 
   filter(region %in% c("East Asia & Pacific", "Latin America & Caribbean"), poblacion_mill > 1, anio >= 1990, 
          !pais %in% c("Cuba", "Korea, Dem. People's Rep.", "Venezuela, RB")) |> 
-  select(pais, anio, industria_pbi, exportacion_manufactura, region, pbi_per_capita) |> 
+  select(pais, anio, industria_pbi, exportacion_manufactura, region, pbi_per_capita, indice_nivel_precios) |> 
   arrange(pais, anio)
 
 
@@ -915,10 +915,10 @@ library(ggtext)
 
 # 2) Definimos tus colores exactos asignados a los nombres en español (sin Asia sin China)
 col_personalizados <- c(
-  "Asia Oriental y Pacífico"     = "#FFAC47", 
+  "Asia Oriental y Pacífico"     = "#E0195B", 
   "América Latina y el Caribe" = "#3919E0", 
   "Argentina"                             = "#19E09E", 
-  "China"                                 = "#E0195B"
+  "China"                                 = "#FFAC47"
 )
 
 # 3) Promedio de Asia Oriental y Pacífico (Total)
@@ -1033,4 +1033,447 @@ ggsave(file.path("output/graficos", "grafico_explicativo.png"),
        plot = g_ind_pc_esp, width = 12, height = 7, units = "in", dpi = 300)
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+#Grafico Exploratorio.
+#Scaterplot.
+
+wdi_final <- read.csv("output/data/wdi_final.csv")
+
+wdi_final_2 <- wdi_final |> 
+  mutate(industria_pc = (industria_pbi*pbi_per_capita)/100)
+
+library(tidyverse)
+library(scales)
+library(ggtext)
+library(ggrepel)
+library(showtext)
+library(patchwork) # Indispensable para wrap_plots y plot_annotation
+#install.packages("patchwork")
+
+
+
+
+
+
+
+
+
+fuentes_ok <- tryCatch({
+  font_add_google("Playfair Display", "playfair", regular.wt = 600, bold.wt = 700)
+  font_add_google("Lato", "lato", regular.wt = 400, bold.wt = 700)
+  TRUE
+}, error = function(e) FALSE)
+
+fuente_titulo <- if (fuentes_ok) "playfair" else "serif"
+fuente_texto  <- if (fuentes_ok) "lato" else "sans"
+showtext_auto()
+showtext_opts(dpi = 96)
+
+col <- c(rojo = "#B13507", azul = "#286BBB", gris = "#BDBDBD")
+gris_titulo <- "#363636"
+gris_texto  <- "#5B5B5B"
+gris_suave  <- "#858585"
+
+theme_owid <- function(base_size = 13) {
+  theme_minimal(base_size = base_size, base_family = fuente_texto) +
+    theme(
+      plot.title.position   = "plot",
+      plot.caption.position = "plot",
+      plot.title    = element_markdown(family = fuente_titulo, size = rel(2.9), color = gris_titulo,
+                                       lineheight = 1.05, margin = margin(b = 10)),
+      plot.subtitle = element_text(size = rel(1.75), color = gris_texto,
+                                   lineheight = 1.15, margin = margin(b = 20)),
+      plot.caption  = element_text(size = rel(0.95), color = gris_suave, hjust = 0,
+                                   margin = margin(t = 18)),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor   = element_blank(),
+      panel.grid.major.y = element_line(color = "#DDDDDD", linetype = "dashed", linewidth = 0.4),
+      axis.line.x  = element_line(color = "#999999", linewidth = 0.4),
+      axis.ticks.x = element_line(color = "#999999", linewidth = 0.4),
+      axis.text    = element_text(color = "#666666", size = rel(1.05)),
+      axis.title   = element_blank(),
+      legend.position = "none",
+      plot.background = element_rect(fill = "white", color = NA),
+      plot.margin = margin(20, 22, 15, 20)
+    )
+}
+
+pintar <- function(texto, color) sprintf("<span style='color:%s'><b>%s</b></span>", color, texto)
+
+carpeta_graficos <- "graficos_clase21"
+dir.create(carpeta_graficos, showWarnings = FALSE)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+library(tidyverse)
+library(scales)
+library(ggtext)
+library(ggrepel)
+library(showtext)
+library(patchwork)
+
+library(tidyverse)
+library(scales)
+library(ggtext)
+library(ggrepel)
+library(showtext)
+library(patchwork)
+col_asia  <- "#E0195B"
+col_latam <- "#3919E0"
+
+# 1) Función de panel: recupera el layout exacto pero colorea por región y sube el techo
+panel_latam <- function(datos, subtitulo = datos$sub_final[1]) {
+  
+  # CAMBIO 2: Agregamos expand para darle aire al límite superior del eje Y
+  escala_y <- if (datos$log_y[1]) {
+    scale_y_log10(labels = label_number(big.mark = ".", decimal.mark = ","),
+                  breaks = breaks_log(n = 5),
+                  expand = expansion(mult = c(0.05, 0.35))) 
+  } else {
+    scale_y_continuous(labels = label_number(big.mark = ".", decimal.mark = ","),
+                       breaks = breaks_extended(n = 4),
+                       expand = expansion(mult = c(0.05, 0.35)))
+  }
+  
+  resto <- filter(datos, grupo_region == "Resto del Mundo")
+  foco  <- filter(datos, grupo_region != "Resto del Mundo")
+  
+  destacar <- c("Argentina", "China")
+  
+  ggplot(datos, aes(pib, valor)) +
+    geom_point(data = resto, shape = 21, size = 1.6, stroke = 0.3,
+               color = "#9E9E9E", fill = alpha(col[["gris"]], 0.55)) +
+    geom_smooth(method = "loess", formula = y ~ x, se = FALSE,
+                color = gris_titulo, linewidth = 0.6) +
+    
+    # CAMBIO 1: fill = grupo_region (sin importar si están arriba o abajo de la media)
+    geom_point(data = foco, aes(fill = grupo_region), shape = 21, size = 2.3,
+               stroke = 0.5, color = "white") +
+    
+    geom_label_repel(data = filter(datos, codigo %in% destacar), aes(label = codigo),
+                     family = fuente_texto, fontface = "bold", size = 3.4,
+                     fill = alpha("white", 0.85), label.size = 0, label.padding = unit(1.5, "pt"),
+                     color = gris_titulo, min.segment.length = 0, segment.color = "#777777",
+                     nudge_y = if (datos$log_y[1]) 0.3 else 0.08 * diff(range(datos$valor, na.rm = TRUE)),
+                     seed = 1) +
+    
+    scale_fill_manual(values = c("América Latina" = col_latam, 
+                                 "Asia Oriental" = col_asia)) +
+    escala_y +
+    scale_x_log10(labels = label_number(big.mark = ".", decimal.mark = ",")) +
+    labs(title = datos$titulo[1], subtitle = subtitulo) +
+    theme_owid(base_size = 9.5) %+replace%
+    theme(
+      plot.title    = element_text(family = fuente_texto, face = "bold", size = rel(2.9),
+                                   color = gris_titulo, hjust = 0, margin = margin(b = 3)),
+      plot.subtitle = element_text(size = rel(1.75), color = gris_texto, hjust = 0,
+                                   lineheight = 0.80, margin = margin(b = 10)),
+      panel.grid.major.x = element_line(color = "#E5E5E5", linetype = "dashed", linewidth = 0.3),
+      axis.line.x = element_blank(), axis.ticks.x = element_blank(),
+      plot.background = element_rect(fill = "#FAFAFA", color = "#E3E3E3"),
+      plot.margin = margin(8, 10, 8, 8)
+    )
+}
+
+# 2) Función juntar original
+# 2) Función juntar corregida
+juntar <- function(paneles, titulo, subtitulo) {
+  wrap_plots(paneles, ncol = 3) +
+    plot_annotation(
+      title = titulo, subtitle = subtitulo, caption = fuente,
+      theme = theme_owid() +
+        theme(
+          plot.title    = ggtext::element_markdown(family = fuente_texto, face = "bold",
+                                                   size = 40, hjust = 0,
+                                                   lineheight = 0.4, # <- Ajuste del interlineado para el <br>
+                                                   margin = margin(b = 6)),
+          plot.subtitle = ggtext::element_markdown(size = 30, hjust = 0,
+                                                   lineheight = 0.8,
+                                                   margin = margin(b = 12)),
+          plot.margin   = margin(15, 15, 10, 15)))}
+# 3) Armado de los datos base
+dispersion <- wdi_final_2 |>
+  filter(anio %in% c(2001, 2008, 2022)) |>
+  filter(!is.na(indice_nivel_precios), region != "Aggregates") |>
+  mutate(
+    grupo_region = case_when(
+      region == "Latin America & Caribbean" ~ "América Latina",
+      region == "East Asia & Pacific" ~ "Asia Oriental",
+      TRUE ~ "Resto del Mundo"
+    )
+  ) |>
+  select(pais, grupo_region, anio, pib = indice_nivel_precios, 
+         Industria = industria_pc, 
+         Exportaciones = exportacion_manufactura) |>
+  pivot_longer(c(Industria, Exportaciones), names_to = "indicador", values_to = "valor") |>
+  filter(!is.na(valor), valor > 0, !is.na(pib)) |>
+  mutate(
+    titulo = paste0(indicador, " (", anio, ")"),
+    subtitulo = if_else(indicador == "Industria", 
+                        "Valor agregado per cápita", 
+                        "Exportaciones (% o absolutas)"),
+    log_y = TRUE,
+    codigo = pais,
+    es_latam = (grupo_region == "América Latina") # Para contar en el resumen
+  )
+
+# 4) Cálculo de Residuos (solo para mantener la matemática del subtítulo)
+dispersion <- dispersion |>
+  mutate(y = log10(valor), x = log10(pib)) |>
+  group_by(titulo) |>
+  mutate(residuo = residuals(loess(y ~ x))) |>
+  ungroup()
+
+# 5) Resumen para subtítulos (mantiene la lógica de cuántos están arriba)
+resumen <- dispersion |>
+  filter(es_latam) |>
+  group_by(titulo) |>
+  summarise(paises = n(),
+            encima = sum(residuo > 0),
+            .groups = "drop")
+
+orden_paneles <- c("Industria (2001)", "Industria (2008)", "Industria (2022)",
+                   "Exportaciones (2001)", "Exportaciones (2008)", "Exportaciones (2022)")
+
+# 6) Paneles
+paneles_finales <- dispersion |>
+  left_join(resumen, by = "titulo") |>
+  # Recuperamos el subtitulo exacto que cuenta a los países
+  mutate(sub_final = paste0(subtitulo, "\nMejor que lo esperado: ", encima, " de ", paises,
+                            " países de la región")) |>
+  split(~ factor(titulo, levels = orden_paneles)) |>
+  map(\(d) panel_latam(d))
+
+# 7) Título y renderizado
+titulo_final <- paste0(
+  "Mientras ", pintar("América Latina", col_latam),
+  " se concentra en niveles intermedios,<br>",
+  pintar("Asia Oriental", col_asia),
+  " combina extremos y una mayor fortaleza exportadora"
+)
+grafico_final <- juntar(
+  paneles_finales,
+  titulo = titulo_final,
+  subtitulo = paste0("Evolución frente al Índice de Nivel de Precios (eje X logarítmico).\n",
+                     "América Latina en azul, Asia Oriental en rojo. Resto del mundo en gris.")
+)
+
+grafico_final
+
+ggsave(file.path("output/graficos", "scater.png"), 
+       plot = grafico_final, width = 13, height = 7, units = "in", dpi = 190)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#Grafico final fidedigno definitivo
+
+
+
+
+
+col_asia  <- "#E0195B"
+col_latam <- "#3919E0"
+
+# 1) Función de panel con margen ajustado para el nuevo subtítulo triple
+panel_latam <- function(datos, subtitulo = datos$sub_final[1]) {
+  
+  escala_y <- if (datos$log_y[1]) {
+    scale_y_log10(labels = label_number(big.mark = ".", decimal.mark = ","),
+                  breaks = breaks_log(n = 5),
+                  expand = expansion(mult = c(0.05, 0.35))) 
+  } else {
+    scale_y_continuous(labels = label_number(big.mark = ".", decimal.mark = ","),
+                       breaks = breaks_extended(n = 4),
+                       expand = expansion(mult = c(0.05, 0.35)))
+  }
+  
+  resto <- filter(datos, grupo_region == "Resto del Mundo")
+  foco  <- filter(datos, grupo_region != "Resto del Mundo")
+  
+  destacar <- c("Argentina", "China")
+  
+  ggplot(datos, aes(pib, valor)) +
+    geom_point(data = resto, shape = 21, size = 1.6, stroke = 0.3,
+               color = "#9E9E9E", fill = alpha(col[["gris"]], 0.55)) +
+    geom_smooth(method = "loess", formula = y ~ x, se = FALSE,
+                color = gris_titulo, linewidth = 0.6) +
+    
+    geom_point(data = foco, aes(fill = grupo_region), shape = 21, size = 2.3,
+               stroke = 0.5, color = "white") +
+    
+    geom_label_repel(data = filter(datos, codigo %in% destacar), aes(label = codigo),
+                     family = fuente_texto, fontface = "bold", size = 3.4,
+                     fill = alpha("white", 0.85), label.size = 0, label.padding = unit(1.5, "pt"),
+                     color = gris_titulo, min.segment.length = 0, segment.color = "#777777",
+                     nudge_y = if (datos$log_y[1]) 0.3 else 0.08 * diff(range(datos$valor, na.rm = TRUE)),
+                     seed = 1) +
+    
+    scale_fill_manual(values = c("América Latina" = col_latam, 
+                                 "Asia Oriental" = col_asia)) +
+    escala_y +
+    scale_x_log10(labels = label_number(big.mark = ".", decimal.mark = ",")) +
+    labs(title = datos$titulo[1], subtitle = subtitulo) +
+    theme_owid(base_size = 9.5) %+replace%
+    theme(
+      plot.title    = element_text(family = fuente_texto, face = "bold", size = rel(2.9),
+                                   color = gris_titulo, hjust = 0, margin = margin(b = 3)),
+      # Aumentamos el lineheight y el margen inferior para acomodar 3 renglones
+      plot.subtitle = element_text(size = rel(1.5), color = gris_texto, hjust = 0,
+                                   lineheight = 0.6, margin = margin(b = 14)),
+      panel.grid.major.x = element_line(color = "#E5E5E5", linetype = "dashed", linewidth = 0.3),
+      axis.line.x = element_blank(), axis.ticks.x = element_blank(),
+      plot.background = element_rect(fill = "#FAFAFA", color = "#E3E3E3"),
+      plot.margin = margin(8, 10, 8, 8)
+    )
+}
+
+# 2) Función juntar forzando interlineado
+juntar <- function(paneles, titulo, subtitulo) {
+  wrap_plots(paneles, ncol = 3) +
+    plot_annotation(
+      title = titulo, subtitle = subtitulo, caption = fuente,
+      theme = theme_owid() +
+        theme(
+          plot.title    = ggtext::element_markdown(family = fuente_texto, face = "bold",
+                                                   size = 40, hjust = 0,
+                                                   lineheight = 0.4,
+                                                   margin = margin(b = 6)),
+          plot.subtitle = ggtext::element_markdown(size = 30, hjust = 0,
+                                                   lineheight = 0.1,
+                                                   margin = margin(b = 12)),
+          plot.margin   = margin(15, 15, 10, 15)))}
+
+# 3) Armado de los datos base (con corrección de etiqueta)
+dispersion <- wdi_final_2 |>
+  filter(anio %in% c(2001, 2008, 2022)) |>
+  filter(!is.na(indice_nivel_precios), region != "Aggregates") |>
+  mutate(
+    grupo_region = case_when(
+      region == "Latin America & Caribbean" ~ "América Latina",
+      region == "East Asia & Pacific" ~ "Asia Oriental",
+      TRUE ~ "Resto del Mundo"
+    )
+  ) |>
+  select(pais, grupo_region, anio, pib = indice_nivel_precios, 
+         Industria = industria_pc, 
+         Exportaciones = exportacion_manufactura) |>
+  pivot_longer(c(Industria, Exportaciones), names_to = "indicador", values_to = "valor") |>
+  filter(!is.na(valor), valor > 0, !is.na(pib)) |>
+  mutate(
+    titulo = paste0(indicador, " (", anio, ")"),
+    # Corrección de la etiqueta de exportaciones
+    subtitulo = if_else(indicador == "Industria", 
+                        "Valor agregado per cápita", 
+                        "Exportaciones (% PBI en logaritmos)"),
+    log_y = TRUE,
+    codigo = pais
+  )
+
+# 4) Cálculo de Residuos
+dispersion <- dispersion |>
+  mutate(y = log10(valor), x = log10(pib)) |>
+  group_by(titulo) |>
+  mutate(residuo = residuals(loess(y ~ x))) |>
+  ungroup()
+
+# 5) Resumen agrupado por Asia y Latam
+resumen <- dispersion |>
+  filter(grupo_region %in% c("América Latina", "Asia Oriental")) |>
+  group_by(titulo, grupo_region) |>
+  summarise(paises = n(),
+            encima = sum(residuo > 0, na.rm = TRUE),
+            .groups = "drop") |>
+  # Pivoteamos para tener las columnas planas por región
+  pivot_wider(names_from = grupo_region, values_from = c(paises, encima)) |>
+  rename(
+    paises_asia = `paises_Asia Oriental`,
+    paises_latam = `paises_América Latina`,
+    encima_asia = `encima_Asia Oriental`,
+    encima_latam = `encima_América Latina`
+  )
+
+orden_paneles <- c("Industria (2001)", "Industria (2008)", "Industria (2022)",
+                   "Exportaciones (2001)", "Exportaciones (2008)", "Exportaciones (2022)")
+
+# 6) Paneles
+paneles_finales <- dispersion |>
+  left_join(resumen, by = "titulo") |>
+  # Armamos el texto en 3 renglones
+  mutate(sub_final = paste0(subtitulo, 
+                            "\nEncima del promedio en Asia: ", encima_asia, " de ", paises_asia,
+                            "\nEncima del promedio en Latam: ", encima_latam, " de ", paises_latam)) |>
+  split(~ factor(titulo, levels = orden_paneles)) |>
+  map(\(d) panel_latam(d))
+
+# 7) Título y renderizado
+titulo_final <- paste0(
+  "Mientras ", pintar("América Latina", col_latam),
+  " se concentra en niveles intermedios,<br>",
+  pintar("Asia Oriental", col_asia),
+  " combina extremos y una mayor fortaleza exportadora"
+)
+
+grafico_final <- juntar(
+  paneles_finales,
+  titulo = titulo_final,
+  subtitulo = paste0("Evolución frente al Índice de Nivel de Precios (eje X logarítmico).\n",
+                     "América Latina en azul, Asia Oriental en rojo. Resto del mundo en gris.")
+)
+
+grafico_final
+
+
+ggsave(file.path("output/graficos", "scater.png"), 
+       plot = grafico_final, width = 13, height = 7, units = "in", dpi = 190)
 
