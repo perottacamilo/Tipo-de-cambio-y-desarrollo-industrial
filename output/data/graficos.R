@@ -915,7 +915,7 @@ library(ggtext)
 
 # 2) Definimos tus colores exactos asignados a los nombres en español (sin Asia sin China)
 col_personalizados <- c(
-  "Asia Oriental y Pacífico"     = "#FFBD1F", 
+  "Asia Oriental y Pacífico"     = "#FFAC47", 
   "América Latina y el Caribe" = "#3919E0", 
   "Argentina"                             = "#19E09E", 
   "China"                                 = "#E0195B"
@@ -965,7 +965,7 @@ g_ind_pc_esp <- ggplot(df_industrializacion, aes(x = year, y = industria_pc, col
   geom_vline(xintercept = 2001, linetype = "dotted", color = "grey60") +
   # 1) Texto con HTML usando geom_richtext (para que pinte de rojo la palabra China)
   geom_richtext(
-    data = data.frame(x = 2002.3, y = max(df_industrializacion$industria_pc, na.rm = TRUE) * 0.08),
+    data = data.frame(x = 2001.8, y = max(df_industrializacion$industria_pc, na.rm = TRUE) * 0.08),
     aes(x = x, y = y, label = "2001: Ingreso de <span style='color:#d62728'>China</span><br>a la OMC"),
     hjust = 0, size = 3.5, color = "grey35",
     fill = NA, label.color = NA, # Para que sea transparente y sin borde tipo etiqueta
@@ -1005,7 +1005,7 @@ g_ind_pc_esp <- ggplot(df_industrializacion, aes(x = year, y = industria_pc, col
                      limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
   coord_cartesian(clip = "off") +
   labs(
-    title    = "La evolución <span style='color:#FFBD1F'>Asiática</span> liderada por <span style='color:#d62728'>China</span> vs el estancamiento <span style='color:#2b5c8f'>Latinoamericano</span>",
+    title    = "La evolución <span style='color:#FFAC47'>Asiática</span> liderada por <span style='color:#d62728'>China</span> vs el estancamiento <span style='color:#2b5c8f'>Latinoamericano</span>",
     subtitle = "Evolución de la Producción Industrial Por Habitante (USD): 1990-2024",
     caption  = "Fuente: Elaboración propia en base a WDI (Banco Mundial).",
     x = NULL, y = NULL
