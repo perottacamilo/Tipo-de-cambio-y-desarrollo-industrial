@@ -837,3 +837,200 @@ ggsave("output/graficos/distribucion_global_macro.png",
        dpi = 300)
 
 print(grafico_macro_global)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#Entrega 3: GRAFICOS
+rm(list = ls())
+
+getwd()
+
+wdi_limpio <- read.csv("output/data/wdi_limpio.csv")
+
+wdi_limpio_2 <- wdi_limpio |> 
+  filter(region %in% c("East Asia & Pacific", "Latin America & Caribbean"), poblacion_mill > 1, anio >= 1990, 
+         !pais %in% c("Cuba", "Korea, Dem. People's Rep.", "Venezuela, RB")) |> 
+  select(pais, anio, industria_pbi, exportacion_manufactura, region, pbi_per_capita) |> 
+  arrange(pais, anio)
+
+
+wdi_limpio_2 <- wdi_limpio_2 |>
+  filter(region %in% c("East Asia & Pacific", "Latin America & Caribbean"),
+    !pais %in% c("Cuba", "Korea, Dem. People's Rep.", "Venezuela, RB")) |> 
+  mutate(industria_pc = (industria_pbi*pbi_per_capita)/100) 
+ 
+
+  
+  
+  
+  
+  
+  
+  
+  
+  imputar_vecinos <- function(x, anio) {
+    ant <- if_else(lag(anio) == anio - 1, lag(x), NA_real_)
+    sig <- if_else(lead(anio) == anio + 1, lead(x), NA_real_)
+    case_when(
+      !is.na(ant) & !is.na(sig) ~ (ant + sig) / 2,
+      TRUE                      ~ NA_real_
+    )}
+
+wdi_filtrado_2 <- wdi_limpio_2 |> 
+  group_by(pais) |> 
+  arrange(pais, anio) |> 
+  mutate(
+    across(
+      .cols = c(industria_pbi, exportacion_manufactura, industria_pc),
+      .fns = ~ if_else(
+        condition = is.na(.x),  # Imputa para cualquier año si falta el dato y hay vecinos
+        true = imputar_vecinos(.x, anio),
+        false = .x
+      )
+    )
+  ) |> 
+  ungroup() 
+
+
+
+
+#Grafico fidedignus
+
+
+library(tidyverse)
+library(scales)
+library(ggtext)
+
+# 2) Definimos tus colores exactos asignados a los nombres en español (sin Asia sin China)
+col_personalizados <- c(
+  "Asia Oriental y Pacífico"     = "#FFBD1F", 
+  "América Latina y el Caribe" = "#3919E0", 
+  "Argentina"                             = "#19E09E", 
+  "China"                                 = "#E0195B"
+)
+
+# 3) Promedio de Asia Oriental y Pacífico (Total)
+df_eap <- wdi_limpio_2 %>%
+  filter(region == "East Asia & Pacific") %>%
+  group_by(anio) %>%
+  summarise(industria_pc = mean(industria_pc, na.rm = TRUE), .groups = "drop") %>%
+  mutate(pais = "Asia Oriental y Pacífico") %>%
+  select(year = anio, pais, industria_pc)
+
+# 4) Promedio de América Latina y el Caribe
+df_lac <- wdi_limpio_2 %>%
+  filter(region == "Latin America & Caribbean") %>%
+  group_by(anio) %>%
+  summarise(industria_pc = mean(industria_pc, na.rm = TRUE), .groups = "drop") %>%
+  mutate(pais = "América Latina y el Caribe") %>%
+  select(year = anio, pais, industria_pc)
+
+# 5) Datos individuales para Argentina y China
+df_paises <- wdi_limpio_2 %>%
+  filter(pais %in% c("Argentina", "China")) %>%
+  mutate(pais = if_else(pais == "China", "China", "Argentina")) %>%
+  select(year = anio, pais, industria_pc)
+
+# 6) Unimos todo en un solo data frame largo y filtramos el período
+df_industrializacion <- bind_rows(df_eap, df_lac, df_paises) %>%
+  filter(year >= 1990, year <= 2024)
+
+# 7) Último año de cada serie para las etiquetas directas al final de las líneas
+ult_ind_pc <- df_industrializacion %>% 
+  group_by(pais) %>% 
+  filter(year == max(year)) %>%
+  ungroup()
+
+# 8) Gráfico final
+g_ind_pc_esp <- ggplot(df_industrializacion, aes(x = year, y = industria_pc, color = pais, group = pais)) +
+  geom_line(linewidth = 1.1, alpha = 0.85) +
+  geom_point(data = ult_ind_pc, size = 3) +
+  geom_text(data = ult_ind_pc,
+            aes(x = 2024.2, label = pais),   # misma x para todas
+            hjust = 0,                     # alineadas a la izquierda
+            fontface = "bold", size = 3.5, show.legend = FALSE) +
+  # Línea punteada para el ingreso de China a la OMC en 2001
+  geom_vline(xintercept = 2001, linetype = "dotted", color = "grey60") +
+  # 1) Texto con HTML usando geom_richtext (para que pinte de rojo la palabra China)
+  geom_richtext(
+    data = data.frame(x = 2002.3, y = max(df_industrializacion$industria_pc, na.rm = TRUE) * 0.08),
+    aes(x = x, y = y, label = "2001: Ingreso de <span style='color:#d62728'>China</span><br>a la OMC"),
+    hjust = 0, size = 3.5, color = "grey35",
+    fill = NA, label.color = NA, # Para que sea transparente y sin borde tipo etiqueta
+    inherit.aes = FALSE
+  ) +
+  # 2) La flecha curva apuntando a la línea
+  annotate("curve", x = 2002.1, xend = 2001.05, 
+           y = max(df_industrializacion$industria_pc, na.rm = TRUE) * 0.08, 
+           yend = max(df_industrializacion$industria_pc, na.rm = TRUE) * 0.08,
+           curvature = 0.3, 
+           arrow = arrow(length = unit(0.15, "cm"), type = "closed"), 
+           color = "grey35", linewidth = 0.6) +
+  # 1) Texto de la crisis corrido a la izquierda
+  geom_richtext(
+    data = data.frame(x = 2009.1, y = max(df_industrializacion$industria_pc, na.rm = TRUE) * 0.92),
+    aes(x = x, y = y, label = "Crisis del 2008"),
+    hjust = 0, size = 3.5, color = "grey35",
+    fill = NA, label.color = NA,
+    inherit.aes = FALSE
+  ) +
+  
+  # 2) Línea punteada vertical en el año 2008
+  geom_vline(xintercept = 2008, linetype = "dotted", color = "grey60") +
+  
+  # 3) Flecha curva horizontal apuntando desde el final del texto hacia la línea 2008
+  annotate("curve", x = 2008, xend = 2009, 
+           y = max(df_industrializacion$industria_pc, na.rm = TRUE) * 0.92, 
+           yend = max(df_industrializacion$industria_pc, na.rm = TRUE) * 0.92,
+           curvature = 0.3, 
+           arrow = arrow(length = unit(0.15, "cm"), type = "closed"), 
+           color = "grey35", linewidth = 0.6) +
+  scale_color_manual(values = col_personalizados) +
+  scale_x_continuous(breaks = c(seq(1990, 2020, by = 10), 2024),
+                     limits = c(1990, 2030),
+                     expand = expansion(mult = c(0.01, 0.05))) +
+  scale_y_continuous(labels = label_dollar(prefix = "$", big.mark = ".", decimal.mark = ","),
+                     limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
+  coord_cartesian(clip = "off") +
+  labs(
+    title    = "La evolución <span style='color:#FFBD1F'>Asiática</span> liderada por <span style='color:#d62728'>China</span> vs el estancamiento <span style='color:#2b5c8f'>Latinoamericano</span>",
+    subtitle = "Evolución de la Producción Industrial Por Habitante (USD): 1990-2024",
+    caption  = "Fuente: Elaboración propia en base a WDI (Banco Mundial).",
+    x = NULL, y = NULL
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    legend.position        = "none",
+    plot.title.position    = "plot",
+    plot.title             = element_markdown(family = "serif", face = "bold",
+                                              size = 16, lineheight = 1.1),
+    plot.subtitle          = element_text(color = "grey35", margin = margin(b = 10)),
+    plot.caption           = element_text(color = "grey45", hjust = 0, size = 9),
+    panel.grid.minor       = element_blank(),
+    panel.grid.major.x     = element_blank(),
+    panel.grid.major.y     = element_line(color = "grey80", linetype = "dashed"),
+    axis.text              = element_text(color = "grey40"),
+    axis.ticks.x           = element_line(color = "grey60"),
+    plot.margin            = margin(12, 40, 10, 12)
+  )
+
+g_ind_pc_esp
+
+
+ggsave(file.path("output/graficos", "grafico_explicativo.png"), 
+       plot = g_ind_pc_esp, width = 12, height = 7, units = "in", dpi = 300)
+
+
+
