@@ -25,7 +25,7 @@ wdi_limpio <- read.csv("output/data/wdi_limpio.csv")
 
 wdi2 <- read.csv("output/data/wdi2.csv")
 
-wdi_final <- read.csv("output/data/wdi_final.csv")
+wdi_filtrado <- read.csv("output/data/wdi_filtrado.csv")
 
 wdi_analisis <- wdi2 |> 
   filter(!is.na(industria_pbi))
@@ -129,7 +129,7 @@ na_por_ingreso <- wdi2 |>
 
 # Pasar a formato largo: una fila por ingreso-año-variable
 #Creo la variable ingreso2, que contiene menos palabras para que el grafico quede bien
-#La forma anterior esta al final del script pero creo que queda muy cargado de "ingreso" 
+#La forma anterior esta al filtrado del script pero creo que queda muy cargado de "ingreso" 
 na_largo <- na_por_ingreso |>
   select(ingreso2, anio, pct_na_ind, pct_na_price_level) |>
   pivot_longer(
@@ -484,7 +484,7 @@ ggsave(file.path("output/graficos", "datos_faltanes_vars.png"),
 
 
 
-# 1. Calculamos los totales por variable y año para la etiqueta final (el total al final de la barra)
+# 1. Calculamos los totales por variable y año para la etiqueta filtrado (el total al filtrado de la barra)
 #Es necesario correr desde 34 a 56
 totales_na <- na_largo |>
   group_by(anio, variable) |>
@@ -509,7 +509,7 @@ crear_grafico_anio <- function(anio_filtro) {
     geom_text(aes(label = ifelse(pct_na > 0.015, percent(pct_na, accuracy = 0.1), "")),
               position = position_stack(vjust = 0.5), size = 3.5) +
     
-    # Etiqueta del total al final de la barra
+    # Etiqueta del total al filtrado de la barra
     geom_text(data = totales_anio, 
               aes(x = total_pct, y = variable, label = percent(total_pct, accuracy = 0.1), fill = NULL),
               hjust = -0.2, size = 4) +
@@ -578,7 +578,7 @@ print(grafico6)
 
 #Despues de filtrar NAs
 
-dist_ingreso_filtr <- wdi_final |>
+dist_ingreso_filtr <- wdi_filtrado |>
   count(ingreso) |>
   mutate(pct = n / sum(n))
 
@@ -632,7 +632,7 @@ print(grafico8)
 
 #Despues de filtrar
 
-dist_regiones_filt <- wdi_final |>
+dist_regiones_filt <- wdi_filtrado |>
   count(region) |>
   mutate(pct = n / sum(n))
 
@@ -686,19 +686,19 @@ library(ggplot2)
 # library(scales) # Opcional, para dar formato de porcentaje al eje Y
 
 # 1. Calcular porcentajes para la primera base (ej: wdi_2001)
-final <- wdi2 %>%
+filtrado <- wdi2 %>%
   count(region) %>%
   mutate(porcentaje = (n / sum(n)) * 100,
          base = "Antes de filtrar") # Creamos una etiqueta para identificar estos datos
 
 # 2. Calcular porcentajes para la segunda base (ej: wdi_2023)
-filtrado <- wdi_final %>%
+filtrado <- wdi_filtrado %>%
   count(region) %>%
   mutate(porcentaje = (n / sum(n)) * 100,
          base = "Base filtrada") # Etiqueta para la segunda base
 
 # 3. Unir ambos dataframes verticalmente
-datos_combinados <- bind_rows(final, filtrado)
+datos_combinados <- bind_rows(filtrado, filtrado)
 
 # 4. Graficar comparando ambas bases
 ggplot(datos_combinados, aes(x = reorder(region, -porcentaje), y = porcentaje, fill = base)) +
@@ -728,7 +728,7 @@ ingreso1 <- wdi2 %>%
          base = "Antes de filtrar") # Creamos una etiqueta para identificar estos datos
 
 # 2. Calcular porcentajes para la segunda base (ej: wdi_2023)
-ingreso2 <- wdi_final %>%
+ingreso2 <- wdi_filtrado %>%
   count(ingreso) %>%
   mutate(porcentaje = (n / sum(n)) * 100,
          base = "Base filtrada") # Etiqueta para la segunda base
@@ -886,15 +886,13 @@ wdi_limpio <- read.csv("output/data/wdi_limpio.csv")
 wdi_limpio_2 <- wdi_limpio |> 
   filter(region %in% c("East Asia & Pacific", "Latin America & Caribbean"), poblacion_mill > 1, anio >= 1990, 
          !pais %in% c("Cuba", "Korea, Dem. People's Rep.", "Venezuela, RB")) |> 
-  select(pais, anio, industria_pbi, exportacion_manufactura, region, pbi_per_capita, indice_nivel_precios) |> 
-  arrange(pais, anio)
+  select(pais, anio, industria_pbi, exportacion_manufactura, region, pbi_per_capita, indice_nivel_precios, industria_pc) |>
+  mutate(industria_pc_wdi = (industria_pbi*pbi_per_capita)/100,
+         industria_per_capita = coalesce(industria_pc_wdi, industria_pc)) |> 
+  arrange(pais, anio) 
 
 
-wdi_limpio_2 <- wdi_limpio_2 |>
-  filter(region %in% c("East Asia & Pacific", "Latin America & Caribbean"),
-    !pais %in% c("Cuba", "Korea, Dem. People's Rep.", "Venezuela, RB")) |> 
-  mutate(industria_pc = (industria_pbi*pbi_per_capita)/100) 
- 
+
 fuente <-  "Fuente: Elaboración propia en base a WDI (Banco Mundial)."
   
   
@@ -917,7 +915,7 @@ wdi_filtrado_2 <- wdi_limpio_2 |>
   arrange(pais, anio) |> 
   mutate(
     across(
-      .cols = c(industria_pbi, exportacion_manufactura, industria_pc),
+      .cols = c(industria_pbi, exportacion_manufactura, industria_pc, industria_pc_wdi, industria_per_capita),
       .fns = ~ if_else(
         condition = is.na(.x),  # Imputa para cualquier año si falta el dato y hay vecinos
         true = imputar_vecinos(.x, anio),
@@ -950,36 +948,36 @@ col_personalizados <- c(
 df_eap <- wdi_limpio_2 %>%
   filter(region == "East Asia & Pacific") %>%
   group_by(anio) %>%
-  summarise(industria_pc = mean(industria_pc, na.rm = TRUE), .groups = "drop") %>%
+  summarise(industria_per_capita = mean(industria_per_capita, na.rm = TRUE), .groups = "drop") %>%
   mutate(pais = "Asia Oriental y Pacífico") %>%
-  select(year = anio, pais, industria_pc)
+  select(year = anio, pais, industria_per_capita)
 
 # 4) Promedio de América Latina y el Caribe
 df_lac <- wdi_limpio_2 %>%
   filter(region == "Latin America & Caribbean") %>%
   group_by(anio) %>%
-  summarise(industria_pc = mean(industria_pc, na.rm = TRUE), .groups = "drop") %>%
+  summarise(industria_per_capita = mean(industria_per_capita, na.rm = TRUE), .groups = "drop") %>%
   mutate(pais = "América Latina y el Caribe") %>%
-  select(year = anio, pais, industria_pc)
+  select(year = anio, pais, industria_per_capita)
 
 # 5) Datos individuales para Argentina y China
 df_paises <- wdi_limpio_2 %>%
   filter(pais %in% c("Argentina", "China")) %>%
   mutate(pais = if_else(pais == "China", "China", "Argentina")) %>%
-  select(year = anio, pais, industria_pc)
+  select(year = anio, pais, industria_per_capita)
 
 # 6) Unimos todo en un solo data frame largo y filtramos el período
 df_industrializacion <- bind_rows(df_eap, df_lac, df_paises) %>%
   filter(year >= 1990, year <= 2024)
 
-# 7) Último año de cada serie para las etiquetas directas al final de las líneas
+# 7) Último año de cada serie para las etiquetas directas al filtrado de las líneas
 ult_ind_pc <- df_industrializacion %>% 
   group_by(pais) %>% 
   filter(year == max(year)) %>%
   ungroup()
 
-# 8) Gráfico final
-g_ind_pc_esp <- ggplot(df_industrializacion, aes(x = year, y = industria_pc, color = pais, group = pais)) +
+# 8) Gráfico filtrado
+g_ind_pc_esp <- ggplot(df_industrializacion, aes(x = year, y = industria_per_capita, color = pais, group = pais)) +
   geom_line(linewidth = 1.1, alpha = 0.85) +
   geom_point(data = ult_ind_pc, size = 3) +
   geom_text(data = ult_ind_pc,
@@ -990,7 +988,7 @@ g_ind_pc_esp <- ggplot(df_industrializacion, aes(x = year, y = industria_pc, col
   geom_vline(xintercept = 2001, linetype = "dotted", color = "grey60") +
   # 1) Texto con HTML usando geom_richtext (para que pinte de rojo la palabra China)
   geom_richtext(
-    data = data.frame(x = 2001.8, y = max(df_industrializacion$industria_pc, na.rm = TRUE) * 0.08),
+    data = data.frame(x = 2001.8, y = max(df_industrializacion$industria_per_capita, na.rm = TRUE) * 0.08),
     aes(x = x, y = y, label = "2001: Ingreso de <span style='color:#ffac47'>China</span><br>a la OMC"),
     hjust = 0, size = 3.5, color = "grey35",
     fill = NA, label.color = NA, # Para que sea transparente y sin borde tipo etiqueta
@@ -998,14 +996,14 @@ g_ind_pc_esp <- ggplot(df_industrializacion, aes(x = year, y = industria_pc, col
   ) +
   # 2) La flecha curva apuntando a la línea
   annotate("curve", x = 2002.1, xend = 2001.05, 
-           y = max(df_industrializacion$industria_pc, na.rm = TRUE) * 0.08, 
-           yend = max(df_industrializacion$industria_pc, na.rm = TRUE) * 0.08,
+           y = max(df_industrializacion$industria_per_capita, na.rm = TRUE) * 0.08, 
+           yend = max(df_industrializacion$industria_per_capita, na.rm = TRUE) * 0.08,
            curvature = 0.3, 
            arrow = arrow(length = unit(0.15, "cm"), type = "closed"), 
            color = "grey35", linewidth = 0.6) +
   # 1) Texto de la crisis corrido a la izquierda
   geom_richtext(
-    data = data.frame(x = 2009.1, y = max(df_industrializacion$industria_pc, na.rm = TRUE) * 0.92),
+    data = data.frame(x = 2009.1, y = max(df_industrializacion$industria_per_capita, na.rm = TRUE) * 0.92),
     aes(x = x, y = y, label = "Crisis del 2008"),
     hjust = 0, size = 3.5, color = "grey35",
     fill = NA, label.color = NA,
@@ -1015,17 +1013,17 @@ g_ind_pc_esp <- ggplot(df_industrializacion, aes(x = year, y = industria_pc, col
   # 2) Línea punteada vertical en el año 2008
   geom_vline(xintercept = 2008, linetype = "dotted", color = "grey60") +
   
-  # 3) Flecha curva horizontal apuntando desde el final del texto hacia la línea 2008
+  # 3) Flecha curva horizontal apuntando desde el filtrado del texto hacia la línea 2008
   annotate("curve", x = 2008, xend = 2009, 
-           y = max(df_industrializacion$industria_pc, na.rm = TRUE) * 0.92, 
-           yend = max(df_industrializacion$industria_pc, na.rm = TRUE) * 0.92,
+           y = max(df_industrializacion$industria_per_capita, na.rm = TRUE) * 0.92, 
+           yend = max(df_industrializacion$industria_per_capita, na.rm = TRUE) * 0.92,
            curvature = 0.3, 
            arrow = arrow(length = unit(0.15, "cm"), type = "closed"), 
            color = "grey35", linewidth = 0.6) +
   scale_color_manual(values = col_personalizados) +
   scale_x_continuous(breaks = c(seq(1990, 2020, by = 10), 2024),
                      limits = c(1990, 2030),
-                     expand = expansion(mult = c(0.01, 0.05))) +
+                     expand = expansion(mult = c(0.03, 0.05))) +
   scale_y_continuous(labels = label_dollar(prefix = "$", big.mark = ".", decimal.mark = ","),
                      limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
   coord_cartesian(clip = "off") +
@@ -1086,10 +1084,13 @@ rm(list = ls())
 
 
 
-wdi_final <- read.csv("output/data/wdi_final.csv")
+wdi_filtrado <- read.csv("output/data/wdi_filtrado.csv")
 
-wdi_final_2 <- wdi_final |> 
-  mutate(industria_pc = (industria_pbi*pbi_per_capita)/100)
+wdi_filtrado_2 <- wdi_filtrado |> 
+  select(pais, anio, industria_pbi, exportacion_manufactura, region, pbi_per_capita, indice_nivel_precios, industria_pc) |>
+  mutate(industria_pc_wdi = (industria_pbi*pbi_per_capita)/100,
+         industria_per_capita = coalesce(industria_pc_wdi, industria_pc)) |> 
+  arrange(pais, anio) 
 
 
 fuente <-  "Fuente: Elaboración propia en base a WDI (Banco Mundial)."
@@ -1145,7 +1146,7 @@ dir.create(carpeta_graficos, showWarnings = FALSE)
 
 
 
-#Grafico final fidedigno definitivo
+#Grafico filtrado fidedigno definitivo
 
 
 
@@ -1155,7 +1156,7 @@ col_asia  <- "#E0195B"
 col_latam <- "#3919E0"
 
 # 1) Función de panel con margen ajustado para el nuevo subtítulo triple
-panel_latam <- function(datos, subtitulo = datos$sub_final[1]) {
+panel_latam <- function(datos, subtitulo = datos$sub_filtrado[1]) {
   
   escala_y <- if (datos$log_y[1]) {
     scale_y_log10(labels = label_number(big.mark = ".", decimal.mark = ","),
@@ -1224,7 +1225,7 @@ juntar <- function(paneles, titulo, subtitulo) {
           plot.margin   = margin(15, 15, 10, 15)))}
 
 # 3) Armado de los datos base (con corrección de etiqueta)
-dispersion <- wdi_final_2 |>
+dispersion <- wdi_filtrado_2 |>
   filter(anio %in% c(2001, 2008, 2022)) |>
   filter(!is.na(indice_nivel_precios), region != "Aggregates") |>
   mutate(
@@ -1235,7 +1236,7 @@ dispersion <- wdi_final_2 |>
     )
   ) |>
   select(pais, grupo_region, anio, pib = indice_nivel_precios, 
-         Industria = industria_pc, 
+         Industria = industria_per_capita, 
          Exportaciones = exportacion_manufactura) |>
   pivot_longer(c(Industria, Exportaciones), names_to = "indicador", values_to = "valor") |>
   filter(!is.na(valor), valor > 0, !is.na(pib)) |>
@@ -1276,34 +1277,34 @@ orden_paneles <- c("Industria (2001)", "Industria (2008)", "Industria (2022)",
                    "Exportaciones (2001)", "Exportaciones (2008)", "Exportaciones (2022)")
 
 # 6) Paneles
-paneles_finales <- dispersion |>
+paneles_filtradoes <- dispersion |>
   left_join(resumen, by = "titulo") |>
   # Armamos el texto en 3 renglones
-  mutate(sub_final = paste0(subtitulo, 
+  mutate(sub_filtrado = paste0(subtitulo, 
                             "\nEncima del promedio en Asia: ", encima_asia, " de ", paises_asia,
                             "\nEncima del promedio en Latam: ", encima_latam, " de ", paises_latam)) |>
   split(~ factor(titulo, levels = orden_paneles)) |>
   map(\(d) panel_latam(d))
 
 # 7) Título y renderizado
-titulo_final <- paste0(
+titulo_filtrado <- paste0(
   "Mientras ", pintar("América Latina", col_latam),
   " se concentra en niveles intermedios,<br>",
   pintar("Asia Oriental", col_asia),
   " combina extremos y una mayor fortaleza exportadora"
 )
 
-grafico_final <- juntar(
-  paneles_finales,
-  titulo = titulo_final,
+grafico_filtrado <- juntar(
+  paneles_filtradoes,
+  titulo = titulo_filtrado,
   subtitulo = paste0("Evolución frente al Índice de Nivel de Precios (eje X logarítmico).\n",
                      "América Latina en azul, Asia Oriental en rojo. Resto del mundo en gris."))
 
-grafico_final
+grafico_filtrado
 
 
 ggsave(file.path("output/graficos", "scater.png"), 
-       plot = grafico_final, width = 13, height = 7, units = "in", dpi = 190)
+       plot = grafico_filtrado, width = 13, height = 7, units = "in", dpi = 190)
 
 
 
@@ -1332,10 +1333,11 @@ rm(list = ls())
 
 
 
-wdi_final <- read.csv("output/data/wdi_final.csv")
+wdi_filtrado <- read.csv("output/data/wdi_filtrado.csv")
 
-wdi_final_2 <- wdi_final |> 
-  mutate(industria_pc = (industria_pbi*pbi_per_capita)/100)
+wdi_filtrado_2 <- wdi_filtrado |> 
+  mutate(industria_pc_wdi = (industria_pbi*pbi_per_capita)/100,
+industria_per_capita = coalesce(industria_pc_wdi, industria_pc))
 
 
 fuente <-  "Fuente: Elaboración propia en base a WDI (Banco Mundial)."
@@ -1400,11 +1402,7 @@ dir.create(carpeta_graficos, showWarnings = FALSE)
 
 
 
-
-
-
-
-#Grafico final fidedigno definitivo exploratorio
+#Grafico filtrado fidedigno definitivo exploratorio
 
 
 
@@ -1423,7 +1421,7 @@ fmt_num <- label_number(big.mark = ".", decimal.mark = ",", drop0trailing = TRUE
 base_indice <- "EE. UU. = 100"
 tipo_usd    <- "corrientes"   # o "constantes de 20XX"
 
-panel_latam <- function(datos, subtitulo = datos$sub_final[1]) {
+panel_latam <- function(datos, subtitulo = datos$sub_filtrado[1]) {
   
   ind <- datos$indicador[1]
   resto <- filter(datos, grupo_region == "Resto del Mundo")
@@ -1507,7 +1505,7 @@ juntar <- function(paneles, titulo, subtitulo, caption = fuente) {
 # ---------------------------------------------------------------------------
 # 3) Armado de los datos base
 # ---------------------------------------------------------------------------
-dispersion <- wdi_final_2 |>
+dispersion <- wdi_filtrado_2 |>
   filter(anio %in% c(2001, 2008, 2022)) |>
   filter(!is.na(indice_nivel_precios), region != "Aggregates") |>
   mutate(
@@ -1518,7 +1516,7 @@ dispersion <- wdi_final_2 |>
     )
   ) |>
   select(pais, grupo_region, anio, pib = indice_nivel_precios,
-         Industria = industria_pc,
+         Industria = industria_per_capita,
          Exportaciones = exportacion_manufactura) |>
   pivot_longer(c(Industria, Exportaciones), names_to = "indicador", values_to = "valor") |>
   filter(!is.na(valor), valor > 0, !is.na(pib)) |>
@@ -1557,37 +1555,38 @@ orden_paneles <- c("Industria (2001)", "Industria (2008)", "Industria (2022)",
                    "Exportaciones (2001)", "Exportaciones (2008)", "Exportaciones (2022)")
 
 # 6) Paneles: subtítulo en 2 renglones (unidad + conteo en una sola línea)
-paneles_finales <- dispersion |>
+paneles_filtradoes <- dispersion |>
   left_join(resumen, by = "titulo") |>
-  mutate(sub_final = paste0(subtitulo,
+  mutate(sub_filtrado = paste0(subtitulo,
                             "\nPor encima de la curva mundial. Asia: ", encima_asia, " de ", paises_asia,
                             " · Latam: ", encima_latam, " de ", paises_latam)) |>
   split(~ factor(titulo, levels = orden_paneles)) |>
   map(\(d) panel_latam(d))
 
-titulo_final <- paste0(
+titulo_filtrado <- paste0(
   "Industria y Exportaciones según el Nivel de Precios:<br>",
   pintar("Asia Oriental", col_asia), " y ",
   pintar("América Latina", col_latam),
   " frente al resto del mundo, 2001, 2008 y 2022"
 )
 
-subtitulo_final <- "Mientras Asia sostiene una fuerte inserción exportadora independientemente de sus precios, 
+subtitulo_filtrado <- "Mientras Asia sostiene una fuerte inserción exportadora independientemente de sus precios, 
 <br>América Latina evidencia menor dispersión y mayor estancamiento.
 <br>Evolución frente al Índice de Nivel de Precios (ambos ejes en escala logarítmica)."
 
-caption_final <- paste0(
-  "Fuente: elaboración propia en base a Banco Mundial (WDI).\n",
-  "Notas: cada punto es un país; resto del mundo en gris. La curva es la tendencia estimada con todos los países.\n",
+caption_filtrado <- paste0(
+  "Fuente: elaboración propia en base a Banco Mundial (WDI) y Schteingart, D. y Sidicaro, N. (2025). Industria. Argendata. Fundar.
+\n",
+  "Notas: cada punto es un país; resto del mundo en gris. La curva es la tendencia estimada con todos los países.",
   "Industria: valor agregado industrial per cápita en USD ", tipo_usd, ". Índice de nivel de precios: ", base_indice, ".\n",
   "Algunos países (por ejemplo, Taiwán o Panamá) carecen de datos en ciertos años y no aparecen en los tres gráficos. 
 Otros paises como Venezuela o Corea del Norte no aparecen por falta de datos en los tres años.")
 
 grafico_exploratorio_2 <- juntar(
-  paneles_finales,
-  titulo    = titulo_final,
-  subtitulo = subtitulo_final,
-  caption   = caption_final)
+  paneles_filtradoes,
+  titulo    = titulo_filtrado,
+  subtitulo = subtitulo_filtrado,
+  caption   = caption_filtrado)
 
 # 8) Exportación según la consigna: JPG, 300 dpi, 20-25 cm de ancho
 # Si el espaciado entre palabras del título se ve raro, probá comentando la línea del device
@@ -1621,7 +1620,7 @@ ggsave(file.path("output/graficos", "exploratorio2.png"),
 
 
 
-  #Grafico final comunicativo
+  #Grafico filtrado comunicativo
 
 
 
@@ -1631,6 +1630,25 @@ ggsave(file.path("output/graficos", "exploratorio2.png"),
 
 
 #Grafico fidedignus
+
+
+rm(list = ls())
+
+
+wdi_limpio <- read.csv("output/data/wdi_limpio.csv")
+
+wdi_limpio_2 <- wdi_limpio |> 
+  filter(region %in% c("East Asia & Pacific", "Latin America & Caribbean"), poblacion_mill > 1, anio >= 1990, 
+         !pais %in% c("Cuba", "Korea, Dem. People's Rep.", "Venezuela, RB")) |> 
+  select(pais, anio, industria_pbi, exportacion_manufactura, region, pbi_per_capita, indice_nivel_precios, industria_pc) |>
+  mutate(industria_pc_wdi = (industria_pbi*pbi_per_capita)/100,
+         industria_per_capita = coalesce(industria_pc_wdi, industria_pc)) |> 
+  arrange(pais, anio) 
+
+
+
+
+
 
 
 library(tidyverse)
@@ -1649,36 +1667,36 @@ col_personalizados <- c(
 df_eap <- wdi_limpio_2 %>%
   filter(region == "East Asia & Pacific") %>%
   group_by(anio) %>%
-  summarise(industria_pc = mean(industria_pc, na.rm = TRUE), .groups = "drop") %>%
+  summarise(industria_per_capita = mean(industria_per_capita, na.rm = TRUE), .groups = "drop") %>%
   mutate(pais = "Asia Oriental y Pacífico") %>%
-  select(year = anio, pais, industria_pc)
+  select(year = anio, pais, industria_per_capita)
 
 # 4) Promedio de América Latina y el Caribe
 df_lac <- wdi_limpio_2 %>%
   filter(region == "Latin America & Caribbean") %>%
   group_by(anio) %>%
-  summarise(industria_pc = mean(industria_pc, na.rm = TRUE), .groups = "drop") %>%
+  summarise(industria_per_capita = mean(industria_per_capita, na.rm = TRUE), .groups = "drop") %>%
   mutate(pais = "América Latina y el Caribe") %>%
-  select(year = anio, pais, industria_pc)
+  select(year = anio, pais, industria_per_capita)
 
 # 5) Datos individuales para Argentina y China
 df_paises <- wdi_limpio_2 %>%
   filter(pais %in% c("Argentina", "China")) %>%
   mutate(pais = if_else(pais == "China", "China", "Argentina")) %>%
-  select(year = anio, pais, industria_pc)
+  select(year = anio, pais, industria_per_capita)
 
 # 6) Unimos todo en un solo data frame largo y filtramos el período
 df_industrializacion <- bind_rows(df_eap, df_lac, df_paises) %>%
   filter(year >= 1990, year <= 2024)
 
-# 7) Último año de cada serie para las etiquetas directas al final de las líneas
+# 7) Último año de cada serie para las etiquetas directas al filtrado de las líneas
 ult_ind_pc <- df_industrializacion %>% 
   group_by(pais) %>% 
   filter(year == max(year)) %>%
   ungroup()
 
-# 8) Gráfico final
-g_ind_pc_esp <- ggplot(df_industrializacion, aes(x = year, y = industria_pc, color = pais, group = pais)) +
+# 8) Gráfico filtrado
+g_ind_pc_esp <- ggplot(df_industrializacion, aes(x = year, y = industria_per_capita, color = pais, group = pais)) +
   geom_line(linewidth = 1.1, alpha = 0.85) +
   geom_point(data = ult_ind_pc, size = 3) +
   geom_text(data = ult_ind_pc,
@@ -1689,35 +1707,30 @@ g_ind_pc_esp <- ggplot(df_industrializacion, aes(x = year, y = industria_pc, col
   geom_vline(xintercept = 2001, linetype = "dotted", color = "grey60") +
   # 1) Texto con HTML usando geom_richtext (para que pinte de rojo la palabra China)
   geom_richtext(
-    data = data.frame(x = 2001.8, y = max(df_industrializacion$industria_pc, na.rm = TRUE) * 0.08),
+    data = data.frame(x = 2001.8, y = max(df_industrializacion$industria_per_capita, na.rm = TRUE) * 0.08),
     aes(x = x, y = y, label = "2001: Ingreso de <span style='color:#ffac47'>China</span><br>a la OMC"),
     hjust = 0, size = 3.5, color = "grey35",
     fill = NA, label.color = NA, # Para que sea transparente y sin borde tipo etiqueta
     inherit.aes = FALSE
   ) +
   # 2) La flecha curva apuntando a la línea
-  annotate("curve", x = 2002.1, xend = 2001.05, 
-           y = max(df_industrializacion$industria_pc, na.rm = TRUE) * 0.08, 
-           yend = max(df_industrializacion$industria_pc, na.rm = TRUE) * 0.08,
-           curvature = 0.3, 
-           arrow = arrow(length = unit(0.15, "cm"), type = "closed"), 
-           color = "grey35", linewidth = 0.6) +
-  # 1) Texto de la crisis corrido a la izquierda
-  geom_richtext(
-    data = data.frame(x = 2009.1, y = max(df_industrializacion$industria_pc, na.rm = TRUE) * 0.92),
-    aes(x = x, y = y, label = "Crisis del 2008"),
-    hjust = 0, size = 3.5, color = "grey35",
-    fill = NA, label.color = NA,
-    inherit.aes = FALSE
+  annotate(
+    geom = "curve",
+    x = 2002.5, y = 350,          # ORIGEN (Cola): Ajustá estos valores para acercarla a tu texto negro
+    xend = 2001, yend = 548.45,   # DESTINO (Punta): Toca la curva exacta de China
+    curvature = -0.2,             
+    arrow = arrow(length = unit(0.2, "cm")),
+    color = "black", size = 0.5
   ) +
+  
   
   # 2) Línea punteada vertical en el año 2008
   geom_vline(xintercept = 2008, linetype = "dotted", color = "grey60") +
   
-  # 3) Flecha curva horizontal apuntando desde el final del texto hacia la línea 2008
+  # 3) Flecha curva horizontal apuntando desde el filtrado del texto hacia la línea 2008
   annotate("curve", x = 2008, xend = 2009, 
-           y = max(df_industrializacion$industria_pc, na.rm = TRUE) * 0.92, 
-           yend = max(df_industrializacion$industria_pc, na.rm = TRUE) * 0.92,
+           y = max(df_industrializacion$industria_per_capita, na.rm = TRUE) * 0.92, 
+           yend = max(df_industrializacion$industria_per_capita, na.rm = TRUE) * 0.92,
            curvature = 0.3, 
            arrow = arrow(length = unit(0.15, "cm"), type = "closed"), 
            color = "grey35", linewidth = 0.6) +
@@ -1729,8 +1742,8 @@ g_ind_pc_esp <- ggplot(df_industrializacion, aes(x = year, y = industria_pc, col
                      limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
   coord_cartesian(clip = "off") +
   labs(
-    title    = "Desde 1990 <span style='color:#ffac47'>China</span> multiplicó por 12 su producción industrial por habitante
-    y hoy supera a <span style='color:#19E09E'>Argentina</span> y a <span style='color:#3919E0'>América Latina</span>, que se quedaron estancadas"
+    title = "Desde 1990 <span style='color:#ffac47'>China</span> aumentó 21 veces su producción industrial por habitante.
+    <br>Y hoy supera a <span style='color:#19E09E'>Argentina</span> y a <span style='color:#3919E0'>América Latina</span>, que se quedaron estancadas",
     subtitle = "Evolución de la Producción Industrial Por Habitante (USD): 1990-2024",
     caption  = "Fuente: Elaboración propia en base a WDI (Banco Mundial).",
     x = NULL, y = NULL
@@ -1756,5 +1769,6 @@ g_ind_pc_esp
 
 ggsave(file.path("output/graficos", "grafico_comunicativo.png"), 
        plot = g_ind_pc_esp, width = 12, height = 7, units = "in", dpi = 300)
+
 
 

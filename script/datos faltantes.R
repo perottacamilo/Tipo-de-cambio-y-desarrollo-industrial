@@ -50,7 +50,8 @@ variables <- c(
   "credito_privado_pbi",
   "recursos_naturales",
   "pbi_per_capita",
-  "pbi_millones")
+  "pbi_millones", 
+  "industria_pc")
 
 
 
@@ -174,7 +175,8 @@ variables2 <- c(
   "credito_privado_pbi",
   "recursos_naturales",
   "pbi_per_capita",
-  "pbi_millones")
+  "pbi_millones",
+  "industria_pc")
 
 
 
@@ -276,7 +278,11 @@ imputar_vecinos <- function(x, anio) {
   )
 }
 
-wdi_filtrado <- wdi3.2 |> 
+wdi_3.3 <- wdi3.2 |> 
+  mutate(industria_pc_wdi = (industria_pbi*pbi_per_capita)/100,
+         industria_per_capita = coalesce(industria_pc_wdi, industria_pc))
+
+wdi_filtrado <- wdi_3.3 |> 
   group_by(pais) |> 
   arrange(pais, anio) |> 
   mutate(
@@ -293,7 +299,8 @@ wdi_filtrado <- wdi3.2 |>
         ahorro_bruto_pbi,
         credito_privado_pbi,
         pbi_per_capita,
-        pbi_millones),
+        pbi_millones,
+        industria_pc),
       .fns = ~ if_else(
         condition = is.na(.x) & anio %in% c(2001, 2008, 2022),
         true = imputar_vecinos(.x, anio),
@@ -306,6 +313,7 @@ wdi_filtrado <- wdi3.2 |>
   ungroup() |> 
   filter(anio %in% c(2001, 2008, 2022))
 
+write.csv(wdi_filtrado, "output/data/wdi_filtrado.csv")
 
 
 
@@ -326,7 +334,8 @@ wdi_filtrado <- wdi3.2 |>
         credito_privado_pbi,
         recursos_naturales,
         pbi_per_capita,
-        pbi_millones),
+        pbi_millones, 
+        industria_per_capita),
       .fns = ~ if_else(
         condition = is.na(.x) & anio %in% c(2001, 2008, 2022), 
         true = (lag(.x) + lead(.x)) / 2, 
@@ -347,7 +356,6 @@ colSums(is.na(wdi_filtrado2))
 
 
 
-
 wdi_final <- wdi_filtrado |> 
   drop_na(
     crecimiento_industria,
@@ -361,7 +369,8 @@ wdi_final <- wdi_filtrado |>
     credito_privado_pbi,
     recursos_naturales,
     pbi_per_capita,
-    pbi_millones)
+    pbi_millones,
+    industria_per_capita)
 
 
 

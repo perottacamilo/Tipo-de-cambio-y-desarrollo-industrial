@@ -20,7 +20,7 @@ wdi <- read_csv("raw/wdi_tabla_completa.csv")
 wdi_limpio <- wdi |>
   filter(region != "Aggregates", !is.na(region), region != "") |>
   rename(pais = country, anio = year, ingreso = income, pbi_millones = pbi) |>
-  select(-iso2c, -status, -lastupdated, -status, -lending, -latitude, -longitude, -capital) |>
+  select(-iso2c, -lending, -status, -lastupdated, -latitude, -longitude, -capital) |>
   mutate(pbi_millones = pbi_millones/1000000,
          poblacion_mill = poblacion/1000000,
          ingreso = factor(ingreso,
