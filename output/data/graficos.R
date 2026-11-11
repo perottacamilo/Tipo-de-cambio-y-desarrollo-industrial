@@ -1441,7 +1441,7 @@ panel_latam <- function(datos, subtitulo = datos$sub_filtrado[1]) {
                stroke = 0.4, color = "white") +
     
     geom_label_repel(data = filter(datos, codigo %in% destacar), aes(label = codigo),
-                     family = fuente_texto, fontface = "bold", size = 3.2,
+                     family = fuente_texto, fontface = "bold", size = 5,
                      fill = alpha("white", 0.85), label.size = 0, label.padding = unit(1.5, "pt"),
                      color = gris_titulo, min.segment.length = 0, segment.color = "#777777",
                      nudge_y = 0.3, seed = 1) +
@@ -1455,12 +1455,12 @@ panel_latam <- function(datos, subtitulo = datos$sub_filtrado[1]) {
     labs(title = datos$titulo[1], subtitle = subtitulo, x = tit_x, y = tit_y) +
     theme_owid(base_size = 9.5) %+replace%
     theme(
-      plot.title    = element_text(family = fuente_texto, face = "bold", size = rel(2.9),
+      plot.title    = element_text(family = fuente_texto, face = "bold", size = rel(3.5),
                                    color = gris_titulo, hjust = 0, margin = margin(b = 3)),
-      plot.subtitle = element_text(size = rel(1.5), color = gris_texto, hjust = 0,
+      plot.subtitle = element_text(size = rel(2), color = gris_texto, hjust = 0,
                                    lineheight = 0.6, margin = margin(b = 14)),
-      axis.title.x  = element_text(size = rel(1.25), color = gris_texto, margin = margin(t = 6)),
-      axis.title.y  = element_text(size = rel(1.25), color = gris_texto, angle = 90, margin = margin(r = 6)),
+      axis.title.x  = element_text(size = rel(1.75), color = gris_texto, margin = margin(t = 6)),
+      axis.title.y  = element_text(size = rel(1.75), color = gris_texto, angle = 90, margin = margin(r = 6)),
       
       # APAGAR EXPLÍCITAMENTE TODAS LAS LÍNEAS
       panel.grid.major.x = element_blank(),
@@ -1488,13 +1488,13 @@ juntar <- function(paneles, titulo, subtitulo, caption = fuente) {
       theme = theme_owid() +
         theme(
           plot.title    = ggtext::element_markdown(family = fuente_texto, face = "bold",
-                                                   size = 40, hjust = 0, halign = 0,
+                                                   size = 45, hjust = 0, halign = 0,
                                                    lineheight = 0.4,
                                                    margin = margin(b = 6)),
           plot.subtitle = ggtext::element_markdown(size = 30, hjust = 0, halign = 0,
                                                    lineheight = 0.35,
                                                    margin = margin(b = 12)),
-          plot.caption  = element_text(size = 14, hjust = 0, lineheight = 0.4, 
+          plot.caption  = element_text(size = 18, hjust = 0, lineheight = 0.4, 
                                        color = gris_texto, margin = margin(t = 10)),
           plot.margin   = margin(15, 15, 10, 15)
         )
@@ -1570,16 +1570,16 @@ titulo_filtrado <- paste0(
   " frente al resto del mundo, 2001, 2008 y 2022"
 )
 
-subtitulo_filtrado <- "Mientras Asia sostiene una fuerte inserción exportadora independientemente de sus precios, 
-<br>América Latina evidencia menor dispersión y mayor estancamiento.
+subtitulo_filtrado <- "Los paises de Asia presentan una gran dispersion y una fuerte capacidad exportadora, 
+<br>mientras que los latinoamericanos se concentran en torno a los promedios.  
 <br>Evolución frente al Índice de Nivel de Precios (ambos ejes en escala logarítmica)."
 
 caption_filtrado <- paste0(
   "Fuente: elaboración propia en base a Banco Mundial (WDI) y Schteingart, D. y Sidicaro, N. (2025). Industria. Argendata. Fundar.
 \n",
   "Notas: cada punto es un país; resto del mundo en gris. La curva es la tendencia estimada con todos los países.",
-  "Industria: valor agregado industrial per cápita en USD ", tipo_usd, ". Índice de nivel de precios: ", base_indice, ".\n",
-  "Algunos países (por ejemplo, Taiwán o Panamá) carecen de datos en ciertos años y no aparecen en los tres gráficos. 
+  " Industria: valor agregado industrial per cápita en USD constantes 2015. Índice de nivel de precios: ", base_indice, ".\n",
+  "Algunos países de Asia carecen de datos en ciertos años y no aparecen en los tres gráficos. 
 Otros paises como Venezuela o Corea del Norte no aparecen por falta de datos en los tres años.")
 
 grafico_exploratorio_2 <- juntar(
@@ -1590,13 +1590,10 @@ grafico_exploratorio_2 <- juntar(
 
 # 8) Exportación según la consigna: JPG, 300 dpi, 20-25 cm de ancho
 # Si el espaciado entre palabras del título se ve raro, probá comentando la línea del device
-ggsave("grupo_XX_exploratorio.jpg",
+ggsave("grupo_01_exploratorio.jpg",
        plot   = grafico_exploratorio_2,
        width  = 22, height = 14, units = "cm", dpi = 300,
        device = ragg::agg_jpeg)
-
-ggsave(file.path("output/graficos", "exploratorio2.png"), 
-       plot = grafico_exploratorio_2, width = 22, height = 14, units = "cm", dpi = 300)
 
 
 
@@ -1651,9 +1648,17 @@ wdi_limpio_2 <- wdi_limpio |>
 
 
 
+
+
 library(tidyverse)
 library(scales)
 library(ggtext)
+
+# ============================================================
+# FACTOR DE ESCALA DEL TEXTO: tocá solo este número
+# 1 = tamaño original | 1.3 = 30% más grande | 1.5 = 50% más grande
+# ============================================================
+k <- 1.25
 
 # 2) Definimos tus colores exactos asignados a los nombres en español (sin Asia sin China)
 col_personalizados <- c(
@@ -1690,26 +1695,29 @@ df_industrializacion <- bind_rows(df_eap, df_lac, df_paises) %>%
   filter(year >= 1990, year <= 2024)
 
 # 7) Último año de cada serie para las etiquetas directas al filtrado de las líneas
+#    (NUEVO: 'etiqueta' parte los nombres largos en 2 renglones para que no se salgan del gráfico)
 ult_ind_pc <- df_industrializacion %>% 
   group_by(pais) %>% 
   filter(year == max(year)) %>%
-  ungroup()
+  ungroup() %>%
+  mutate(etiqueta = str_wrap(pais, 14))
 
 # 8) Gráfico filtrado
 g_ind_pc_esp <- ggplot(df_industrializacion, aes(x = year, y = industria_per_capita, color = pais, group = pais)) +
   geom_line(linewidth = 1.1, alpha = 0.85) +
   geom_point(data = ult_ind_pc, size = 3) +
   geom_text(data = ult_ind_pc,
-            aes(x = 2024.2, label = pais),   # misma x para todas
+            aes(x = 2025, label = etiqueta),   # misma x para todas
             hjust = 0,                     # alineadas a la izquierda
-            fontface = "bold", size = 3.5, show.legend = FALSE) +
+            lineheight = 0.3,
+            fontface = "bold", size = 7 * k, show.legend = FALSE) +
   # Línea punteada para el ingreso de China a la OMC en 2001
   geom_vline(xintercept = 2001, linetype = "dotted", color = "grey60") +
   # 1) Texto con HTML usando geom_richtext (para que pinte de rojo la palabra China)
   geom_richtext(
-    data = data.frame(x = 2001.8, y = max(df_industrializacion$industria_per_capita, na.rm = TRUE) * 0.08),
-    aes(x = x, y = y, label = "2001: Ingreso de <span style='color:#ffac47'>China</span><br>a la OMC"),
-    hjust = 0, size = 3.5, color = "grey35",
+    data = data.frame(x = 2001.25, y = max(df_industrializacion$industria_per_capita, na.rm = TRUE) * 0.08),
+    aes(x = x, y = y, label = "<b>2001: Ingreso de <span style='color:#ffac47'>China</span><br>a la OMC</b>"),
+    hjust = 0, size = 6 * k, color = "grey35", lineheight = 0.3,
     fill = NA, label.color = NA, # Para que sea transparente y sin borde tipo etiqueta
     inherit.aes = FALSE
   ) +
@@ -1741,43 +1749,50 @@ g_ind_pc_esp <- ggplot(df_industrializacion, aes(x = year, y = industria_per_cap
     geom = "text",
     x = 2010, y = 3100,           # Posición exacta donde arranca la palabra
     label = "Crisis del 2008",
-    hjust = 0, size = 3, color = "black" 
-  )
+    hjust = 0, size = 6 * k, color = "black", lineheight =  0.3
+  )+
   scale_color_manual(values = col_personalizados) +
   scale_x_continuous(breaks = c(seq(1990, 2020, by = 10), 2024),
-                     limits = c(1990, 2030),
+                     limits = c(1990, 2032),      # antes 2030: un poco más de lugar para las etiquetas
                      expand = expansion(mult = c(0.01, 0.05))) +
   scale_y_continuous(labels = label_dollar(prefix = "$", big.mark = ".", decimal.mark = ","),
                      limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
   coord_cartesian(clip = "off") +
   labs(
-    title = "Desde 1990 <span style='color:#ffac47'>China</span> aumentó 21 veces su producción industrial por habitante.
-    <br>Y hoy supera a <span style='color:#19E09E'>Argentina</span> y a <span style='color:#3919E0'>América Latina</span>, que se quedaron estancadas",
-    subtitle = "Evolución de la Producción Industrial Por Habitante (USD): 1990-2024",
-    caption  = "Fuente: Elaboración propia en base a WDI (Banco Mundial).",
-    x = NULL, y = NULL
+    title = "Desde 1990 <span style='color:#ffac47'>China</span> aumentó 21 veces su producción industrial por habitante,
+    <br>superando al promedio de <span style='color:#E0195B'>Asia</span> y <span style='color:#3919E0'>América Latina</span>.
+    <br><span style='color:#19E09E'>Argentina</span> perdió la ventaja que tenía sobre <span style='color:#E0195B'>Asia</span>.",
+    subtitle = "Evolución de la Producción Industrial por Habitante (USD constantes de 2015): 1990-2024",
+    caption  = "Fuente: Elaboración propia en base a WDI (Banco Mundial) y Schteingart, D. y Sidicaro, N. (2025). Industria. Argendata. Fundar.",
+    x = "Año", y = "Producción Industrial por Habitante"
   ) +
-  theme_minimal(base_size = 13) +
+  theme_minimal(base_size = 15) +
   theme(
     legend.position        = "none",
     plot.title.position    = "plot",
-    plot.title             = element_markdown(family = "serif", face = "bold",
-                                              size = 16, lineheight = 1.1),
-    plot.subtitle          = element_text(color = "grey35", margin = margin(b = 10)),
-    plot.caption           = element_text(color = "grey45", hjust = 0, size = 9),
+    # element_textbox_simple = igual que element_markdown pero ajusta el título al ancho (no se corta)
+    plot.title             = element_textbox_simple(family = "serif", face = "bold",
+                                                    size = 40 * k, lineheight = 0.33,
+                                                    margin = margin(b = 6)),
+    plot.subtitle          = element_text(color = "grey35", margin = margin(b = 10), size = 26),
+    plot.caption           = element_text(color = "grey45", hjust = 0, size = 15 * k),
     panel.grid.minor       = element_blank(),
     panel.grid.major.x     = element_blank(),
-    panel.grid.major.y     = element_line(color = "grey80", linetype = "dashed"),
-    axis.text              = element_text(color = "grey40"),
+    panel.grid.major.y     = element_line(color = "grey92", linetype = "dashed", linewidth = 0.3),
+    axis.text              = element_text(color = "grey40", size = 25),
     axis.ticks.x           = element_line(color = "grey60"),
-    plot.margin            = margin(12, 40, 10, 12)
+    plot.margin            = margin(12, 50, 10, 12),
+    axis.title = element_text(color = "grey35", size = 20),
   )
 
 g_ind_pc_esp
 
 
-ggsave(file.path("output/graficos", "grafico_comunicativo.png"), 
-       plot = g_ind_pc_esp, width = 12, height = 7, units = "in", dpi = 300)
+ggsave("grupo_01_comunicativo.jpg",
+       plot   = g_ind_pc_esp,
+       width  = 22, height = 14, units = "cm", dpi = 300,
+       device = ragg::agg_jpeg)
+
 
 
 
