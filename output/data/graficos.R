@@ -1727,13 +1727,22 @@ g_ind_pc_esp <- ggplot(df_industrializacion, aes(x = year, y = industria_per_cap
   # 2) Línea punteada vertical en el año 2008
   geom_vline(xintercept = 2008, linetype = "dotted", color = "grey60") +
   
-  # 3) Flecha curva horizontal apuntando desde el filtrado del texto hacia la línea 2008
-  annotate("curve", x = 2008, xend = 2009, 
-           y = max(df_industrializacion$industria_per_capita, na.rm = TRUE) * 0.92, 
-           yend = max(df_industrializacion$industria_per_capita, na.rm = TRUE) * 0.92,
-           curvature = 0.3, 
-           arrow = arrow(length = unit(0.15, "cm"), type = "closed"), 
-           color = "grey35", linewidth = 0.6) +
+  # Flecha de la Crisis de 2008
+  annotate(
+    geom = "curve",
+    x = 2009.5, y = 3100,         # ORIGEN: Nace un poco a la derecha y bien arriba
+    xend = 2008, yend = 3100,     # DESTINO: Toca exactamente la línea punteada de 2008
+    curvature = 0.1,              # Curvatura leve (si la querés recta, usá geom = "segment")
+    arrow = arrow(length = unit(0.2, "cm")),
+    color = "black", size = 0.5
+  ) +
+  # Texto de la Crisis de 2008
+  annotate(
+    geom = "text",
+    x = 2010, y = 3100,           # Posición exacta donde arranca la palabra
+    label = "Crisis del 2008",
+    hjust = 0, size = 3, color = "black" 
+  )
   scale_color_manual(values = col_personalizados) +
   scale_x_continuous(breaks = c(seq(1990, 2020, by = 10), 2024),
                      limits = c(1990, 2030),
