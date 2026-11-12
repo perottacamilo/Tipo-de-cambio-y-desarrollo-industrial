@@ -261,7 +261,7 @@ g_ind_pc_esp <- ggplot(df_industrializacion, aes(x = year, y = industria_per_cap
   annotate(geom = "curve", x = 2002.5, y = 350, xend = 2001, yend = 548.45, curvature = -0.2, arrow = arrow(length = unit(0.2, "cm")), color = "black", size = 0.5) +
   geom_vline(xintercept = 2008, linetype = "dotted", color = "grey60") +
   annotate(geom = "curve", x = 2009.5, y = 3400, xend = 2008, yend = 3400, curvature = 0.1, arrow = arrow(length = unit(0.2, "cm")), color = "black", size = 0.5) +
-  annotate(geom = "text", x = 2010, y = 3400, label = "Crisis del 2008", hjust = 0, size = 6 * k, color = "black", lineheight = 0.3, color = "grey35",       # <-- IGUALAMOS EL COLOR GRIS
+  annotate(geom = "text", x = 2010, y = 3400, label = "Crisis del 2008", hjust = 0, size = 6 * k, lineheight = 0.3, color = "grey35",       # <-- IGUALAMOS EL COLOR GRIS
            family = fuente_texto,  # <-- FORZAMOS LA MISMA FUENTE
            fontface = "bold"       # <-- IGUALAMOS LA NEGRITA DEL HTML
   ) +
@@ -269,28 +269,21 @@ g_ind_pc_esp <- ggplot(df_industrializacion, aes(x = year, y = industria_per_cap
   scale_x_continuous(breaks = c(1990, 2000, 2010, 2023), limits = c(1990, 2028.5), expand = expansion(mult = c(0.01, 0.05))) +
   scale_y_continuous(labels = label_dollar(prefix = "$", big.mark = ".", decimal.mark = ","), limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
   coord_cartesian(clip = "off") +
-  labs(
-    title = "Desde 1990 <span style='color:#ffac47'>China</span> aumentó 22 veces su producción industrial por habitante,
-    <br>superando al promedio de <span style='color:#E0195B'>Asia Oriental</span> y <span style='color:#3919E0'>América Latina</span>.
-    <br><span style='color:#9E9E9E'>Argentina, que superaba a Asia en 1990, terminó por debajo</span>",
-    subtitle = "Evolución de la Industria per cápita (USD constantes de 2015): 1990-2023",
-    caption  = "Fuente: Elaboración propia en base a WDI (Banco Mundial) y Schteingart, D. y Sidicaro, N. (2025). Industria. Argendata. Fundar.",
-    x = "Año", y = "PBI Industrial per cápita"
-  ) +
   theme_minimal(base_size = 15) +
   labs(
     title = "Desde 1990 <span style='color:#ffac47'>China</span> aumentó 22 veces su PBI Industrial por habitante,<br>superando al promedio de <span style='color:#E0195B'>Asia Oriental</span> y <span style='color:#3919E0'>América Latina</span>.",
     
     # Agrupamos la frase de Argentina y la técnica en el subtítulo separadas por un <br>
     # Ajustá los valores de font-size (ej. 24pt y 18pt) hasta que quede a tu gusto
-    subtitle = "<span style='font-size: 32pt; color: #5B5B5B;'><b>Argentina, que superaba a Asia en 1990, terminó por debajo.</b></span><br><span style='font-size: 25pt; color: #858585;'> Evolución de la Industria per cápita (USD constantes de 2015): 1990-2023</span>",
+    subtitle = "<span style='font-size: 32pt; color: #5B5B5B;'><b>Argentina, que superaba a Asia en 1990, terminó por debajo.
+    </b></span><br><span style='font-size: 25pt; color: #858585;'> Evolución del PBI Industrial per cápita (USD constantes de 2015): 1990-2023</span>",
     
     caption = paste0(
       "Fuente: Schteingart, D. y Sidicaro, N. (2025). Industria. Argendata. Fundar, en base a UNSTATS, INDEC y Fundación Norte y Sur.\n",
       "Nota: PBI industrial per cápita en USD constantes de 2015. Argentina está calculada a precios constantes de 2004.\n",
       "Asia Oriental y América Latina: promedio simple de los países de cada región."
     ),
-    x = "Año", y = "PBI Industrial per cápita"
+    x = NULL, y = "PBI Industrial per cápita"
   ) +
   theme_minimal(base_size = 15) +
   theme(
