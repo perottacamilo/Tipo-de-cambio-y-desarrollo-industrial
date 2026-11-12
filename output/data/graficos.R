@@ -1796,3 +1796,309 @@ ggsave("grupo_01_comunicativo.jpg",
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ==============================================================================
+# SCRIPT MAESTRO: GRÁFICO EXPLORATORIO Y COMUNICATIVO
+# ==============================================================================
+
+library(tidyverse)
+library(scales)
+library(ggtext)
+library(ggrepel)
+library(showtext)
+library(patchwork)
+rm(list = ls())
+# ------------------------------------------------------------------------------
+# 1. CONFIGURACIÓN DEL ENTORNO Y TIPOGRAFÍAS (Unificado para todo el script)
+# ------------------------------------------------------------------------------
+fuentes_ok <- tryCatch({
+  font_add_google("Playfair Display", "playfair", regular.wt = 600, bold.wt = 700)
+  font_add_google("Lato", "lato", regular.wt = 400, bold.wt = 700)
+  TRUE
+}, error = function(e) FALSE)
+
+fuente_titulo <- if (fuentes_ok) "playfair" else "serif"
+fuente_texto  <- if (fuentes_ok) "lato" else "sans"
+
+# Activamos un único motor tipográfico para evitar conflictos de resolución
+showtext_auto()
+showtext_opts(dpi = 96)
+
+# Paletas globales
+col <- c(rojo = "#B13507", azul = "#286BBB", gris = "#BDBDBD")
+col_asia  <- "#E0195B"
+col_latam <- "#3919E0"
+gris_titulo <- "#363636"
+gris_texto  <- "#5B5B5B"
+gris_suave  <- "#858585"
+
+fmt_num <- label_number(big.mark = ".", decimal.mark = ",", drop0trailing = TRUE)
+base_indice <- "EE. UU. = 100"
+
+# Tema base OWID
+theme_owid <- function(base_size = 13) {
+  theme_minimal(base_size = base_size, base_family = fuente_texto) +
+    theme(
+      plot.title.position   = "plot",
+      plot.caption.position = "plot",
+      plot.title    = element_markdown(family = fuente_titulo, size = rel(2.9), color = gris_titulo,
+                                       lineheight = 1.05, margin = margin(b = 10)),
+      plot.subtitle = element_text(size = rel(1.75), color = gris_texto,
+                                   lineheight = 1.15, margin = margin(b = 20)),
+      plot.caption  = element_text(size = rel(0.95), color = gris_suave, hjust = 0,
+                                   margin = margin(t = 18)),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor   = element_blank(),
+      panel.grid.major.y = element_line(color = "#DDDDDD", linetype = "dashed", linewidth = 0.4),
+      axis.line.x  = element_line(color = "#999999", linewidth = 0.4),
+      axis.ticks.x = element_line(color = "#999999", linewidth = 0.4),
+      axis.text    = element_text(color = "#666666", size = rel(1.05)),
+      axis.title   = element_blank(),
+      legend.position = "none",
+      plot.background = element_rect(fill = "white", color = NA),
+      plot.margin = margin(20, 22, 15, 20)
+    )
+}
+
+pintar <- function(texto, color) sprintf("<span style='color:%s'><b>%s</b></span>", color, texto)
+dir.create("graficos_clase21", showWarnings = FALSE)
+
+# Funciones de ploteo para el exploratorio
+panel_latam <- function(datos, subtitulo = datos$sub_filtrado[1]) {
+  ind <- datos$indicador[1]
+  resto <- filter(datos, grupo_region == "Resto del Mundo")
+  foco  <- filter(datos, grupo_region != "Resto del Mundo")
+  destacar <- c("Argentina", "China")
+  
+  tit_y <- if (ind == "Industria") "USD (escala log)" else "% del PBI (escala log)"
+  tit_x <- if (ind == "Exportaciones") "Índice de nivel de precios (escala log)" else NULL
+  
+  ggplot(datos, aes(pib, valor)) +
+    geom_point(data = resto, shape = 21, size = 1.1, stroke = 0.25,
+               color = "#9E9E9E", fill = alpha(col[["gris"]], 0.55)) +
+    geom_smooth(method = "loess", formula = y ~ x, se = FALSE,
+                color = gris_titulo, linewidth = 0.5) +
+    geom_point(data = foco, aes(fill = grupo_region), shape = 21, size = 1.7,
+               stroke = 0.4, color = "white") +
+    geom_label_repel(data = filter(datos, codigo %in% destacar), aes(label = codigo),
+                     family = fuente_texto, fontface = "bold", size = 5,
+                     fill = alpha("white", 0.85), label.size = 0, label.padding = unit(1.5, "pt"),
+                     color = gris_titulo, min.segment.length = 0, segment.color = "#777777",
+                     nudge_y = 0.3, seed = 1) +
+    scale_fill_manual(values = c("América Latina" = col_latam, "Asia Oriental" = col_asia)) +
+    scale_y_log10(labels = fmt_num, expand = expansion(mult = c(0.1, 0.35))) +
+    scale_x_log10(breaks = c(30, 50, 100), labels = fmt_num) +
+    coord_cartesian(ylim = if (ind == "Exportaciones") c(1, NA) else NULL) +
+    labs(title = datos$titulo[1], subtitle = subtitulo, x = tit_x, y = tit_y) +
+    theme_owid(base_size = 9.5) %+replace%
+    theme(
+      plot.title    = element_text(family = fuente_texto, face = "bold", size = rel(3.5),
+                                   color = gris_titulo, hjust = 0, margin = margin(b = 3)),
+      plot.subtitle = element_text(size = rel(2), color = gris_texto, hjust = 0,
+                                   lineheight = 0.6, margin = margin(b = 14)),
+      axis.title.x  = element_text(size = rel(1.75), color = gris_texto, margin = margin(t = 6)),
+      axis.title.y  = element_text(size = rel(1.75), color = gris_texto, angle = 90, margin = margin(r = 6)),
+      panel.grid.major.x = element_blank(), panel.grid.major.y = element_blank(), panel.grid.minor = element_blank(),
+      axis.line.x = element_blank(), axis.ticks.x = element_blank(),
+      plot.background = element_rect(fill = "#FAFAFA", color = "#E3E3E3"),
+      plot.margin = margin(8, 10, 8, 8)
+    )
+}
+
+juntar <- function(paneles, titulo, subtitulo, caption) {
+  wrap_plots(paneles, ncol = 3) +
+    plot_annotation(
+      title = titulo, 
+      subtitle = subtitulo, 
+      caption = caption, 
+      theme = theme_owid() +
+        theme(
+          plot.title    = ggtext::element_markdown(family = fuente_texto, face = "bold",
+                                                   size = 45, hjust = 0, halign = 0,
+                                                   lineheight = 0.4, margin = margin(b = 6)),
+          plot.subtitle = ggtext::element_markdown(size = 30, hjust = 0, halign = 0,
+                                                   lineheight = 0.35, margin = margin(b = 12)),
+          plot.caption  = element_text(size = 18, hjust = 0, lineheight = 0.4, 
+                                       color = gris_texto, margin = margin(t = 10)),
+          plot.margin   = margin(15, 15, 10, 15)
+        )
+    )
+}
+
+# ------------------------------------------------------------------------------
+# 2. PROCESAMIENTO Y GRÁFICO EXPLORATORIO
+# ------------------------------------------------------------------------------
+wdi_filtrado <- read.csv("output/data/wdi_filtrado.csv")
+
+# CORRECCIÓN METODOLÓGICA: if_else para aislar China sin saltos espurios
+wdi_filtrado_2 <- wdi_filtrado |> 
+  mutate(industria_pc_wdi = (industria_pbi * pbi_per_capita) / 100,
+         industria_per_capita = if_else(pais == "China", industria_pc, industria_pc_wdi))
+
+dispersion <- wdi_filtrado_2 |>
+  filter(anio %in% c(2001, 2008, 2022)) |>
+  filter(!is.na(indice_nivel_precios), region != "Aggregates") |>
+  mutate(
+    grupo_region = case_when(
+      region == "Latin America & Caribbean" ~ "América Latina",
+      region == "East Asia & Pacific" ~ "Asia Oriental",
+      TRUE ~ "Resto del Mundo"
+    )
+  ) |>
+  select(pais, grupo_region, anio, pib = indice_nivel_precios,
+         Industria = industria_per_capita,
+         Exportaciones = exportacion_manufactura) |>
+  pivot_longer(c(Industria, Exportaciones), names_to = "indicador", values_to = "valor") |>
+  filter(!is.na(valor), valor > 0, !is.na(pib)) |>
+  mutate(
+    titulo = paste0(indicador, " (", anio, ")"),
+    subtitulo = if_else(indicador == "Industria", "Valor agregado per cápita", "Exportaciones (% del PBI)"),
+    log_y = TRUE, codigo = pais
+  )
+
+dispersion <- dispersion |>
+  mutate(y = log10(valor), x = log10(pib)) |>
+  group_by(titulo) |>
+  mutate(residuo = residuals(loess(y ~ x))) |>
+  ungroup()
+
+resumen <- dispersion |>
+  filter(grupo_region %in% c("América Latina", "Asia Oriental")) |>
+  group_by(titulo, grupo_region) |>
+  summarise(paises = n(), encima = sum(residuo > 0, na.rm = TRUE), .groups = "drop") |>
+  pivot_wider(names_from = grupo_region, values_from = c(paises, encima)) |>
+  rename(paises_asia = `paises_Asia Oriental`, paises_latam = `paises_América Latina`,
+         encima_asia = `encima_Asia Oriental`, encima_latam = `encima_América Latina`)
+
+orden_paneles <- c("Industria (2001)", "Industria (2008)", "Industria (2022)",
+                   "Exportaciones (2001)", "Exportaciones (2008)", "Exportaciones (2022)")
+
+paneles_filtradoes <- dispersion |>
+  left_join(resumen, by = "titulo") |>
+  mutate(sub_filtrado = paste0(subtitulo,
+                               "\nPor encima de la curva mundial. Asia: ", encima_asia, " de ", paises_asia,
+                               " · Latam: ", encima_latam, " de ", paises_latam)) |>
+  split(~ factor(titulo, levels = orden_paneles)) |>
+  map(\(d) panel_latam(d))
+
+titulo_filtrado <- paste0("Industria y Exportaciones según el Nivel de Precios:<br>",
+                          pintar("Asia Oriental", col_asia), " y ", pintar("América Latina", col_latam),
+                          " frente al resto del mundo, 2001, 2008 y 2022")
+
+subtitulo_filtrado <- "Los paises de Asia presentan una gran dispersion y una fuerte capacidad exportadora, <br>mientras que los latinoamericanos se concentran en torno a los promedios. <br>Evolución frente al Índice de Nivel de Precios (ambos ejes en escala logarítmica)."
+
+caption_filtrado <- paste0("Fuente: elaboración propia en base a Banco Mundial (WDI) y Schteingart, D. y Sidicaro, N. (2025). Industria. Argendata. Fundar.\n",
+                           "Notas: cada punto es un país; resto del mundo en gris. La curva es la tendencia estimada con todos los países. Industria: valor agregado industrial per cápita en USD constantes 2015. Índice de nivel de precios: ", base_indice, ".\n",
+                           "Algunos países de Asia carecen de datos en ciertos años y no aparecen en los tres gráficos. Otros paises como Venezuela o Corea del Norte no aparecen por falta de datos en los tres años.")
+
+grafico_exploratorio_2 <- juntar(paneles_filtradoes, titulo = titulo_filtrado, subtitulo = subtitulo_filtrado, caption = caption_filtrado)
+
+# CORRECCIÓN DE DISPOSITIVO: Eliminado device = ragg::agg_jpeg para evitar conflicto con showtext
+ggsave("grupo_01_exploratoriolalala.jpg", plot = grafico_exploratorio_2,
+       width = 22, height = 14, units = "cm", dpi = 300)
+
+# ------------------------------------------------------------------------------
+# 3. PROCESAMIENTO Y GRÁFICO COMUNICATIVO
+# ------------------------------------------------------------------------------
+wdi_limpio <- read.csv("output/data/wdi_limpio.csv")
+
+# CORRECCIÓN METODOLÓGICA: if_else para evitar saltos en la serie de tiempo
+wdi_limpio_2 <- wdi_limpio |> 
+  filter(region %in% c("East Asia & Pacific", "Latin America & Caribbean"), poblacion_mill > 1, anio >= 1990, 
+         !pais %in% c("Cuba", "Korea, Dem. People's Rep.", "Venezuela, RB")) |> 
+  select(pais, anio, industria_pbi, exportacion_manufactura, region, pbi_per_capita, indice_nivel_precios, industria_pc) |>
+  mutate(industria_pc_wdi = (industria_pbi * pbi_per_capita) / 100,
+         industria_per_capita = if_else(pais == "China", industria_pc, industria_pc_wdi)) |> 
+  arrange(pais, anio) 
+
+k <- 1.25
+col_personalizados <- c("Asia Oriental y Pacífico" = "#E0195B", "América Latina y el Caribe" = "#3919E0", "Argentina" = "#19E09E", "China" = "#FFAC47")
+
+df_eap <- wdi_limpio_2 %>% filter(region == "East Asia & Pacific") %>% group_by(anio) %>% summarise(industria_per_capita = mean(industria_per_capita, na.rm = TRUE), .groups = "drop") %>% mutate(pais = "Asia Oriental y Pacífico") %>% select(year = anio, pais, industria_per_capita)
+df_lac <- wdi_limpio_2 %>% filter(region == "Latin America & Caribbean") %>% group_by(anio) %>% summarise(industria_per_capita = mean(industria_per_capita, na.rm = TRUE), .groups = "drop") %>% mutate(pais = "América Latina y el Caribe") %>% select(year = anio, pais, industria_per_capita)
+df_paises <- wdi_limpio_2 %>% filter(pais %in% c("Argentina", "China")) %>% mutate(pais = if_else(pais == "China", "China", "Argentina")) %>% select(year = anio, pais, industria_per_capita)
+
+df_industrializacion <- bind_rows(df_eap, df_lac, df_paises) %>% filter(year >= 1990, year <= 2024)
+ult_ind_pc <- df_industrializacion %>% group_by(pais) %>% filter(year == max(year)) %>% ungroup() %>% mutate(etiqueta = str_wrap(pais, 14))
+
+g_ind_pc_esp <- ggplot(df_industrializacion, aes(x = year, y = industria_per_capita, color = pais, group = pais)) +
+  geom_line(linewidth = 1.1, alpha = 0.85) +
+  geom_point(data = ult_ind_pc, size = 3) +
+  geom_text(data = ult_ind_pc, aes(x = 2025, label = etiqueta), hjust = 0, lineheight = 0.3, fontface = "bold", size = 7 * k, show.legend = FALSE) +
+  geom_vline(xintercept = 2001, linetype = "dotted", color = "grey60") +
+  geom_richtext(data = data.frame(x = 2001.25, y = max(df_industrializacion$industria_per_capita, na.rm = TRUE) * 0.08),
+                aes(x = x, y = y, label = "<b>2001: Ingreso de <span style='color:#ffac47'>China</span><br>a la OMC</b>"),
+                hjust = 0, size = 6 * k, color = "grey35", lineheight = 0.3, fill = NA, label.color = NA, inherit.aes = FALSE) +
+  annotate(geom = "curve", x = 2002.5, y = 350, xend = 2001, yend = 548.45, curvature = -0.2, arrow = arrow(length = unit(0.2, "cm")), color = "black", size = 0.5) +
+  geom_vline(xintercept = 2008, linetype = "dotted", color = "grey60") +
+  annotate(geom = "curve", x = 2009.5, y = 3100, xend = 2008, yend = 3100, curvature = 0.1, arrow = arrow(length = unit(0.2, "cm")), color = "black", size = 0.5) +
+  annotate(geom = "text", x = 2010, y = 3100, label = "Crisis del 2008", hjust = 0, size = 6 * k, color = "black", lineheight = 0.3) +
+  scale_color_manual(values = col_personalizados) +
+  scale_x_continuous(breaks = c(seq(1990, 2020, by = 10), 2024), limits = c(1990, 2032), expand = expansion(mult = c(0.01, 0.05))) +
+  scale_y_continuous(labels = label_dollar(prefix = "$", big.mark = ".", decimal.mark = ","), limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
+  coord_cartesian(clip = "off") +
+  labs(
+    title = "Desde 1990 <span style='color:#ffac47'>China</span> aumentó 21 veces su producción industrial por habitante,<br>superando al promedio de <span style='color:#E0195B'>Asia</span> y <span style='color:#3919E0'>América Latina</span>.<br><span style='color:#19E09E'>Argentina</span> perdió la ventaja que tenía sobre <span style='color:#E0195B'>Asia</span>.",
+    subtitle = "Evolución de la Producción Industrial por Habitante (USD constantes de 2015): 1990-2024",
+    caption  = "Fuente: Elaboración propia en base a WDI (Banco Mundial) y Schteingart, D. y Sidicaro, N. (2025). Industria. Argendata. Fundar.",
+    x = "Año", y = "Producción Industrial por Habitante"
+  ) +
+  theme_minimal(base_size = 15) +
+  theme(
+    legend.position        = "none",
+    plot.title.position    = "plot",
+    plot.title             = element_textbox_simple(family = "serif", face = "bold", size = 40 * k, lineheight = 0.33, margin = margin(b = 6)),
+    plot.subtitle          = element_text(color = "grey35", margin = margin(b = 10), size = 26),
+    plot.caption           = element_text(color = "grey45", hjust = 0, size = 15 * k),
+    panel.grid.minor       = element_blank(),
+    panel.grid.major.x     = element_blank(),
+    panel.grid.major.y     = element_line(color = "grey92", linetype = "dashed", linewidth = 0.3),
+    axis.text              = element_text(color = "grey40", size = 25),
+    axis.ticks.x           = element_line(color = "grey60"),
+    plot.margin            = margin(12, 50, 10, 12),
+    axis.title             = element_text(color = "grey35", size = 20),
+  )
+
+# CORRECCIÓN DE DISPOSITIVO: Eliminado device = ragg::agg_jpeg para evitar conflicto con showtext
+ggsave("grupo_01_comunicativolalalal.jpg", plot = g_ind_pc_esp,
+       width = 22, height = 14, units = "cm", dpi = 300)
