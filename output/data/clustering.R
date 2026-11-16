@@ -27,9 +27,9 @@ wdi_final <- read.csv("output/data/wdi_final.csv")
 
 wdi_pca <- wdi_final |> 
   filter(anio == 2022) |> 
-  mutate(ln_pbi_pc = log(pbi_per_capita), ln_va_trabajador = log(valor_agregado_trabajador))
+  mutate(ln_pbi_pc = log(pbi_per_capita), ln_va_trabajador = log(valor_agregado_trabajador), ln_industria_per_capita = log(industria_per_capita))
 
-vars <- c("crecimiento_industria", "industria_pbi", "indice_nivel_precios", 
+vars <- c("crecimiento_industria", "ln_industria_per_capita", "indice_nivel_precios", 
           "empleo_industrial", "exportacion_manufactura", "gasto_gobierno_pbi",
           "ln_va_trabajador", "ahorro_bruto_pbi", "credito_privado_pbi", 
           "recursos_naturales", "ln_pbi_pc")
@@ -62,7 +62,7 @@ heatmap <- cor(X) |>
   scale_fill_gradient2(low = "firebrick", mid = "white", high = "steelblue", limits = c(-1, 1)) +
   labs(x = NULL, y = NULL, title = "Correlaciones entre las variables activas") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
+print(heatmap)
 
 ggsave(file.path("output/graficos", "heatmap.png"), 
        plot = heatmap, width = 12, height = 7, units = "in", dpi = 300)
@@ -114,15 +114,17 @@ res$var$cos2[, 1:4]      # calidad de representacion (coord al cuadrado)
 res$var$contrib[, 1:4]   # % con que cada variable construye cada componente
 
 
-
-
 fviz_pca_var(res, repel = TRUE, col.var = "contrib",
              gradient.cols = c("gray70", "steelblue", "firebrick"))
 
-pc1 <- fviz_contrib(res, choice = "var", axes = 1)   # quien arma PC1
-pc2 <- fviz_contrib(res, choice = "var", axes = 2)   # quien arma PC2
-pc3 <- fviz_contrib(res, choice = "var", axes = 3)   # quien arma PC3
-pc4 <- fviz_contrib(res, choice = "var", axes = 4)   # quien arma PC4
+tema_agrandado <- theme(
+  axis.text = element_text(size = 30),  # Agranda las etiquetas (los nombres de las variables y los números)
+  axis.title = element_text(size = 38)  # Agranda los títulos ("Contributions (%)", "Variables")
+)
+pc1 <- fviz_contrib(res, choice = "var", axes = 1)  + tema_agrandado # quien arma PC1
+pc2 <- fviz_contrib(res, choice = "var", axes = 2) + tema_agrandado  # quien arma PC2
+pc3 <- fviz_contrib(res, choice = "var", axes = 3)  + tema_agrandado # quien arma PC3
+pc4 <- fviz_contrib(res, choice = "var", axes = 4) + tema_agrandado  # quien arma PC4
 
 ggsave(file.path("output/graficos", "pc1.png"), 
        plot = pc1, width = 12, height = 7, units = "in", dpi = 300)
@@ -199,7 +201,7 @@ mapa_regiones <- fviz_pca_ind(
   # Por ejemplo: 1. East Asia, 2. Latin America, 3. Otros, 4. South Asia (revisá los niveles de tu factor)
   palette = c("#1B9E77", "#D95F02", "gray85", "#7570B3") 
 )
-
+print(mapa_regiones)
 ggsave(file.path("output/graficos", "mapa_regiones.png"), 
        plot = mapa_regiones, width = 12, height = 7, units = "in", dpi = 300)
 
@@ -393,7 +395,7 @@ perfil <- wdi_pca |>
   group_by(grupo) |>
   summarise(n = n(),
             crecimiento_industria_prom = mean(crecimiento_industria), 
-            industria_pbi_prom = mean(industria_pbi),
+            industria_per_capita_prom = mean(industria_per_capita),
             indice_nivel_precios_median = median(indice_nivel_precios), 
             mean_empleo_industrial = mean(empleo_industrial),
             mean_exportacion_manufactura = median(exportacion_manufactura), 
@@ -403,7 +405,7 @@ perfil <- wdi_pca |>
             mean_credito_privado_pbi = mean(credito_privado_pbi),
             median_recursos_naturales = median(recursos_naturales),
             median_ln_pbi_pc = median(ln_pbi_pc))|>
-  arrange(industria_pbi_prom)
+  arrange(industria_per_capita_prom)
 perfil
 
 
@@ -492,9 +494,9 @@ rm(dendograma)
 
 dendograma <- plot(res_hcpc, choice = "tree") #CLUSTER         # dendrograma con el corte
 
-
 # dev.off()
 
+print(dendograma)
 plot(res_hcpc, choice = "bar")           # ganancia de inercia por cada fusion
 #La incercia nos diria que debemos elegir 9 clusters
 #Lo cual por un lado puede indicar por que no es facil identificar a los

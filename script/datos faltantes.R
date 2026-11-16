@@ -38,7 +38,7 @@ na_2022 <- wdi3 |>
 
 variables <- c(
   "crecimiento_industria",
-  "industria_pbi",
+  "industria_per_capita",
   "tipo_cambio_real_efectivo",
   "indice_nivel_precios",
   "empleo_industrial",
@@ -107,20 +107,20 @@ view(faltantes_2022)
 
 
 
-#Analisis de Paises sin datos en las variables seleccionadas -> industria_pbi e indice_nivel_precios
-wdi_analisis <- wdi2 |> filter(!is.na(industria_pbi))
+#Analisis de Paises sin datos en las variables seleccionadas -> industria_per_capita e indice_nivel_precios
+wdi_analisis <- wdi2 |> filter(!is.na(industria_per_capita))
 wdi_analisis2 <- wdi2 |> filter(!is.na(indice_nivel_precios))
-wdi_analisis_3_ipbi <- wdi3 |> filter(!is.na(industria_pbi))
+wdi_analisis_3_ipbi <- wdi3 |> filter(!is.na(industria_per_capita))
 wdi_analisis_3_inp <- wdi3 |> filter(!is.na(indice_nivel_precios))
 
 
-#Cuales son aquellos paises que se no tienen industria_pbi en ninguno de los tres anios
+#Cuales son aquellos paises que se no tienen industria_per_capita en ninguno de los tres anios
 setdiff(wdi2$pais, wdi_analisis$pais)
 
 #Cuales son aquellos paises que se no tienen indice_nivel_precios en ninguno de los tres anios
 setdiff(wdi2$pais, wdi_analisis2$pais) 
 
-setdiff(wdi3$pais, wdi_analisis_3_ipbi$pais) #Que paises no tienen industria_pbi ni en ninguno de los 9 anios  
+setdiff(wdi3$pais, wdi_analisis_3_ipbi$pais) #Que paises no tienen industria_per_capita ni en ninguno de los 9 anios  
 setdiff(wdi3$pais, wdi_analisis_3_inp$pais) #Que paises no tienen indice_nivel_precios ni en ninguno de los 9 anios  
 
 
@@ -128,7 +128,7 @@ setdiff(wdi3$pais, wdi_analisis_3_inp$pais) #Que paises no tienen indice_nivel_p
 #En primer lugar creo que podriamos quedarnos solo con los comandos que agrupan tanto (2001,2008,2022) como los otros 9 anios a la vez, en vez de analizar por separado anio a anio
 #Ya que el pais resulta problematico si le falta tanto en los 3 como en los 9, no en uno en especifico
 #El analisis en bloque como en los anios particulares arroja los mismos resultados
-#Corea del Norte y Somalia no tienen datos de industria_pbi en ninguno de los 9 anios
+#Corea del Norte y Somalia no tienen datos de industria_per_capita en ninguno de los 9 anios
 #Por lo que no se puede interpolar sus datos usando los anios cercanos
 #En cuanto a indice_nivel_precios ni Corea del Norte ni Cuba tienen datos en esos 9 anios
 #Por lo tanto decidimos eliminarlos de la base
@@ -165,7 +165,7 @@ na_2022.1 <- wdi3.1 |>
 
 variables2 <- c(
   "crecimiento_industria",
-  "industria_pbi",
+  "industria_per_capita",
   "indice_nivel_precios",
   "empleo_industrial",
   "exportacion_manufactura",
@@ -210,7 +210,7 @@ summarise(ingreso = first(ingreso2),
   arrange(desc(pct_faltantes))
 
 print(faltantes_pais_2008, n = Inf)
-
+head(faltantes_pais_2008)
 
 
 faltantes_pais_2022 <- base_2022.1 |>
@@ -278,11 +278,8 @@ imputar_vecinos <- function(x, anio) {
   )
 }
 
-wdi_3.3 <- wdi3.2 |> 
-  mutate(industria_pc_wdi = (industria_pbi*pbi_per_capita)/100,
-         industria_per_capita = coalesce(industria_pc_wdi, industria_pc))
 
-wdi_filtrado <- wdi_3.3 |> 
+wdi_filtrado <- wdi3.2 |> 
   group_by(pais) |> 
   arrange(pais, anio) |> 
   mutate(
@@ -290,7 +287,7 @@ wdi_filtrado <- wdi_3.3 |>
     across(
       .cols = c(
         crecimiento_industria,
-        industria_pbi,
+        industria_per_capita,
         indice_nivel_precios,
         empleo_industrial,
         exportacion_manufactura,
@@ -324,7 +321,7 @@ write.csv(wdi_filtrado, "output/data/wdi_filtrado.csv")
     across(
       .cols = c(
         crecimiento_industria,
-        industria_pbi,
+        industria_per_capita,
         indice_nivel_precios,
         empleo_industrial,
         exportacion_manufactura,
@@ -359,7 +356,7 @@ colSums(is.na(wdi_filtrado2))
 wdi_final <- wdi_filtrado |> 
   drop_na(
     crecimiento_industria,
-    industria_pbi,
+    industria_per_capita,
     indice_nivel_precios,
     empleo_industrial,
     exportacion_manufactura,
@@ -369,16 +366,16 @@ wdi_final <- wdi_filtrado |>
     credito_privado_pbi,
     recursos_naturales,
     pbi_per_capita,
-    pbi_millones,
-    industria_per_capita)
+    pbi_millones)
 
+write.csv(wdi_final, "output/data/wdi_final.csv")
 
 
 
 wdi_final2 <- wdi_filtrado2 %>% 
   drop_na(
     crecimiento_industria,
-    industria_pbi,
+    industria_per_capita,
     indice_nivel_precios,
     empleo_industrial,
     exportacion_manufactura,
@@ -397,7 +394,7 @@ wdi_final2 <- wdi_filtrado2 %>%
 reporte_eliminados <- anti_join(wdi_filtrado, wdi_final, by = c("pais", "anio")) |> 
   select(pais, anio, 
          crecimiento_industria,
-         industria_pbi,
+         industria_per_capita,
          indice_nivel_precios,
          empleo_industrial,
          exportacion_manufactura,
@@ -420,7 +417,6 @@ reporte_eliminados <- anti_join(wdi_filtrado, wdi_final, by = c("pais", "anio"))
 
 print(reporte_eliminados, n = Inf)
 
-write.csv(wdi_final, "output/data/wdi_final.csv")
 
 colSums(is.na(wdi_filtrado))
 
@@ -434,7 +430,7 @@ head(reporte_eliminados$region[["East Asia & Pacific"]])
 wdi_regresion <- wdi_filtrado |> 
   drop_na(
     crecimiento_industria,
-    industria_pbi,
+    industria_per_capita,
     indice_nivel_precios,
     empleo_industrial,
     exportacion_manufactura,
@@ -447,4 +443,3 @@ wdi_regresion <- wdi_filtrado |>
     pbi_millones)
 
 write.csv(wdi_regresion, "output/data/wdi_regresion.csv")
-write.csv(wdi_filtrado, "output/data/wdi_filtrado.csv")

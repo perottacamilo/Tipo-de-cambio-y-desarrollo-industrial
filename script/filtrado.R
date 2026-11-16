@@ -35,6 +35,11 @@ wdi_limpio <- wdi |>
                                       "Ingreso alto", "Sin clasificar"),
                            labels = c("Bajo", "Medio-bajo", "Medio-alto",
                                       "Alto", "Sin clasificar")),)
+wdi_limpio <- wdi_limpio |> 
+  mutate(industria_pc_wdi = (industria_pbi * pbi_per_capita) / 100,
+         industria_per_capita = coalesce(industria_pc, industria_pc_wdi))
+
+
 write.csv(wdi_limpio, "output/data/wdi_limpio.csv")
 
 
@@ -54,13 +59,13 @@ diccionario <- tribble(
   "pbi_millones",               "PBI del país en millones de dólares",                                                                    "Numérica",            "Dolares constanes 2015",         "> 0",            2789,              18,       9,        9,
   "pbi_per_capita",             "PBI per capita ",                                                                                        "Numérica",            "Dolares constanes 2015",         "> 0",            2789,              18,       9,        9,
   "indice_nivel_precios",       "Factor de Paridad de Poder Adquisitivo (PPA) sobre el tipo de cambio nominal multiplicado por 100",      "Numérica",            "Indice",                         "> 0",            7299,              23,       17,       18,
-  "industria_pbi",              "Participacion de la industria en el PBI",                                                                "Numérica",            "% del PBI",                      "0 a 100",        5267,              36,       21,       19,
+  "industria_per_capita",       "PBI Industrial per capita",                                                                              "Numérica",            "Dolares constantes 2015",        "0 a 100",        5267,              36,       21,       19,
   "crecimiento_industria",      "Crecimiento de la industria",                                                                            "Numérica",            "% de crecimiento",               "> 0",            6232,              48,       35,       24,
   "tipo_cambio_real_efectivo",  "Nivel de Competitividad con base = 2010",                                                                "Numérica",            "Indice",                         "> 0",            10172,             122,      122,      125,
   "recursos_naturales",         "Rentas Económicas provenientes de los recursos naturales ",                                              "Numérica",            "% del PBI",                      "0 a 100",        5087,              17,       10,       217,
   "empleo_industrial",          "Cantidad de empleados en el sector industrial",                                                          "Numérica",            "% del total de empleados",       "0 a 100",        7791,              30,       30,       31,
   "ingreso",                    "Tipo de ingreso per capita del pais",                                                                    "Categórica",          "-",                              "5 categorías",   0,                 0,        0,        0,
-  "exportacion_manufactura",    "Porcentaje de la exportacion en manufacturas",                                                           "Numérica",            "% del total",                    "0 a 100",        6383,              53,       50,       54,
+  "exportacion_manufactura",    "Porcentaje de la exportacion en manufacturas del total de las mercancias",                                                           "Numérica",            "% del total",                    "0 a 100",        6383,              53,       50,       54,
   "gasto_gobierno_pbi",         "Gasto Total del Gobierno",                                                                               "Numérica",            "% del PBI",                      "0 a 100",        5593,              58,       46,       41,
   "gastos_totales_gob_pbi",     "Gasto total del gobierno como % PBI (inculye subsidios)",                                                "Numérica",            "% del PBI",                      "0 a 100",        9870,              58,       46,       41,
   "valor_agregado_trabajador",  "Valor agregado del trabajador de la industria",                                                          "Numérica",            "Dolares constantes 2015",        "> 0",            8735,              61,       46,       44,
@@ -137,6 +142,21 @@ write.csv(wdi3, "output/data/wdi3.csv")
   
   
   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #Creamos una base para cada anio
 wdi_2001 <- wdi2 |>
   filter(anio == 2001)
