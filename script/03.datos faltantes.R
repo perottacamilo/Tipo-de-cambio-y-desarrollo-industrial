@@ -1,5 +1,7 @@
 #Script Datos Faltantes (NAs)
 
+# install.packages(c("dplyr", "tidyr"))
+
 library(dplyr)
 library(tidyr)
 library(readxl)
@@ -27,12 +29,13 @@ base_2022<- wdi2 |>
 
 
 #Creamos bases para los bloques de tres anios
+wdi3 <- wdi3 |> 
+  filter(poblacion_mill > 1)
+
 na_2001 <- wdi3 |> 
   filter(anio %in% c(2000, 2001, 2002))
-  
 na_2008 <- wdi3 |> 
   filter(anio %in% c(2007, 2008, 2009))
-
 na_2022 <- wdi3 |> 
   filter(anio %in% c(2021, 2022, 2023))
 
@@ -121,6 +124,7 @@ setdiff(wdi2$pais, wdi_analisis$pais)
 setdiff(wdi2$pais, wdi_analisis2$pais) 
 
 setdiff(wdi3$pais, wdi_analisis_3_ipbi$pais) #Que paises no tienen industria_per_capita ni en ninguno de los 9 anios  
+
 setdiff(wdi3$pais, wdi_analisis_3_inp$pais) #Que paises no tienen indice_nivel_precios ni en ninguno de los 9 anios  
 
 
@@ -138,8 +142,7 @@ setdiff(wdi3$pais, wdi_analisis_3_inp$pais) #Que paises no tienen indice_nivel_p
 
 wdi2.1 <- wdi2 |> 
   select(-tipo_cambio_real_efectivo, -gastos_totales_gob_pbi) |> 
-  filter(!pais %in% c("Korea, Dem. People's Rep.", "Cuba", "Somalia, Fed. Rep."),
-         poblacion_mill > 1)
+  filter(!pais %in% c("Korea, Dem. People's Rep.", "Cuba", "Somalia, Fed. Rep."))
 
 wdi3.1 <- wdi3 |> 
   select(-tipo_cambio_real_efectivo, -gastos_totales_gob_pbi) |> 
@@ -196,7 +199,6 @@ summarise(ingreso = first(ingreso2),
 arrange(desc(pct_faltantes))
 
 print(faltantes_pais_2001, n = Inf)
-head(faltantes_pais_2001)
 
 
 faltantes_pais_2008 <- base_2008.1 |>
@@ -210,7 +212,6 @@ summarise(ingreso = first(ingreso2),
   arrange(desc(pct_faltantes))
 
 print(faltantes_pais_2008, n = Inf)
-head(faltantes_pais_2008)
 
 
 faltantes_pais_2022 <- base_2022.1 |>
@@ -313,46 +314,6 @@ wdi_filtrado <- wdi3.2 |>
 write.csv(wdi_filtrado, "output/data/wdi_filtrado.csv")
 
 
-
-# wdi_filtrado2<- wdi3.2 |> 
-  group_by(pais) |> 
-  arrange(anio) |> 
-  mutate(
-    across(
-      .cols = c(
-        crecimiento_industria,
-        industria_per_capita,
-        indice_nivel_precios,
-        empleo_industrial,
-        exportacion_manufactura,
-        gasto_gobierno_pbi,
-        valor_agregado_trabajador,
-        ahorro_bruto_pbi,
-        credito_privado_pbi,
-        recursos_naturales,
-        pbi_per_capita,
-        pbi_millones, 
-        industria_per_capita),
-      .fns = ~ if_else(
-        condition = is.na(.x) & anio %in% c(2001, 2008, 2022), 
-        true = (lag(.x) + lead(.x)) / 2, 
-        false = .x)),
-    recursos_naturales = if_else(
-      condition = is.na(recursos_naturales) & anio == 2022, 
-      true = lag(recursos_naturales, n = 1), 
-      false = recursos_naturales)) |> 
-  ungroup() |> 
-  filter(anio %in% c(2001, 2008, 2022))
-
-
-
-colSums(is.na(wdi_filtrado))
-colSums(is.na(wdi_filtrado2))
-
-
-
-
-
 wdi_final <- wdi_filtrado |> 
   drop_na(
     crecimiento_industria,
@@ -369,25 +330,6 @@ wdi_final <- wdi_filtrado |>
     pbi_millones)
 
 write.csv(wdi_final, "output/data/wdi_final.csv")
-
-
-
-wdi_final2 <- wdi_filtrado2 %>% 
-  drop_na(
-    crecimiento_industria,
-    industria_per_capita,
-    indice_nivel_precios,
-    empleo_industrial,
-    exportacion_manufactura,
-    gasto_gobierno_pbi,
-    valor_agregado_trabajador,
-    ahorro_bruto_pbi,
-    credito_privado_pbi,
-    recursos_naturales,
-    pbi_per_capita,
-    pbi_millones)
-
-
 
 
 
@@ -419,8 +361,6 @@ print(reporte_eliminados, n = Inf)
 
 
 colSums(is.na(wdi_filtrado))
-
-head(reporte_eliminados$region[["East Asia & Pacific"]])
 
 
 #Filtramos (drop.na) solo en las variables que ustilizamos en la regresion

@@ -1,4 +1,5 @@
-# install.packages(c("WDI","readxl"))
+# install.packages(c("WDI","readxl", "tidyverse"))
+
 library(tidyverse)
 library(WDI)
 library(readxl)
@@ -28,30 +29,7 @@ wdi <- WDI(indicator = c(crecimiento_industria = "NV.IND.TOTL.KD.ZG",
   end = 2025,
   extra = TRUE)
 
-wdi <- wdi |> 
-  # 1. Eliminamos las columnas administrativas que separan las filas 
-  # (así R deja de pensar que son registros distintos por la fecha)
-  select(-status, -lastupdated) |> 
-  
-  # 2. Le decimos a R: "mirá la base agrupando país por país y año por año"
-  # (Ej: mirá las dos filas de Afganistán 2024 juntas)
-  group_by(iso2c, iso3c, year) |> 
-  
-  # 3. EL "SUPER JOIN" (Aplastamiento):
-  # across(everything(), ...): Recorre todas las columnas (crecimiento, manufactura, etc).
-  # na.omit(x): Borra los vacíos (NA) de esa columna en ese bloque de filas.
-  # first(): Agarra el primer dato real que sobrevivió.
-  summarise(across(everything(), \(x) if(all(is.na(x))) NA else first(na.omit(x))), 
-            .groups = "drop")
-
-
-
-
-
-
-
-
-argendata <- read_csv("raw/pib_indust_per_capita_comparado.csv") |> 
+argendata <- read_csv("auxiliar/pib_indust_per_capita_comparado.csv") |> 
   select(
     iso3c = geocodigoFundar, 
     year = anio, 
@@ -61,7 +39,6 @@ argendata <- read_csv("raw/pib_indust_per_capita_comparado.csv") |>
 wdi <- wdi |> 
   left_join(argendata, by = c("iso3c", "year"))
 
-
-
-
 write.csv(wdi, "raw/wdi_tabla_completa.csv")
+
+
