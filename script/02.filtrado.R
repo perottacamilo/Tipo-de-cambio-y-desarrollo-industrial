@@ -29,14 +29,13 @@ wdi_limpio <- wdi |>
                                      "High income", "Not classified"),
                           labels = c("Ingreso bajo", "Ingreso medio-bajo", "Ingreso medio-alto",
                                      "Ingreso alto", "Sin clasificar")),
-         mutate(across(where(is.numeric), ~ round(.x, 3))),
-         ingreso2 = ingreso,
-         ingreso2 = factor(ingreso2,
+         across(where(is.numeric), ~ round(.x, 3)),
+         ingreso2 = factor(ingreso,
                            levels = c("Ingreso bajo", "Ingreso medio-bajo", "Ingreso medio-alto",
                                       "Ingreso alto", "Sin clasificar"),
                            labels = c("Bajo", "Medio-bajo", "Medio-alto",
-                                      "Alto", "Sin clasificar")),) |> 
-  mutate(industria_pc_wdi = (industria_pbi * pbi_per_capita) / 100,
+                                      "Alto", "Sin clasificar")), 
+         industria_pc_wdi = (industria_pbi * pbi_per_capita) / 100,
          industria_per_capita = coalesce(industria_pc, industria_pc_wdi))
 
 
