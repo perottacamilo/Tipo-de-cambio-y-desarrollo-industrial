@@ -20,7 +20,7 @@ library(dplyr)
 rm(list = ls())
 
 
-wdi_regresion <- read.csv("output/data/wdi_filtrado.csv")
+wdi_regresion <- read.csv("input/wdi_filtrado.csv")
 
 
 #/*

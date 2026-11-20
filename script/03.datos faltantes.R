@@ -9,9 +9,9 @@ library(readxl)
 
 rm(list = ls())
 
-wdi2 <- read.csv("output/data/wdi2.csv")
+wdi2 <- read.csv("input/wdi2.csv")
 
-wdi3 <- read.csv("output/data/wdi3.csv")
+wdi3 <- read.csv("input/wdi3.csv")
 
 #Creamos una base para cada anio
 #Y eliminamos a los paises con menos de un millon de habitantes
@@ -66,8 +66,6 @@ faltantes <- wdi2 |>
   pivot_longer(everything(), names_to = "variable", values_to = "pct_na") |>
   arrange(desc(pct_na))
 
-view(faltantes)
-
 
 
 #Proceentaje de datos faltantes por variable por cada anio
@@ -75,19 +73,16 @@ faltantes_2001 <- base_2001 |>
   summarise(across(everything(), ~ mean(is.na(.x)) * 100)) |>
   pivot_longer(everything(), names_to = "variable", values_to = "pct_na") |>
   arrange(desc(pct_na))
-view(faltantes_2001)
 
 faltantes_2008 <- base_2008 |>
   summarise(across(everything(), ~ mean(is.na(.x)) * 100)) |>
   pivot_longer(everything(), names_to = "variable", values_to = "pct_na") |>
   arrange(desc(pct_na))
-view(faltantes_2008)
 
 faltantes_2022 <- base_2022 |>
   summarise(across(everything(), ~ mean(is.na(.x)) * 100)) |>
   pivot_longer(everything(), names_to = "variable", values_to = "pct_na") |>
   arrange(desc(pct_na))
-view(faltantes_2022)
 
 #De la tabla "faltantes" vemos que hay dos variables que les falta mas del 40% de los datos
 #tipo_cambio_real_efectivo -> 51.2%
@@ -284,7 +279,6 @@ wdi_filtrado <- wdi3.2 |>
   group_by(pais) |> 
   arrange(pais, anio) |> 
   mutate(
-    # Todas las variables menos recursos_naturales
     across(
       .cols = c(
         crecimiento_industria,
@@ -303,7 +297,6 @@ wdi_filtrado <- wdi3.2 |>
         condition = is.na(.x) & anio %in% c(2001, 2008, 2022),
         true = imputar_vecinos(.x, anio),
         false = .x)),
-    # recursos_naturales: 2022 copia 2021; 2001 y 2008 usan la regla de vecinos
     recursos_naturales = case_when(
       anio == 2022 ~ if_else(lag(anio) == anio - 1, lag(recursos_naturales), NA_real_),
       is.na(recursos_naturales) & anio %in% c(2001, 2008) ~ imputar_vecinos(recursos_naturales, anio),
@@ -311,7 +304,7 @@ wdi_filtrado <- wdi3.2 |>
   ungroup() |> 
   filter(anio %in% c(2001, 2008, 2022))
 
-write.csv(wdi_filtrado, "output/data/wdi_filtrado.csv")
+write.csv(wdi_filtrado, "input/wdi_filtrado.csv")
 
 
 wdi_final <- wdi_filtrado |> 
@@ -329,7 +322,7 @@ wdi_final <- wdi_filtrado |>
     pbi_per_capita,
     pbi_millones)
 
-write.csv(wdi_final, "output/data/wdi_final.csv")
+write.csv(wdi_final, "input/wdi_final.csv")
 
 
 
@@ -382,4 +375,4 @@ wdi_regresion <- wdi_filtrado |>
     pbi_per_capita,
     pbi_millones)
 
-write.csv(wdi_regresion, "output/data/wdi_regresion.csv")
+write.csv(wdi_regresion, "input/wdi_regresion.csv")

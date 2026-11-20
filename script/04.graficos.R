@@ -16,11 +16,11 @@ library(webshot2)
 
 rm(list = ls())
 
-wdi_limpio <- read.csv("output/data/wdi_limpio.csv")
+wdi_limpio <- read.csv("input/wdi_limpio.csv")
 
-wdi2 <- read.csv("output/data/wdi2.csv")
+wdi2 <- read.csv("input/wdi2.csv")
 
-wdi_filtrado <- read.csv("output/data/wdi_filtrado.csv")
+wdi_filtrado <- read.csv("input/wdi_filtrado.csv")
 
 wdi_analisis <- wdi2 |> 
   filter(!is.na(industria_per_capita))
@@ -680,7 +680,7 @@ ggsave(file.path("output/graficos", "variacion_ingreso.png"),
 rm(list = ls())
 
 
-wdi_limpio <- read.csv("output/data/wdi_limpio.csv")
+wdi_limpio <- read.csv("input/wdi_limpio.csv")
 
 wdi_limpio_2 <- wdi_limpio |> 
   filter(region %in% c("Este de Asia y Pacífico", "América Latina y el Caribe"), poblacion_mill > 1, anio >= 1990, 
@@ -724,7 +724,7 @@ wdi_filtrado_2 <- wdi_limpio_2 |>
   ) |> 
   ungroup() 
 
-write.csv(wdi_filtrado_2, "output/data/wdi_filtrado_2.csv")
+write.csv(wdi_filtrado_2, "input/wdi_filtrado_2.csv")
 
 
 
@@ -883,7 +883,7 @@ rm(list = ls())
 
 
 
-wdi_filtrado <- read.csv("output/data/wdi_filtrado.csv")
+wdi_filtrado <- read.csv("input/wdi_filtrado.csv")
 
 wdi_filtrado_2 <- wdi_filtrado |> 
   select(pais, anio, industria_per_capita, exportacion_manufactura, region, pbi_per_capita, indice_nivel_precios, industria_pc) |>
@@ -1132,7 +1132,7 @@ rm(list = ls())
 
 
 
-wdi_filtrado <- read.csv("output/data/wdi_filtrado.csv")
+wdi_filtrado <- read.csv("input/wdi_filtrado.csv")
 
 wdi_filtrado_2 <- wdi_filtrado |> 
   mutate(industria_pc_wdi = (industria_per_capita*pbi_per_capita)/100,
@@ -1431,7 +1431,7 @@ ggsave("grupo_01_exploratorio.jpg",
 rm(list = ls())
 
 
-wdi_limpio <- read.csv("output/data/wdi_limpio.csv")
+wdi_limpio <- read.csv("input/wdi_limpio.csv")
 
 wdi_limpio_2 <- wdi_limpio |> 
   filter(region %in% c("Este de Asia y Pacífico", "América Latina y el Caribe"), poblacion_mill > 1, anio >= 1990, 
@@ -1767,7 +1767,7 @@ juntar <- function(paneles, titulo, subtitulo, caption) {
 # ------------------------------------------------------------------------------
 # 2. PROCESAMIENTO Y GRÁFICO EXPLORATORIO
 # ------------------------------------------------------------------------------
-wdi_filtrado <- read.csv("output/data/wdi_filtrado.csv")
+wdi_filtrado <- read.csv("input/wdi_filtrado.csv")
 
 # CORRECCIÓN METODOLÓGICA: if_else para aislar China sin saltos espurios
 wdi_filtrado_2 <- wdi_filtrado |> 
@@ -1839,7 +1839,7 @@ ggsave("grupo_01_exploratoriolalala.jpg", plot = grafico_exploratorio_2,
 # ------------------------------------------------------------------------------
 # 3. PROCESAMIENTO Y GRÁFICO COMUNICATIVO
 # ------------------------------------------------------------------------------
-wdi_limpio <- read.csv("output/data/wdi_limpio.csv")
+wdi_limpio <- read.csv("input/wdi_limpio.csv")
 
 # CORRECCIÓN METODOLÓGICA: if_else para evitar saltos en la serie de tiempo
 wdi_limpio_2 <- wdi_limpio |> 
@@ -2055,7 +2055,7 @@ juntar <- function(paneles, titulo, subtitulo, caption) {
 # ------------------------------------------------------------------------------
 # 2. PROCESAMIENTO Y GRÁFICO EXPLORATORIO
 # ------------------------------------------------------------------------------
-wdi_filtrado <- read.csv("output/data/wdi_filtrado.csv")
+wdi_filtrado <- read.csv("input/wdi_filtrado.csv")
 
 # CORRECCIÓN METODOLÓGICA: if_else para aislar China sin saltos espurios
 wdi_filtrado_2 <- wdi_filtrado |> 
@@ -2137,7 +2137,7 @@ ggsave("output/graficos/grupo_01_exploratorio.jpg", plot = grafico_exploratorio_
 # 3. PROCESAMIENTO Y GRÁFICO COMUNICATIVO
 # ------------------------------------------------------------------------------
 rm(list = ls())
-wdi_limpio <- read.csv("output/data/wdi_limpio.csv")
+wdi_limpio <- read.csv("input/wdi_limpio.csv")
 
 # CORRECCIÓN METODOLÓGICA: if_else para evitar saltos en la serie de tiempo
 wdi_limpio_2 <- wdi_limpio |> 

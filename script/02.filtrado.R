@@ -5,11 +5,6 @@ library(readxl)
 library(gt) 
 
 
-#library(dplyr) creo que ninguno de estos cuatro paquetes sirve en este script
-#library(tidyr)
-#library(skimr)
-#library(ggplot2)
-
 rm(list = ls())
 
 options(scipen = 999)
@@ -45,7 +40,7 @@ wdi_limpio <- wdi |>
          industria_per_capita = coalesce(industria_pc, industria_pc_wdi))
 
 
-write.csv(wdi_limpio, "output/data/wdi_limpio.csv")
+write.csv(wdi_limpio, "input/wdi_limpio.csv")
 
 
 #Tabla que explica a que categoria corresponde cada variable
@@ -104,11 +99,11 @@ gtsave(tabla_imagen, "output/tablas/diccionario_imagen.png")
 wdi2 <- wdi_limpio |> 
   filter(anio %in% c(2001, 2008, 2022))
   
-write.csv(wdi2, "output/data/wdi2.csv")
+write.csv(wdi2, "input/wdi2.csv")
 
   wdi3 <- wdi_limpio |>
     filter(anio %in% c(2000, 2001, 2002, 2007, 2008, 2009, 2021, 2022, 2023), poblacion_mill >= 1) |> 
     arrange(pais, anio)
 
-write.csv(wdi3, "output/data/wdi3.csv")
+write.csv(wdi3, "input/wdi3.csv")
   
