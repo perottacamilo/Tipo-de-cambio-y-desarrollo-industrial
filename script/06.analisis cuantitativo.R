@@ -55,9 +55,9 @@ for (a in anios) {
                           ahorro_bruto_pbi + gasto_gobierno_pbi + log(pbi_per_capita), data = df_sub),
     
     # --- EXPORTACIONES MANUFACTURERAS ---
-    "Exp: Simple"  = lm(exportacion_manufactura ~ indice_nivel_precios, data = df_sub),
+    "Exp: Simple"  = lm(log(exportacion_manufactura_brutas) ~ indice_nivel_precios, data = df_sub),
     
-    "Exp: Control" = lm(exportacion_manufactura ~ indice_nivel_precios + recursos_naturales + 
+    "Exp: Control" = lm(log(exportacion_manufactura_brutas) ~ indice_nivel_precios + recursos_naturales + 
                           ahorro_bruto_pbi + gasto_gobierno_pbi + log(pbi_per_capita), data = df_sub)
   )
   
@@ -173,7 +173,7 @@ df_sub_2022_exp <- wdi_regresion |>
 # 2. Estimación del modelo controlado para Exportaciones
 mods_exp_2022 <- list(
   "Exp: Control" = lm(
-    exportacion_manufactura ~ indice_nivel_precios + recursos_naturales + 
+    log(exportacion_manufactura_brutas) ~ indice_nivel_precios + recursos_naturales + 
       ahorro_bruto_pbi + gasto_gobierno_pbi + log(pbi_per_capita), 
     data = df_sub_2022_exp
   )
@@ -357,7 +357,7 @@ variables2 <- c(
   "industria_pbi",
   "indice_nivel_precios",
   "empleo_industrial",
-  "exportacion_manufactura",
+  "exportacion_manufactura_brutas",
   "gasto_gobierno_pbi",
   "valor_agregado_trabajador",
   "ahorro_bruto_pbi",
@@ -419,9 +419,9 @@ head(sort(cooks.distance(modelos_por_anio$anio_2008[["Ind: Control"]]), decreasi
 
 
 # Cambiá "pais" por el nombre exacto de la columna que identifica a los países en tu base
-paises_grafico_2022 <- wdi_2022[c(77, 28, 141,151,80,150), c("pais", "exportacion_manufactura","industria_pbi")]
-paises_grafico_2008 <- wdi_2008[c(77, 57, 19, 145), c("pais", "exportacion_manufactura")]
-paises_grafico_2001 <- wdi_2001[c(28,76, 50, 64,54), c("pais", "exportacion_manufactura")]
+paises_grafico_2022 <- wdi_2022[c(77, 28, 141,151,80,150), c("pais", "exportacion_manufactura_brutas","industria_pbi")]
+paises_grafico_2008 <- wdi_2008[c(77, 57, 19, 145), c("pais", "exportacion_manufactura_brutas")]
+paises_grafico_2001 <- wdi_2001[c(28,76, 50, 64,54), c("pais", "exportacion_manufactura_brutas")]
 print(paises_grafico_2022)
 print(paises_grafico_2008)
 print(paises_grafico_2001)
@@ -695,7 +695,7 @@ tablas_anios <- setNames(
     df_anio <- wdi2 |> filter(anio == a)
     
     mod1 <- lm(industria_per_capita ~ indice_nivel_precios, data = df_anio)
-    mod2 <- lm(exportacion_manufactura ~ indice_nivel_precios, data = df_anio)
+    mod2 <- lm(log(exportacion_manufactura_brutas) ~ indice_nivel_precios, data = df_anio)
     
     modelsummary(
       list(
@@ -740,13 +740,13 @@ wdi_2022<- wdi2 |>
 
 # Estimación de todos los modelos
 mod1_2001 <- lm(industria_per_capita ~ indice_nivel_precios, data = wdi2 |> filter(anio == 2001))
-mod2_2001 <- lm(exportacion_manufactura ~ indice_nivel_precios, data = wdi2 |> filter(anio == 2001))
+mod2_2001 <- lm(log(exportacion_manufactura_brutas) ~ indice_nivel_precios, data = wdi2 |> filter(anio == 2001))
 
 mod1_2008 <- lm(industria_per_capita ~ indice_nivel_precios, data = wdi2 |> filter(anio == 2008))
-mod2_2008 <- lm(exportacion_manufactura ~ indice_nivel_precios, data = wdi2 |> filter(anio == 2008))
+mod2_2008 <- lm(log(exportacion_manufactura_brutas) ~ indice_nivel_precios, data = wdi2 |> filter(anio == 2008))
 
 mod1_2022 <- lm(industria_per_capita ~ indice_nivel_precios, data = wdi2 |> filter(anio == 2022))
-mod2_2022 <- lm(exportacion_manufactura ~ indice_nivel_precios, data = wdi2 |> filter(anio == 2022))
+mod2_2022 <- lm(log(exportacion_manufactura_brutas) ~ indice_nivel_precios, data = wdi2 |> filter(anio == 2022))
 
 # Muestra la tabla visualmente en la pestaña Viewer (al costado)
 modelsummary(

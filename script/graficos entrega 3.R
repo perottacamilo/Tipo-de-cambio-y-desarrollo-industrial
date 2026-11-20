@@ -157,12 +157,12 @@ dispersion <- wdi_filtrado_2 |>
   ) |>
   select(pais, grupo_region, anio, pib = indice_nivel_precios,
          Industria = industria_per_capita,
-         Exportaciones = exportacion_manufactura) |>
+         Exportaciones = exportacion_manufactura_brutas) |>
   pivot_longer(c(Industria, Exportaciones), names_to = "indicador", values_to = "valor") |>
   filter(!is.na(valor), valor > 0, !is.na(pib)) |>
   mutate(
     titulo = paste0(indicador, " (", anio, ")"),
-    subtitulo = if_else(indicador == "Industria", "Industria per cápita", "Manufacturas en las exportaciones de mercancías (%)"),
+    subtitulo = if_else(indicador == "Industria", "Industria per cápita", "Exportaciones brutas (millones USD)"),
     log_y = TRUE, codigo = pais
   )
 
@@ -226,7 +226,7 @@ wdi_limpio <- read.csv("output/data/wdi_limpio.csv")
 wdi_limpio_2 <- wdi_limpio |> 
   filter(region %in% c("East Asia & Pacific", "Latin America & Caribbean"), poblacion_mill > 1, anio >= 1990 & anio <= 2023, 
          !pais %in% c("Cuba", "Korea, Dem. People's Rep.", "Venezuela, RB")) |> 
-  select(pais, anio, industria_pbi, exportacion_manufactura, region, pbi_per_capita, indice_nivel_precios, industria_pc) |>
+  select(pais, anio, industria_pbi, exportacion_manufactura_brutas, region, pbi_per_capita, indice_nivel_precios, industria_pc) |>
   mutate(industria_pc_wdi = (industria_pbi * pbi_per_capita) / 100,
          industria_per_capita = coalesce(industria_pc, industria_pc_wdi)) |>   arrange(pais, anio) 
 

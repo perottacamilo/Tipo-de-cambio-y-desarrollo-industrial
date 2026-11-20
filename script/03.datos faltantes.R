@@ -9,9 +9,9 @@ library(readxl)
 
 rm(list = ls())
 
-wdi2 <- read.csv("input/wdi2.csv")
-
-wdi3 <- read.csv("input/wdi3.csv")
+wdi2 <- read.csv("input/wdi2.csv")#2001 2008 2022
+colSums(is.na(wdi2))
+wdi3 <- read.csv("input/wdi3.csv")# 2000, 2001, 2002, 2007, 2008, 2009, 2021, 2022, 2023
 
 #Creamos una base para cada anio
 #Y eliminamos a los paises con menos de un millon de habitantes
@@ -26,6 +26,7 @@ base_2008 <- wdi2 |>
   filter(anio == 2008)
 base_2022<- wdi2 |>
   filter(anio == 2022)
+colSums(is.na(base_2022))
 
 
 #Creamos bases para los bloques de tres anios
@@ -45,7 +46,7 @@ variables <- c(
   "tipo_cambio_real_efectivo",
   "indice_nivel_precios",
   "empleo_industrial",
-  "exportacion_manufactura",
+  "exportacion_manufactura_brutas",
   "gasto_gobierno_pbi",
   "gastos_totales_gob_pbi",
   "valor_agregado_trabajador",
@@ -53,8 +54,7 @@ variables <- c(
   "credito_privado_pbi",
   "recursos_naturales",
   "pbi_per_capita",
-  "pbi_millones", 
-  "industria_pc")
+  "pbi_millones")
 
 
 
@@ -127,7 +127,7 @@ setdiff(wdi3$pais, wdi_analisis_3_inp$pais) #Que paises no tienen indice_nivel_p
 #En primer lugar creo que podriamos quedarnos solo con los comandos que agrupan tanto (2001,2008,2022) como los otros 9 anios a la vez, en vez de analizar por separado anio a anio
 #Ya que el pais resulta problematico si le falta tanto en los 3 como en los 9, no en uno en especifico
 #El analisis en bloque como en los anios particulares arroja los mismos resultados
-#Corea del Norte y Somalia no tienen datos de industria_per_capita en ninguno de los 9 anios
+#Corea del Norte no tienen datos de industria_per_capita en ninguno de los 9 anios
 #Por lo que no se puede interpolar sus datos usando los anios cercanos
 #En cuanto a indice_nivel_precios ni Corea del Norte ni Cuba tienen datos en esos 9 anios
 #Por lo tanto decidimos eliminarlos de la base
@@ -137,11 +137,11 @@ setdiff(wdi3$pais, wdi_analisis_3_inp$pais) #Que paises no tienen indice_nivel_p
 
 wdi2.1 <- wdi2 |> 
   select(-tipo_cambio_real_efectivo, -gastos_totales_gob_pbi) |> 
-  filter(!pais %in% c("Korea, Dem. People's Rep.", "Cuba", "Somalia, Fed. Rep."))
+  filter(!pais %in% c("Korea, Dem. People's Rep.", "Cuba"))
 
 wdi3.1 <- wdi3 |> 
   select(-tipo_cambio_real_efectivo, -gastos_totales_gob_pbi) |> 
-  filter(!pais %in% c("Korea, Dem. People's Rep.", "Cuba", "Somalia, Fed. Rep."))
+  filter(!pais %in% c("Korea, Dem. People's Rep.", "Cuba"))
 
 
 base_2001.1 <- wdi2.1 |>
@@ -166,15 +166,14 @@ variables2 <- c(
   "industria_per_capita",
   "indice_nivel_precios",
   "empleo_industrial",
-  "exportacion_manufactura",
+  "exportacion_manufactura_brutas",
   "gasto_gobierno_pbi",
   "valor_agregado_trabajador",
   "ahorro_bruto_pbi",
   "credito_privado_pbi",
   "recursos_naturales",
   "pbi_per_capita",
-  "pbi_millones",
-  "industria_pc")
+  "pbi_millones")
 
 
 
@@ -285,7 +284,7 @@ wdi_filtrado <- wdi3.2 |>
         industria_per_capita,
         indice_nivel_precios,
         empleo_industrial,
-        exportacion_manufactura,
+        exportacion_manufactura_brutas,
         gasto_gobierno_pbi,
         valor_agregado_trabajador,
         ahorro_bruto_pbi,
@@ -313,7 +312,7 @@ wdi_final <- wdi_filtrado |>
     industria_per_capita,
     indice_nivel_precios,
     empleo_industrial,
-    exportacion_manufactura,
+    exportacion_manufactura_brutas,
     gasto_gobierno_pbi,
     valor_agregado_trabajador,
     ahorro_bruto_pbi,
@@ -332,7 +331,7 @@ reporte_eliminados <- anti_join(wdi_filtrado, wdi_final, by = c("pais", "anio"))
          industria_per_capita,
          indice_nivel_precios,
          empleo_industrial,
-         exportacion_manufactura,
+         exportacion_manufactura_brutas,
          gasto_gobierno_pbi,
          valor_agregado_trabajador,
          ahorro_bruto_pbi,
@@ -366,7 +365,7 @@ wdi_regresion <- wdi_filtrado |>
     industria_per_capita,
     indice_nivel_precios,
     empleo_industrial,
-    exportacion_manufactura,
+    exportacion_manufactura_brutas,
     gasto_gobierno_pbi,
     valor_agregado_trabajador,
     ahorro_bruto_pbi,
@@ -376,3 +375,4 @@ wdi_regresion <- wdi_filtrado |>
     pbi_millones)
 
 write.csv(wdi_regresion, "input/wdi_regresion.csv")
+

@@ -29,10 +29,13 @@ wdi_final <- read.csv("input/wdi_final.csv")
 
 wdi_pca <- wdi_final |> 
   filter(anio == 2022) |> 
-  mutate(ln_pbi_pc = log(pbi_per_capita), ln_va_trabajador = log(valor_agregado_trabajador), ln_industria_per_capita = log(industria_per_capita))
+  mutate(ln_pbi_pc = log(pbi_per_capita), 
+         ln_va_trabajador = log(valor_agregado_trabajador), 
+         ln_industria_per_capita = log(industria_per_capita),
+         ln_exportacion_manufactura_brutas = log(exportacion_manufactura_brutas))
 
 vars <- c("crecimiento_industria", "ln_industria_per_capita", "indice_nivel_precios", 
-          "empleo_industrial", "exportacion_manufactura", "gasto_gobierno_pbi",
+          "empleo_industrial", "ln_exportacion_manufactura_brutas", "gasto_gobierno_pbi",
           "ln_va_trabajador", "ahorro_bruto_pbi", "credito_privado_pbi", 
           "recursos_naturales", "ln_pbi_pc")
 
