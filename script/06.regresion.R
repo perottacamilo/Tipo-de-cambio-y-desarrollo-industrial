@@ -52,13 +52,13 @@ for (a in anios) {
     "Ind: Simple"  = lm(industria_pbi ~ indice_nivel_precios, data = df_sub),
     
     "Ind: Control" = lm(industria_pbi ~ indice_nivel_precios + recursos_naturales + 
-                          ahorro_bruto_pbi + gasto_gobierno_pbi + log(pbi_per_capita), data = df_sub),
+                          ahorro_bruto_pbi + log(pbi_per_capita), data = df_sub),
     
     # --- EXPORTACIONES MANUFACTURERAS ---
     "Exp: Simple"  = lm(log(exportacion_manufactura_brutas) ~ indice_nivel_precios, data = df_sub),
     
     "Exp: Control" = lm(log(exportacion_manufactura_brutas) ~ indice_nivel_precios + recursos_naturales + 
-                          ahorro_bruto_pbi + gasto_gobierno_pbi + log(pbi_per_capita), data = df_sub)
+                          ahorro_bruto_pbi + log(pbi_per_capita), data = df_sub)
   )
   
   # Guardar modelos
@@ -126,7 +126,6 @@ for (a in anios) {
   if (a == 2008) {
     df_sub <- df_sub |> filter(!pais %in% outliers_2008_ind)
   }
-  # 2. Estimación de los 4 modelos seleccionados
   mods <- list(
     # --- INDUSTRIA (% PBI) ---
     "Ind: Control" = lm(industria_pbi ~ indice_nivel_precios + recursos_naturales + 
@@ -535,149 +534,6 @@ modelplot(
     subtitle = "Intervalos de confianza al 95% con errores robustos (HC1)"
   ) +
   theme_minimal()
-#avPlots(modelos_por_anio$anio_2022[["Exp: Control"]], terms = ~ indice_nivel_precios)
-
-#Despues agregar los controles
-
-#Significativo no es lo mismo que importante. 
-#Mirar siempre la magnitud y preguntarse si es económicamente relevante.
-
-
-## 1.8 Diagnóstico: chequear los supuestos y corregir
-
-#  | Problema | Qué rompe | Test en R | Solución |
-#  |:--|:--|:--|:--|
-#  | Forma funcional incorrecta | Coeficientes (sesgo) | `resettest()` | Logs, cuadrados, interacciones |
-#  | Multicolinealidad | Nada, pero infla los EE | `vif()` | Quitar o combinar variables |
-#  | Heteroscedasticidad | EE, tests $t$ y $F$ | `bptest()` | Errores robustos: `vcovHC()` |
-#  | No normalidad | Tests con $n$ chico | `jarque.bera.test()` | Con $n$ grande, nada. Si no, logs |
-#  | Observaciones influyentes | Coeficientes | `cooks.distance()` | Revisar y reportar con y sin |
-  
-
-### Primera mirada: los gráficos de `plot()`
-
-```{r fig.height=7}
-par(mfrow = c(2, 2))
-plot(regresion, pch = 16, col = rgb(0, 0, 1, 0.1))
-par(mfrow = c(1, 1))
-```
-
-#  | Gráfico | Qué mirar |
-#  |:--|:--|
-#  | Residuals vs Fitted | Nube sin forma alrededor de 0. Una curva sugiere mala forma funcional |
-#  | Normal Q-Q | Puntos sobre la diagonal: residuos aproximadamente normales |
-#  | Scale-Location | Línea plana: varianza constante |
-#  | Residuals vs Leverage | Puntos fuera de las líneas de Cook: muy influyentes |
-  
-
-
-### Multicolinealidad: VIF
-
-#No genera sesgo: con regresoras muy correlacionadas entre sí, 
-#los errores estándar se inflan. Regla práctica: VIF > 10 merece atención.
-
-
-vif(r4_2022)
-vif(r5_2022)
-vif(r6_2022)
-
-
-
-
-
-
-### Heteroscedasticidad: detectar
-
-#La varianza del error cambia con las regresoras. 
-#Los coeficientes siguen bien, pero **los errores estándar están mal**, 
-#y con ellos los tests y los intervalos.
-
-{r6_2022 fig.height=3.5}
-plot(fitted(r6_2022), residuals(r6_2022), pch = 16, col = rgb(0, 0, 1, 0.1),
-     xlab = "Valores predichos", ylab = "Residuos")
-abline(h = 0, lty = 2)
-
-
-
-
-
-
-
-
-**Test de Breusch-Pagan**: regresa los residuos al cuadrado contra las regresoras. $H_0$: varianza constante.
-
-bptest(r6_2022)
-
-bptest(r5_2022)
-
-
-### Heteroscedasticidad: corregir con errores robustos
-
-#Errores estándar **robustos de White**: mismos coeficientes, 
-#errores estándar recalculados con una fórmula válida con o sin heteroscedasticidad. 
-
-coeftest(regresion)                                        # errores clásicos
-coeftest(regresion, vcov = vcovHC(regresion, type = "HC1"))       # errores robustos
-
-
-
-
-
-
-### Normalidad de los residuos
-
-#No afecta los coeficientes. 
-#Solo hace falta para que los tests sean exactos con **muestras chicas**; 
-#con más de 100 o 200 observaciones funcionan bien igual (teorema central del límite).
-
-{r fig.height=3.5}
-qqnorm(residuals(r4_2022), pch = 16, col = rgb(0, 0, 1, 0.1))
-qqline(residuals(r4_2022), col = "firebrick", lwd = 2)
-tseries::jarque.bera.test(residuals(r4_2022))
-
-
-
-
-
-## 1.10 Comparar modelos y guardar la tabla
-
-#Con distinta cantidad de variables, comparar con **R² ajustado** o **AIC** (menor es mejor),
-#nunca con R² a secas. Solo son comparables modelos con **la misma variable dependiente 
-#y la misma muestra** (no se puede comparar `e1` con `e1_niveles`).
-
-AIC(regresion1, regresion2, regresion3)
-sapply(list(e0 = e0, e1 = e1, e2 = e2), \(m) summary(m)$adj.r.squared)
-
-
-
-
-
-#Un gráfico de coeficientes comunica mejor que la tabla frente a públicos no técnicos:
-  
-  ```{r fig.height=4}
-modelplot(e1, vcov = "HC1", coef_omit = "Intercept|edad") +
-  geom_vline(xintercept = 0, linetype = 2) +
-  labs(x = "Coeficiente (log-puntos)", title = "log(ingreso horario), EPH 1T2026")
-```
-
-
-aa
-
-# **Errores frecuentes de interpretación**
-  
-#  - Leer causalidad donde hay asociación.
-#  - Extrapolar fuera del rango de los datos (el modelo no sabe nada de personas de 90 años).
-#  - Confundir significancia estadística con magnitud relevante.
-#  - Leer un coeficiente con interacción como si fuera el efecto general (en `e2`, `sexoVaron` es la brecha solo en "hasta primario").
-#  - Leer solo el término lineal cuando hay un cuadrado.
-
-
-
-
-
-
-
-
 
 
 #Pegue los codigos que estaban al principio de 04.graficos
