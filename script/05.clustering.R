@@ -57,7 +57,7 @@ print(heatmap)
 
 
 #ANEXO
-ggsave(file.path("output/graficos", "heatmap.png"), 
+ggsave(file.path("output/graficos/clustering", "heatmap.png"), 
        plot = heatmap, width = 12, height = 7, units = "in", dpi = 300)
 
 
@@ -74,7 +74,7 @@ print(screeplot)
 
 
 #ANEXO
-ggsave(file.path("output/graficos", "screeplot.png"), 
+ggsave(file.path("output/graficos/clustering", "screeplot.png"), 
        plot = screeplot, width = 12, height = 7, units = "in", dpi = 300)
 
 rm(screeplot)
@@ -103,13 +103,13 @@ print(pc4)
 
 
 #ANEXO
-ggsave(file.path("output/graficos", "pc1.png"), 
+ggsave(file.path("output/graficos/clustering", "pc1.png"), 
        plot = pc1, width = 12, height = 7, units = "in", dpi = 300)
-ggsave(file.path("output/graficos", "pc2.png"), 
+ggsave(file.path("output/graficos/clustering", "pc2.png"), 
        plot = pc2, width = 12, height = 7, units = "in", dpi = 300)
-ggsave(file.path("output/graficos", "pc3.png"), 
+ggsave(file.path("output/graficos/clustering", "pc3.png"), 
        plot = pc3, width = 12, height = 7, units = "in", dpi = 300)
-ggsave(file.path("output/graficos", "pc4.png"), 
+ggsave(file.path("output/graficos/clustering", "pc4.png"), 
        plot = pc4, width = 12, height = 7, units = "in", dpi = 300)
 
 
@@ -120,7 +120,7 @@ print(mapa_paises)
 
 
 #PRESENTACION o ANEXO
-ggsave(file.path("output/graficos", "mapa_paises.png"), 
+ggsave(file.path("output/graficos/clustering", "mapa_paises.png"), 
        plot = mapa_paises, width = 12, height = 7, units = "in", dpi = 300)
 
 
@@ -148,7 +148,7 @@ print(mapa_regiones)
 #PRESENTACION o ANEXO
 #ESTE O EL ANTERIOR, NO LOS DOS
 #VER SI SE PUEDE HACER UN POCO MAS LINDO
-ggsave(file.path("output/graficos", "mapa_regiones.png"), 
+ggsave(file.path("output/graficos/clustering", "mapa_regiones.png"), 
        plot = mapa_regiones, width = 12, height = 7, units = "in", dpi = 300)
 
 
@@ -202,7 +202,7 @@ silhouette <- fviz_silhouette(sil, label = FALSE)
 print(silhouette)
 
 #ANEXO
-ggsave(file.path("output/graficos", "silhouette.png"), 
+ggsave(file.path("output/graficos/clustering", "silhouette.png"), 
        plot = silhouette, width = 12, height = 7, units = "in", dpi = 300)
 
 #ANEXO CON SILUETA
@@ -223,7 +223,9 @@ res_pca$eig[1:5, ]
 par(mfrow = c(1, 1))
 
 # ---- B.3 HCPC con k = 4 ----
-res_hcpc <- HCPC(res_pca, nb.clust = 4, consol = TRUE, graph = FALSE)
+res_hcpc <- HCPC(res_pca, nb.clust = -1, consol = TRUE, graph = FALSE)
+
+hcpc <- HCPC(res_pca, nb.clust = 5, consol = TRUE, graph = FALSE)
 
 # png("output/graficos/dendograma.png", width = 8, height = 6, units = "in", res = 300)
 
@@ -239,22 +241,26 @@ plot(res_hcpc, choice = "bar")           # ganancia de inercia por cada fusion
 #tambien puede dificultar la interpretabilidad de los grupos
 rm(dendograma)
 
-hcpc4 <- fviz_cluster(res_hcpc, repel = TRUE, labelsize = 7, show.clust.cent = TRUE,
+hcpc5 <- fviz_cluster(hcpc, repel = TRUE, labelsize = 7, show.clust.cent = TRUE,
                       main = "HCPC: 4 grupos en el plano PC1-PC2")
 
-
-print(hcpc4)
+print(hcpc5)
 
 #PRESENTACION VER SI 3 O 4 GRUPOS
-ggsave(file.path("output/graficos", "hcpc4.png"), 
-       plot = hcpc4, width = 12, height = 7, units = "in", dpi = 300)
+ggsave(file.path("output/graficos/clustering", "hcpc5.png"), 
+       plot = hcpc5, width = 12, height = 7, units = "in", dpi = 300)
 
 
 
-grupo_hcpc <- res_hcpc$data.clust$clust
+
+
+
+split(wdi_pca$pais, grupos)
+
+grupo_hcpc <- hcpc$data.clust$clust
 table(grupo_hcpc)
 
-res_hcpc$desc.var$quanti
+hcpc$desc.var$quanti
 
 #Mucho muy importante, ver que variables pesan en cada grupo
 #Ayuda a interpretar como se conforma cada uno
@@ -262,7 +268,8 @@ res_hcpc$desc.var$quanti
 #Si aparece como negativo es porque le falta
 #Ejemplo grupo 1 tiene todo negativo, es decir le falta todo, representa a los paises mas pobres
 #Grupo 4 tiene todo muy positivo, son los paises ricos
-
+table(Ward = grupos, HCPC = grupo_hcpc)
+split(wdi_pca$pais, grupo_hcpc)
 
 
 
