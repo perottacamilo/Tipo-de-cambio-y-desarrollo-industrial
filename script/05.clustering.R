@@ -63,7 +63,7 @@ ggsave(file.path("output/graficos", "heatmap.png"),
 # FactoMineR::PCA() estandariza por defecto (scale.unit = TRUE) y devuelve,
 
 res <- PCA(X, scale.unit = TRUE, graph = FALSE)
-
+coord_pc1 <- res$ind$coord[, 1]
 # ---- 4.1 Cuantos componentes mirar ----
 res$eig
 screeplot <- fviz_eig(res, addlabels = TRUE)
@@ -159,7 +159,7 @@ sensibilidad <- map_dfr(vars, function(v) {
   r <- PCA(X[, setdiff(vars, v)], graph = FALSE)
   tibble(sin = v,
          var_pc1 = r$eig[1, 2],
-         cor_pc1 = abs(cor(r$ind$coord[, 1], pc1, method = "spearman")))
+         cor_pc1 = abs(cor(r$ind$coord[, 1], coord_pc1, method = "spearman")))
 })
 sensibilidad
 
