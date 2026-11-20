@@ -36,7 +36,8 @@ wdi_limpio <- wdi |>
                            labels = c("Bajo", "Medio-bajo", "Medio-alto",
                                       "Alto", "Sin clasificar")), 
          industria_pc_wdi = (industria_pbi * pbi_per_capita) / 100,
-         industria_per_capita = coalesce(industria_pc, industria_pc_wdi))
+         industria_per_capita = coalesce(industria_pc, industria_pc_wdi),
+         exportacion_manufactura_brutas = ((exportacion_manufactura*exportaciones_totales)/100)/1000000) #Se quita el porcentaje y se mide en millones de usd
 
 
 write.csv(wdi_limpio, "input/wdi_limpio.csv")
@@ -71,8 +72,10 @@ diccionario <- tribble(
   "ied_pbi",                    "Inversion extranjera directa",                                                                           "Numérica",            "% del PBI",                      "0 a 100",        5016,              30,       23,       22,
   "ahorro_bruto_pbi",           "Ahorro Bruto Nacional",                                                                                  "Numérica",            "% del PBI",                      "0 a 100",        7892,              89,       61,       59,
   "credito_privado_pbi",        "Credito al sector privado",                                                                              "Numérica",            "% del PBI",                      "0 a 100",        6685,              76,       54,       58,
-  "poblacion_mill",             "Poblacion del pais en millones de habitantes",                                                           "Numérica",            "Anual",                          "> 0",            0,                 0,        0,        0)
-
+  "poblacion_mill",             "Poblacion del pais en millones de habitantes",                                                           "Numérica",            "Anual",                          "> 0",            0,                 0,        0,        0
+  "exportacion_manufactura_bruto",    "Porcentaje de la exportacion en manufacturas del total de las mercancias",                                                           "Numérica",            "% del total",                    "0 a 100",        6383,              53,       50,       54,
+  "exportaciones_totales",    "Porcentaje de la exportacion en manufacturas del total de las mercancias",                                                           "Numérica",            "% del total",                    "0 a 100",        6383,              53,       50,       54)
+  
 tabla_imagen <- diccionario |> 
   gt() |> 
   tab_header(
