@@ -72,8 +72,7 @@ diccionario <- tribble(
   "ahorro_bruto_pbi",                "Ahorro Bruto Nacional",                                                                                  "Numérica",            "% del PBI",                      "0 a 100",        7892,              89,       61,       58,
   "credito_privado_pbi",             "Credito al sector privado",                                                                              "Numérica",            "% del PBI",                      "0 a 100",        6685,              76,       54,       55,
   "poblacion_mill",                  "Poblacion del pais en millones de habitantes",                                                           "Numérica",            "Anual",                          "> 0",            0,                 0,        0,        0,
-  "exportacion_manufactura_brutas",  "Exportaciones de manufacturas en valor bruto",                                                           "Numérica",            "Millones de dólares",            ">= 0",           6406,              57,       53,       54
-)
+  "exportacion_manufactura_brutas",  "Exportaciones de manufacturas en valor bruto",                                                           "Numérica",            "Millones de dólares",            ">= 0",           6406,              57,       53,       54)
   
 tabla_imagen <- diccionario |> 
   gt() |> 

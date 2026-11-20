@@ -10,7 +10,7 @@ library(readxl)
 rm(list = ls())
 
 wdi2 <- read.csv("input/wdi2.csv")#2001 2008 2022
-colSums(is.na(wdi2))
+
 wdi3 <- read.csv("input/wdi3.csv")# 2000, 2001, 2002, 2007, 2008, 2009, 2021, 2022, 2023
 
 #Creamos una base para cada anio
@@ -26,7 +26,6 @@ base_2008 <- wdi2 |>
   filter(anio == 2008)
 base_2022<- wdi2 |>
   filter(anio == 2022)
-colSums(is.na(base_2022))
 
 
 #Creamos bases para los bloques de tres anios
@@ -73,7 +72,6 @@ faltantes_2001 <- base_2001 |>
   summarise(across(everything(), ~ mean(is.na(.x)) * 100)) |>
   pivot_longer(everything(), names_to = "variable", values_to = "pct_na") |>
   arrange(desc(pct_na))
-
 faltantes_2008 <- base_2008 |>
   summarise(across(everything(), ~ mean(is.na(.x)) * 100)) |>
   pivot_longer(everything(), names_to = "variable", values_to = "pct_na") |>
@@ -84,9 +82,10 @@ faltantes_2022 <- base_2022 |>
   pivot_longer(everything(), names_to = "variable", values_to = "pct_na") |>
   arrange(desc(pct_na))
 
+
 #De la tabla "faltantes" vemos que hay dos variables que les falta mas del 40% de los datos
 #tipo_cambio_real_efectivo -> 51.2%
-#gastos_totales_gob_pbi -> 41.86%
+#gastos_totales_gob_pbi -> 41.9%
 #La segunda variable puede ser prescindible, aparte de sus datos faltantes, por ser muy parecida
 #A otra variable tambien incluida, gasto_gobierno_pbi, que tiene menos cantidad de datos faltantes
 #En cuanto a tipo_cambio_real_efectivo es necesaria su eliminacion ya que requeriria interpolar mas de la
