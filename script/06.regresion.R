@@ -534,7 +534,7 @@ graficar_residuos_leverage <- function(modelo, datos_df, titulo, nombre_archivo,
     cex.id = 1.05,
     cex.caption = 1.1,
     cex.axis = 1.05,
-    caption = list("", "", "", "", "Residuals vs Leverage")
+    caption = list("", "", "", "", "")
   )
   title(main = titulo, line = 1.65, cex.main = 1.35, font.main = 2)
   title(
