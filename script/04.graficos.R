@@ -494,9 +494,13 @@ grafico10 <- ggplot(datos_combinados, aes(x = reorder(region, -porcentaje), y = 
        x = "Región",
        y = "Porcentaje del total de países",
        fill = "Año de la base") + 
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        panel.border = element_rect(colour = "black", fill=NA, size=1))
+  theme_minimal(base_size = 14) + 
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 13), # Nombres de las regiones (eje X)
+    axis.text.y = element_text(size = 13),                        # Números del porcentaje (eje Y)
+    axis.title = element_text(size = 15, face = "bold"),          # Títulos "Región" y "Porcentaje..."
+    panel.border = element_rect(colour = "black", fill = NA, linewidth = 1)
+  )
 
 print(grafico10)
 
@@ -523,9 +527,13 @@ grafico11 <- ggplot(datos_combinados, aes(x = reorder(ingreso, -porcentaje), y =
        x = "Región",
        y = "Porcentaje del total de países",
        fill = "Año de la base") + 
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        panel.border = element_rect(colour = "black", fill=NA, size=1))
+  theme_minimal(base_size = 14) + 
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 13), # Nombres de las regiones (eje X)
+    axis.text.y = element_text(size = 13),                        # Números del porcentaje (eje Y)
+    axis.title = element_text(size = 15, face = "bold"),          # Títulos "Región" y "Porcentaje..."
+    panel.border = element_rect(colour = "black", fill = NA, linewidth = 1)
+  )
 
 print(grafico11)
 
