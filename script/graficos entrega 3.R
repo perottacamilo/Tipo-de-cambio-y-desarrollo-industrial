@@ -220,11 +220,11 @@ ggsave("output/graficos/grupo_01_exploratorio.jpg", plot = grafico_exploratorio_
 # 3. PROCESAMIENTO Y GRÁFICO COMUNICATIVO
 # ------------------------------------------------------------------------------
 rm(list = ls())
-wdi_limpio <- read.csv("output/data/wdi_limpio.csv")
+wdi_limpio <- read.csv("input/wdi_limpio.csv")
 
 # CORRECCIÓN METODOLÓGICA: if_else para evitar saltos en la serie de tiempo
 wdi_limpio_2 <- wdi_limpio |> 
-  filter(region %in% c("East Asia & Pacific", "Latin America & Caribbean"), poblacion_mill > 1, anio >= 1990 & anio <= 2023, 
+  filter(region %in% c("East Asia & Pacific", "Este de Asia y Pacífico", "Latin America & Caribbean", "América Latina y el Caribe"), poblacion_mill > 1, anio >= 1990 & anio <= 2023, 
          !pais %in% c("Cuba", "Korea, Dem. People's Rep.", "Venezuela, RB")) |> 
   select(pais, anio, industria_pbi, exportacion_manufactura_brutas, region, pbi_per_capita, indice_nivel_precios, industria_pc) |>
   mutate(industria_pc_wdi = (industria_pbi * pbi_per_capita) / 100,
@@ -243,8 +243,8 @@ fuente_texto  <- if (fuentes_ok) "lato" else "sans"
 k <- 1.25
 col_personalizados <- c("Asia Oriental y Pacífico" = "#E0195B", "América Latina y el Caribe" = "#3919E0", "Argentina" = "#19E09E", "China" = "#FFAC47")
 
-df_eap <- wdi_limpio_2 %>% filter(region == "East Asia & Pacific") %>% group_by(anio) %>% summarise(industria_per_capita = mean(industria_per_capita, na.rm = TRUE), .groups = "drop") %>% mutate(pais = "Asia Oriental y Pacífico") %>% select(year = anio, pais, industria_per_capita)
-df_lac <- wdi_limpio_2 %>% filter(region == "Latin America & Caribbean") %>% group_by(anio) %>% summarise(industria_per_capita = mean(industria_per_capita, na.rm = TRUE), .groups = "drop") %>% mutate(pais = "América Latina y el Caribe") %>% select(year = anio, pais, industria_per_capita)
+df_eap <- wdi_limpio_2 %>% filter(region %in% c("East Asia & Pacific", "Este de Asia y Pacífico")) %>% group_by(anio) %>% summarise(industria_per_capita = mean(industria_per_capita, na.rm = TRUE), .groups = "drop") %>% mutate(pais = "Asia Oriental y Pacífico") %>% select(year = anio, pais, industria_per_capita)
+df_lac <- wdi_limpio_2 %>% filter(region %in% c("Latin America & Caribbean", "América Latina y el Caribe")) %>% group_by(anio) %>% summarise(industria_per_capita = mean(industria_per_capita, na.rm = TRUE), .groups = "drop") %>% mutate(pais = "América Latina y el Caribe") %>% select(year = anio, pais, industria_per_capita)
 df_paises <- wdi_limpio_2 %>% filter(pais %in% c("Argentina", "China")) %>% mutate(pais = if_else(pais == "China", "China", "Argentina")) %>% select(year = anio, pais, industria_per_capita)
 
 df_industrializacion <- bind_rows(df_eap, df_lac, df_paises) %>% filter(year >= 1990, year <= 2023)
