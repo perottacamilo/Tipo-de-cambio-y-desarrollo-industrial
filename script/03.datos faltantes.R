@@ -45,7 +45,7 @@ variables <- c(
   "tipo_cambio_real_efectivo",
   "indice_nivel_precios",
   "empleo_industrial",
-  "exportacion_manufactura_brutas",
+  "exportacion_manufactura_pc",
   "gasto_gobierno_pbi",
   "gastos_totales_gob_pbi",
   "valor_agregado_trabajador",
@@ -165,7 +165,7 @@ variables2 <- c(
   "industria_per_capita",
   "indice_nivel_precios",
   "empleo_industrial",
-  "exportacion_manufactura_brutas",
+  "exportacion_manufactura_pc",
   "gasto_gobierno_pbi",
   "valor_agregado_trabajador",
   "ahorro_bruto_pbi",
@@ -283,7 +283,7 @@ wdi_filtrado <- wdi3.2 |>
         industria_per_capita,
         indice_nivel_precios,
         empleo_industrial,
-        exportacion_manufactura_brutas,
+        exportacion_manufactura_pc,
         gasto_gobierno_pbi,
         valor_agregado_trabajador,
         ahorro_bruto_pbi,
@@ -311,7 +311,7 @@ wdi_final <- wdi_filtrado |>
     industria_per_capita,
     indice_nivel_precios,
     empleo_industrial,
-    exportacion_manufactura_brutas,
+    exportacion_manufactura_pc,
     gasto_gobierno_pbi,
     valor_agregado_trabajador,
     ahorro_bruto_pbi,
@@ -330,7 +330,7 @@ reporte_eliminados <- anti_join(wdi_filtrado, wdi_final, by = c("pais", "anio"))
          industria_per_capita,
          indice_nivel_precios,
          empleo_industrial,
-         exportacion_manufactura_brutas,
+         exportacion_manufactura_pc,
          gasto_gobierno_pbi,
          valor_agregado_trabajador,
          ahorro_bruto_pbi,
@@ -364,7 +364,7 @@ wdi_regresion <- wdi_filtrado |>
     industria_per_capita,
     indice_nivel_precios,
     empleo_industrial,
-    exportacion_manufactura_brutas,
+    exportacion_manufactura_pc,
     gasto_gobierno_pbi,
     valor_agregado_trabajador,
     ahorro_bruto_pbi,
@@ -374,4 +374,5 @@ wdi_regresion <- wdi_filtrado |>
     pbi_millones)
 
 write.csv(wdi_regresion, "input/wdi_regresion.csv")
+
 

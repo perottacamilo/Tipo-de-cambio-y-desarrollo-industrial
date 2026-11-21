@@ -32,10 +32,10 @@ wdi_pca <- wdi_final |>
   mutate(ln_pbi_pc = log(pbi_per_capita), 
          ln_va_trabajador = log(valor_agregado_trabajador), 
          ln_industria_per_capita = log(industria_per_capita),
-         ln_exportacion_manufactura_brutas = log(exportacion_manufactura_brutas))
+         ln_exportacion_manufactura_pc = log(exportacion_manufactura_pc))
 
 vars <- c("crecimiento_industria", "ln_industria_per_capita", "indice_nivel_precios", 
-          "empleo_industrial", "ln_exportacion_manufactura_brutas", "gasto_gobierno_pbi",
+          "empleo_industrial", "ln_exportacion_manufactura_pc", "gasto_gobierno_pbi",
           "ln_va_trabajador", "ahorro_bruto_pbi", "credito_privado_pbi", 
           "recursos_naturales", "ln_pbi_pc")
 
