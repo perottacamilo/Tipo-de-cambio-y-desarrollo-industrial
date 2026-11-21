@@ -137,6 +137,154 @@ print(grafico4)
 
 
 
+library(tidyverse)
+library(scales)
+library(patchwork)
+library(here)
+
+df_2022 <- wdi2 |> 
+  filter(anio == 2022) 
+
+# Función auxiliar para no repetir código
+hacer_hist <- function(data, col, titulo, usar_log = FALSE, mostrar_y = FALSE) {
+  d <- data |>
+    select(valor = {{ col }}) |>
+    drop_na(valor)
+  
+  if (usar_log) d <- d |> filter(valor > 0)
+  
+  stats <- tibble(
+    estadistico = c("Media", "Mediana"),
+    valor = c(mean(d$valor), median(d$valor))
+  )
+  
+  p <- ggplot(d, aes(x = valor)) +
+    geom_histogram(bins = 22, fill = "#2C5F8A", color = "white", alpha = 0.85) +
+    geom_vline(
+      data = stats,
+      aes(xintercept = valor, color = estadistico, linetype = estadistico),
+      linewidth = 0.8
+    ) +
+    scale_color_manual(values = c("Media" = "#C0392B", "Mediana" = "#1E8449"), name = NULL) +
+    scale_linetype_manual(values = c("Media" = "solid", "Mediana" = "dashed"), name = NULL) +
+    labs(
+      title = titulo,
+      x = NULL,
+      y = if (mostrar_y) "Cantidad de países" else NULL
+    ) +
+    theme_minimal(base_size = 11.5) +
+    theme(
+      plot.title = element_text(face = "bold", size = 10.5, hjust = 0.5),
+      panel.grid.minor = element_blank(),
+      panel.grid.major.x = element_blank()
+    )
+  
+  if (usar_log) {
+    p <- p + scale_x_log10(labels = label_number(big.mark = ".", decimal.mark = ","))
+  } else {
+    p <- p + scale_x_continuous(labels = label_number(big.mark = ".", decimal.mark = ","))
+  }
+  
+  return(p)
+}
+
+# Armar los 3 paneles
+p1 <- hacer_hist(
+  df_2022, industria_per_capita,
+  "PBI industrial per cápita\n(USD const. 2015, escala log.)",
+  usar_log = TRUE, mostrar_y = TRUE) + 
+    theme(
+      plot.title = element_text(face = "bold", size = 22, hjust = 0.5), # Título más grande
+      axis.text = element_text(size = 18),                              # Números de los ejes más grandes
+      axis.title = element_text(size = 19),                             # Nombre del eje Y más grande
+      legend.position = "none",                                         # Saca la leyenda de Media/Mediana
+      panel.grid.minor = element_blank(),
+      panel.grid.major.x = element_blank()
+    )
+print(p1)
+p2 <- hacer_hist(
+  df_2022, exportacion_manufactura_pc,
+  "Exportaciones manuf. per cápita\n(USD corr., escala log.)",
+  usar_log = TRUE
+) +
+  theme(
+    plot.title = element_text(face = "bold", size = 22, hjust = 0.5), # Título más grande
+    axis.text = element_text(size = 18),                              # Números de los ejes más grandes
+    axis.title = element_text(size = 19),                             # Nombre del eje Y más grande
+    legend.position = "none",                                         # Saca la leyenda de Media/Mediana
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank()
+  )
+
+p3 <- hacer_hist(
+  df_2022, indice_nivel_precios,
+  "Índice de nivel de precios\n(EE. UU. = 100)",
+  usar_log = FALSE
+) + 
+  theme(
+    plot.title = element_text(face = "bold", size = 22, hjust = 0.5), # Título más grande
+    axis.text = element_text(size = 18),                              # Números de los ejes más grandes
+    axis.title = element_text(size = 19),                             # Nombre del eje Y más grande
+    legend.position = "none",                                         # Saca la leyenda de Media/Mediana
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank()
+  )
+
+# Unir todo en una sola figura con leyenda compartida
+g_hist_2022 <- (p1 + p2 + p3) +
+  plot_layout(guides = "collect") +
+  plot_annotation(
+    title = "Distribución de las variables principales en 2022",
+    subtitle = "Países con más de 1 millón de habitantes. Líneas verticales indican media y mediana.",
+    caption = "Fuente: elaboración propia en base a Banco Mundial (WDI) y Argendata (Fundar).",
+    theme = theme(
+      plot.title = element_text(face = "bold", size = 14),
+      plot.subtitle = element_text(color = "grey30", size = 11),
+      plot.caption = element_text(color = "grey45", hjust = 0, size = 9)
+    )
+  ) &
+  theme(legend.position = "top", legend.justification = "left")
+
+
+
+# 4. Guardar con ruta relativa y tamaño apto para diapositiva
+ggsave(file.path("output/graficos/eda", "eda.png"), 
+       plot = g_hist_2022, width = 12, height = 7, units = "in", dpi = 300)
+
+
+
+
+
+ggsave(file.path("output/graficos/eda", "eda1.png"), 
+       plot = p1, width = 12, height = 7, units = "in", dpi = 300)
+ggsave(file.path("output/graficos/eda", "eda2.png"), 
+       plot = p2, width = 12, height = 7, units = "in", dpi = 300)
+ggsave(file.path("output/graficos/eda", "eda3.png"), 
+       plot = p3, width = 12, height = 7, units = "in", dpi = 300)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # cor.test() agrega el test de significatividad y el intervalo de confianza
 cor.test(wdi_2001$industria_per_capita, wdi_2001$indice_nivel_precios)
 #La correlacion es significativa al 1%
@@ -325,13 +473,11 @@ ggsave(file.path("output/graficos/eda", "datos_faltanes_vars.png"),
 
 
 
-# 1. Calcular porcentajes para la primera base (ej: wdi_2001)
 filtrado1 <- wdi2 %>%
   count(region) %>%
   mutate(porcentaje = (n / sum(n)) * 100,
          base = "Antes de filtrar") 
 
-# 2. Calcular porcentajes para la segunda base (ej: wdi_2023)
 filtrado2 <- wdi_filtrado %>%
   count(region) %>%
   mutate(porcentaje = (n / sum(n)) * 100,

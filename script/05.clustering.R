@@ -137,10 +137,9 @@ mapa_regiones <- fviz_pca_ind(
   label = "none", 
   habillage = factor(wdi_pca$region_resaltada),
   addEllipses = TRUE, 
+  labelsize = 7.5,
   ellipse.level = 0.68,
-  # Asegurate de que el orden de los colores coincida con el orden alfabético de tus factores
-  # Por ejemplo: 1. East Asia, 2. Latin America, 3. Otros, 4. South Asia (revisá los niveles de tu factor)
-  palette = c("#1B9E77", "#D95F02", "gray85") 
+  palette = c("#3919E0", "#E0195B", "gray85") 
 )
 print(mapa_regiones)
 
@@ -241,8 +240,8 @@ plot(res_hcpc, choice = "bar")           # ganancia de inercia por cada fusion
 #tambien puede dificultar la interpretabilidad de los grupos
 rm(dendograma)
 
-hcpc5 <- fviz_cluster(hcpc, repel = TRUE, labelsize = 7, show.clust.cent = TRUE,
-                      main = "HCPC: 4 grupos en el plano PC1-PC2")
+hcpc5 <- fviz_cluster(hcpc, repel = TRUE, labelsize = 7.5, show.clust.cent = TRUE,
+                      main = "HCPC: 5 grupos en el plano PC1-PC2")
 
 print(hcpc5)
 
