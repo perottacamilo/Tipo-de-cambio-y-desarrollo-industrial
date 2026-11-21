@@ -492,27 +492,15 @@ for (a in anios_test) {
   filas_reset[[paste0(a, "_ind")]] <- data.frame(
     Año = a,
     Modelo = "Industria (per cápita)",
-    Tipo_con = t_ind_con$Tipo_Test,
-    Stat_con = t_ind_con$Estadistico,
     Pval_con = t_ind_con$p_valor,
-    Diag_con = t_ind_con$Diagnostico,
-    Tipo_sin = t_ind_sin$Tipo_Test,
-    Stat_sin = t_ind_sin$Estadistico,
-    Pval_sin = t_ind_sin$p_valor,
-    Diag_sin = t_ind_sin$Diagnostico
+    Pval_sin = t_ind_sin$p_valor
   )
   
   filas_reset[[paste0(a, "_exp")]] <- data.frame(
     Año = a,
-    Modelo = "Exportaciones Manufactureras",
-    Tipo_con = t_exp_con$Tipo_Test,
-    Stat_con = t_exp_con$Estadistico,
+    Modelo = "Exportaciones Manufactureras (per cápita)",
     Pval_con = t_exp_con$p_valor,
-    Diag_con = t_exp_con$Diagnostico,
-    Tipo_sin = t_exp_sin$Tipo_Test,
-    Stat_sin = t_exp_sin$Estadistico,
-    Pval_sin = t_exp_sin$p_valor,
-    Diag_sin = t_exp_sin$Diagnostico
+    Pval_sin = t_exp_sin$p_valor
   )
 }
 
@@ -523,34 +511,28 @@ tabla_reset_gt <- df_tabla_reset |>
   gt(groupname_col = "Año") |>
   tab_header(
     title = "Test de Especificación de Ramsey (RESET)",
-    subtitle = "Comparación con y sin observaciones influyentes (corregido por heterocedasticidad con HC1 si BP p < 0.05)"
+    subtitle = "Comparación de p-valores con y sin observaciones influyentes (corregido por heterocedasticidad con HC1 si BP p < 0.05)"
   ) |>
   tab_spanner(
     label = "Muestra Completa",
-    columns = c(Tipo_con, Stat_con, Pval_con, Diag_con)
+    columns = Pval_con
   ) |>
   tab_spanner(
     label = "Sin valores atípicos",
-    columns = c(Tipo_sin, Stat_sin, Pval_sin, Diag_sin)
+    columns = Pval_sin
   ) |>
   cols_label(
     Modelo   = "Modelo",
-    Tipo_con = "Test",
-    Stat_con = "Estadístico",
     Pval_con = "p-valor",
-    Diag_con = "Especificación",
-    Tipo_sin = "Test",
-    Stat_sin = "Estadístico",
-    Pval_sin = "p-valor",
-    Diag_sin = "Especificación"
-  ) |>
-  fmt_number(
-    columns = c(Stat_con, Stat_sin),
-    decimals = 3
+    Pval_sin = "p-valor"
   ) |>
   fmt_number(
     columns = c(Pval_con, Pval_sin),
     decimals = 4
+  ) |>
+  cols_align(
+    align = "center",
+    columns = c(Pval_con, Pval_sin)
   ) |>
   tab_style(
     style = cell_text(weight = "bold"),
