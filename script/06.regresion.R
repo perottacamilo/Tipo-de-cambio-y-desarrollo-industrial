@@ -15,7 +15,12 @@ library(car)
 library(modelsummary)
 library(gt)
 library(dplyr)
-
+library(lmtest)
+library(sandwich)
+library(car)
+library(tseries)
+library(ggplot2)
+# ===============
 rm(list = ls())
 
 
@@ -327,25 +332,14 @@ tabla_bp_final <- resultados_bp |>
 
 # Imprimimos la tabla
 tabla_bp_final
-#Regresiones
-#*/
 
-
-library(lmtest)
-library(sandwich)
-library(car)
-library(tseries)
-library(modelsummary)
-library(ggplot2)
-library(dplyr)
-# ==============================================================================
+===============================================================
 # DIAGNÓSTICOS ECONOMÉTRICOS PARA CADA AÑO
 # ==============================================================================
 
 # ==============================================================================
 # 1. MULTICOLINEALIDAD (VIF) PARA TODOS LOS AÑOS Y MODELOS
 # ==============================================================================
-library(car)
 
 # Creamos una lista para almacenar los resultados
 vifs_por_anio <- list()
@@ -377,8 +371,7 @@ print(vifs_por_anio$anio_2008)
 print("--- VIF Año 2022 ---")
 print(vifs_por_anio$anio_2022)
 
-library(dplyr)
-library(gt)
+
 
 # Extraemos los nombres de las variables del primer VIF guardado
 nombres_vars <- names(vifs_por_anio$anio_2001$VIF_Industria)
