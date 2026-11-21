@@ -15,7 +15,12 @@ library(car)
 library(modelsummary)
 library(gt)
 library(dplyr)
-
+library(lmtest)
+library(sandwich)
+library(car)
+library(tseries)
+library(ggplot2)
+# ===============
 rm(list = ls())
 
 
@@ -43,15 +48,15 @@ for (a in anios) {
   # 2. Estimación de los 4 modelos seleccionados
   mods <- list(
     # --- INDUSTRIA (per cápita) ---
-    "Ind: Simple"  = lm(log(industria_per_capita) ~ log(indice_nivel_precios), data = df_sub),
+    "log-log Ind: Simple"  = lm(log(industria_per_capita) ~ log(indice_nivel_precios), data = df_sub),
     
-    "Ind: Control" = lm(log(industria_per_capita) ~ log(indice_nivel_precios) + recursos_naturales + 
+    "log-log Ind: Control" = lm(log(industria_per_capita) ~ log(indice_nivel_precios) + recursos_naturales + 
                           ahorro_bruto_pbi + log(pbi_per_capita), data = df_sub),
     
     # --- EXPORTACIONES MANUFACTURERAS ---
-    "Exp: Simple"  = lm(log(exportacion_manufactura_pc) ~ log(indice_nivel_precios), data = df_sub),
+    "log-log Exp: Simple"  = lm(log(exportacion_manufactura_pc) ~ log(indice_nivel_precios), data = df_sub),
     
-    "Exp: Control" = lm(log(exportacion_manufactura_pc) ~ log(indice_nivel_precios) + recursos_naturales + 
+    "log-log Exp: Control" = lm(log(exportacion_manufactura_pc) ~ log(indice_nivel_precios) + recursos_naturales + 
                           ahorro_bruto_pbi + log(pbi_per_capita), data = df_sub)
   )
   
@@ -68,7 +73,7 @@ for (a in anios) {
     fmt = 3,
     coef_rename = c(
       "(Intercept)"              = "Constante",
-      "indice_nivel_precios"     = "Índice de nivel de precios",
+      "log(indice_nivel_precios)"= "log(Índice de nivel de precios)",
       "recursos_naturales"       = "Rentas rec. naturales (% PBI)",
       "ahorro_bruto_pbi"         = "Ahorro bruto (% PBI)",
       "log(pbi_per_capita)"      = "log(PBI pc)"
@@ -81,9 +86,9 @@ for (a in anios) {
     output = "gt"
   )
 }
-tablas_por_anio$anio_2001
-tablas_por_anio$anio_2008
-tablas_por_anio$anio_2022
+#tablas_por_anio$anio_2001
+#tablas_por_anio$anio_2008
+#tablas_por_anio$anio_2022
 gtsave(tablas_por_anio$anio_2001, filename = "output/tablas/tabla_2001.html")
 gtsave(tablas_por_anio$anio_2008, filename = "output/tablas/tabla_2008.html")
 gtsave(tablas_por_anio$anio_2022, filename = "output/tablas/tabla_2022.html")
@@ -98,97 +103,91 @@ obtener_outliers_cook <- function(modelo, datos_df, umbral = 0.15) {
 
 # Identificación automática de outliers (D_i > 0.15)
 # Industria
-outliers_2001_ind <- obtener_outliers_cook(modelos_por_anio$anio_2001[["Ind: Control"]], wdi_2001, umbral = 0.15)
-outliers_2008_ind <- obtener_outliers_cook(modelos_por_anio$anio_2008[["Ind: Control"]], wdi_2008, umbral = 0.15)
-outliers_2022_ind <- obtener_outliers_cook(modelos_por_anio$anio_2022[["Ind: Control"]], wdi_2022, umbral = 0.15)
+outliers_2001_ind <- obtener_outliers_cook(modelos_por_anio$anio_2001[["log-log Ind: Control"]], wdi_2001, umbral = 0.15)
+outliers_2008_ind <- obtener_outliers_cook(modelos_por_anio$anio_2008[["log-log Ind: Control"]], wdi_2008, umbral = 0.15)
+outliers_2022_ind <- obtener_outliers_cook(modelos_por_anio$anio_2022[["log-log Ind: Control"]], wdi_2022, umbral = 0.15)
 
 # Exportaciones
-outliers_2001_exp <- obtener_outliers_cook(modelos_por_anio$anio_2001[["Exp: Control"]], wdi_2001, umbral = 0.15)
-outliers_2008_exp <- obtener_outliers_cook(modelos_por_anio$anio_2008[["Exp: Control"]], wdi_2008, umbral = 0.15)
-outliers_2022_exp <- obtener_outliers_cook(modelos_por_anio$anio_2022[["Exp: Control"]], wdi_2022, umbral = 0.15)
+outliers_2001_exp <- obtener_outliers_cook(modelos_por_anio$anio_2001[["log-log Exp: Control"]], wdi_2001, umbral = 0.15)
+outliers_2008_exp <- obtener_outliers_cook(modelos_por_anio$anio_2008[["log-log Exp: Control"]], wdi_2008, umbral = 0.15)
+outliers_2022_exp <- obtener_outliers_cook(modelos_por_anio$anio_2022[["log-log Exp: Control"]], wdi_2022, umbral = 0.15)
 modelos_por_anio_sin_outliers <- list()
-tablas_por_anio_2 <- list()
+
+# 1. Estimación para Industria sin outliers
 for (a in anios) {
-  
-  # 1. Filtrar datos del año
   df_sub <- wdi_regresion |> filter(anio == a)
   
-  # 1b. Excluir outliers solo para la estimación de 2022
-  if (a == 2022) {
-  df_sub <- df_sub |> filter(!pais %in% outliers_2022_ind)
-  }
   if (a == 2001) {
     df_sub <- df_sub |> filter(!pais %in% outliers_2001_ind)
   }
   if (a == 2008) {
     df_sub <- df_sub |> filter(!pais %in% outliers_2008_ind)
   }
+  if (a == 2022) {
+    df_sub <- df_sub |> filter(!pais %in% outliers_2022_ind)
+  }
+  
   mods <- list(
     # --- INDUSTRIA (per cápita) ---
-    "Ind: Control" = lm(log(industria_per_capita) ~ log(indice_nivel_precios) + recursos_naturales + 
-                          ahorro_bruto_pbi + log(pbi_per_capita), data = df_sub)
+    "log-log Ind: Control" = lm(
+      log(industria_per_capita) ~ log(indice_nivel_precios) + recursos_naturales + 
+        ahorro_bruto_pbi + log(pbi_per_capita), 
+      data = df_sub
+    )
   )
   
-  # Guardar modelos
   modelos_por_anio_sin_outliers[[paste0("anio_", a)]] <- mods
-  
-  # 3. Generar la tabla comparativa para el Viewer
-  tablas_por_anio_2[[paste0("anio_", a)]] <- modelsummary(
-    mods,
-    vcov = "HC1",
-    title = paste0("Regresiones para Industria (", a, ")"),
-    stars = TRUE,
-    statistic = "std.error",
-    fmt = 3,
-    coef_rename = c(
-      "(Intercept)"              = "Constante",
-      "indice_nivel_precios"     = "Índice de nivel de precios",
-      "recursos_naturales"       = "Rentas rec. naturales (% PBI)",
-      "ahorro_bruto_pbi"         = "Ahorro bruto (% PBI)",
-      "log(pbi_per_capita)"      = "log(PBI pc)"
-    ),
-    gof_map = list(
-      list("raw" = "nobs", "clean" = "N", "fmt" = 0),
-      list("raw" = "r.squared", "clean" = "R²", "fmt" = 3),
-      list("raw" = "adj.r.squared", "clean" = "R² ajustado", "fmt" = 3)
-    ),
-    output = "gt"
-  )
 }
-tablas_por_anio_2$anio_2022
-tablas_por_anio_2$anio_2001
-tablas_por_anio_2$anio_2008
-gtsave(tablas_por_anio_2$anio_2001, filename = "output/tablas/tabla_2001_outlier.html")
-gtsave(tablas_por_anio_2$anio_2008, filename = "output/tablas/tabla_2008_outlier.html")
-gtsave(tablas_por_anio_2$anio_2022, filename = "output/tablas/tabla_2022_outlier.html")
 
-# 2. Estimación de los modelos controlados para Exportaciones sin outliers
-# --- 2001 ---
-df_sub_2001_exp <- wdi_regresion |> 
-  filter(anio == 2001, !pais %in% outliers_2001_exp)
-
-mods_exp_2001 <- list(
-  "Exp: Control" = lm(
-    log(exportacion_manufactura_pc) ~ log(indice_nivel_precios) + recursos_naturales + 
-      ahorro_bruto_pbi + log(pbi_per_capita), 
-    data = df_sub_2001_exp
+# 2. Estimación para Exportaciones sin outliers
+for (a in anios) {
+  df_sub_exp <- wdi_regresion |> filter(anio == a)
+  
+  if (a == 2001) {
+    df_sub_exp <- df_sub_exp |> filter(!pais %in% outliers_2001_exp)
+  }
+  if (a == 2008) {
+    df_sub_exp <- df_sub_exp |> filter(!pais %in% outliers_2008_exp)
+  }
+  if (a == 2022) {
+    df_sub_exp <- df_sub_exp |> filter(!pais %in% outliers_2022_exp)
+  }
+  
+  mods_exp <- list(
+    # --- EXPORTACIONES MANUFACTURERAS ---
+    "log-log Exp: Control" = lm(
+      log(exportacion_manufactura_pc) ~ log(indice_nivel_precios) + recursos_naturales + 
+        ahorro_bruto_pbi + log(pbi_per_capita), 
+      data = df_sub_exp
+    )
   )
-)
-modelos_por_anio_sin_outliers$anio_2001[["Exp: Control"]] <- mods_exp_2001[["Exp: Control"]]
+  
+  modelos_por_anio_sin_outliers[[paste0("anio_", a)]][["log-log Exp: Control"]] <- mods_exp[["log-log Exp: Control"]]
+}
 
-tabla_2001_exp <- modelsummary(
-  mods_exp_2001,
+# 3. Generar la tabla comparativa unificada con todos los modelos
+modelos_sin_outliers_todos <- list(
+  "2001"   = modelos_por_anio_sin_outliers$anio_2001[["log-log Ind: Control"]],
+  "2008"   = modelos_por_anio_sin_outliers$anio_2008[["log-log Ind: Control"]],
+  "2022"   = modelos_por_anio_sin_outliers$anio_2022[["log-log Ind: Control"]],
+  "2001 "  = modelos_por_anio_sin_outliers$anio_2001[["log-log Exp: Control"]],
+  "2008 "  = modelos_por_anio_sin_outliers$anio_2008[["log-log Exp: Control"]],
+  "2022 "  = modelos_por_anio_sin_outliers$anio_2022[["log-log Exp: Control"]]
+)
+
+tabla_sin_outliers <- modelsummary(
+  modelos_sin_outliers_todos,
   vcov = "HC1",
-  title = "Regresión para Exportaciones (2001)",
+  title = "Regresiones para Industria y Exportaciones sin outliers",
   stars = TRUE,
   statistic = "std.error",
   fmt = 3,
   coef_rename = c(
-    "(Intercept)"          = "Constante",
-    "indice_nivel_precios" = "Índice de nivel de precios",
-    "recursos_naturales"   = "Rentas rec. naturales (% PBI)",
-    "ahorro_bruto_pbi"     = "Ahorro bruto (% PBI)",
-    "log(pbi_per_capita)"  = "log(PBI pc)"
+    "(Intercept)"              = "Constante",
+    "indice_nivel_precios"     = "Índice de nivel de precios",
+    "recursos_naturales"       = "Rentas rec. naturales (% PBI)",
+    "ahorro_bruto_pbi"         = "Ahorro bruto (% PBI)",
+    "log(pbi_per_capita)"      = "log(PBI pc)"
   ),
   gof_map = list(
     list("raw" = "nobs", "clean" = "N", "fmt" = 0),
@@ -196,84 +195,13 @@ tabla_2001_exp <- modelsummary(
     list("raw" = "adj.r.squared", "clean" = "R² ajustado", "fmt" = 3)
   ),
   output = "gt"
-)
-gtsave(tabla_2001_exp, filename = "output/tablas/tabla_2001_exp_outlier.html")
-
-# --- 2008 ---
-df_sub_2008_exp <- wdi_regresion |> 
-  filter(anio == 2008, !pais %in% outliers_2008_exp)
-
-mods_exp_2008 <- list(
-  "Exp: Control" = lm(
-    log(exportacion_manufactura_pc) ~ log(indice_nivel_precios) + recursos_naturales + 
-      ahorro_bruto_pbi + log(pbi_per_capita), 
-    data = df_sub_2008_exp
-  )
-)
-modelos_por_anio_sin_outliers$anio_2008[["Exp: Control"]] <- mods_exp_2008[["Exp: Control"]]
-
-tabla_2008_exp <- modelsummary(
-  mods_exp_2008,
-  vcov = "HC1",
-  title = "Regresión para Exportaciones (2008)",
-  stars = TRUE,
-  statistic = "std.error",
-  fmt = 3,
-  coef_rename = c(
-    "(Intercept)"          = "Constante",
-    "indice_nivel_precios" = "Índice de nivel de precios",
-    "recursos_naturales"   = "Rentas rec. naturales (% PBI)",
-    "ahorro_bruto_pbi"     = "Ahorro bruto (% PBI)",
-    "log(pbi_per_capita)"  = "log(PBI pc)"
-  ),
-  gof_map = list(
-    list("raw" = "nobs", "clean" = "N", "fmt" = 0),
-    list("raw" = "r.squared", "clean" = "R²", "fmt" = 3),
-    list("raw" = "adj.r.squared", "clean" = "R² ajustado", "fmt" = 3)
-  ),
-  output = "gt"
-)
-gtsave(tabla_2008_exp, filename = "output/tablas/tabla_2008_exp_outlier.html")
-
-# --- 2022 ---
-df_sub_2022_exp <- wdi_regresion |> 
-  filter(anio == 2022, !pais %in% outliers_2022_exp)
-
-mods_exp_2022 <- list(
-  "Exp: Control" = lm(
-    log(exportacion_manufactura_pc) ~ log(indice_nivel_precios) + recursos_naturales + 
-      ahorro_bruto_pbi + log(pbi_per_capita), 
-    data = df_sub_2022_exp
-  )
-)
-modelos_por_anio_sin_outliers$anio_2022[["Exp: Control"]] <- mods_exp_2022[["Exp: Control"]]
-
-# 3. Generar la tabla con modelsummary
-tabla_2022_exp <- modelsummary(
-  mods_exp_2022,
-  vcov = "HC1",
-  title = "Regresión para Exportaciones (2022)",
-  stars = TRUE,
-  statistic = "std.error",
-  fmt = 3,
-  coef_rename = c(
-    "(Intercept)"          = "Constante",
-    "indice_nivel_precios" = "Índice de nivel de precios",
-    "recursos_naturales"   = "Rentas rec. naturales (% PBI)",
-    "ahorro_bruto_pbi"     = "Ahorro bruto (% PBI)",
-    "log(pbi_per_capita)"  = "log(PBI pc)"
-  ),
-  gof_map = list(
-    list("raw" = "nobs", "clean" = "N", "fmt" = 0),
-    list("raw" = "r.squared", "clean" = "R²", "fmt" = 3),
-    list("raw" = "adj.r.squared", "clean" = "R² ajustado", "fmt" = 3)
-  ),
-  output = "gt"
-)
+) |> 
+  tab_spanner(label = "Industria (per cápita)", columns = 2:4) |> 
+  tab_spanner(label = "Exportaciones Manufactureras (per cápita)", columns = 5:7)
 
 # Visualizar en RStudio Viewer y guardar en HTML
-tabla_2022_exp
-gtsave(tabla_2022_exp, filename = "output/tablas/tabla_2022_exp_outlier.html")
+#tabla_sin_outliers
+gtsave(tabla_sin_outliers, filename = "output/tablas/tabla_sin_outliers.html")
 #####tests de Breusch-Pagan#####
 # 1. Creamos un data.frame vacío para ir guardando los resultados
 resultados_bp <- data.frame()
@@ -282,8 +210,8 @@ resultados_bp <- data.frame()
 for (a in c(2001, 2008, 2022)) {
   
   # Extraemos los modelos
-  mod_ind <- modelos_por_anio[[paste0("anio_", a)]][["Ind: Control"]]
-  mod_exp <- modelos_por_anio[[paste0("anio_", a)]][["Exp: Control"]]
+  mod_ind <- modelos_por_anio[[paste0("anio_", a)]][["log-log Ind: Control"]]
+  mod_exp <- modelos_por_anio[[paste0("anio_", a)]][["log-log Exp: Control"]]
   
   # Aplicamos el test de Breusch-Pagan
   bp_ind <- lmtest::bptest(mod_ind)
@@ -326,18 +254,9 @@ tabla_bp_final <- resultados_bp |>
   )
 
 # Imprimimos la tabla
-tabla_bp_final
-#Regresiones
-#*/
+#tabla_bp_final
+gtsave(tabla_bp_final, filename = "output/tablas/tabla_bp_final.html")
 
-
-library(lmtest)
-library(sandwich)
-library(car)
-library(tseries)
-library(modelsummary)
-library(ggplot2)
-library(dplyr)
 # ==============================================================================
 # DIAGNÓSTICOS ECONOMÉTRICOS PARA CADA AÑO
 # ==============================================================================
@@ -345,7 +264,6 @@ library(dplyr)
 # ==============================================================================
 # 1. MULTICOLINEALIDAD (VIF) PARA TODOS LOS AÑOS Y MODELOS
 # ==============================================================================
-library(car)
 
 # Creamos una lista para almacenar los resultados
 vifs_por_anio <- list()
@@ -353,8 +271,8 @@ vifs_por_anio <- list()
 for (a in c(2001, 2008, 2022)) {
   
   # Extraemos los modelos de control para cada año
-  mod_ind <- modelos_por_anio[[paste0("anio_", a)]][["Ind: Control"]]
-  mod_exp <- modelos_por_anio[[paste0("anio_", a)]][["Exp: Control"]]
+  mod_ind <- modelos_por_anio[[paste0("anio_", a)]][["log-log Ind: Control"]]
+  mod_exp <- modelos_por_anio[[paste0("anio_", a)]][["log-log Exp: Control"]]
   
   # Calculamos el VIF
   vif_ind <- car::vif(mod_ind)
@@ -367,18 +285,7 @@ for (a in c(2001, 2008, 2022)) {
   )
 }
 
-# Consultar los resultados
-print("--- VIF Año 2001 ---")
-print(vifs_por_anio$anio_2001)
 
-print("--- VIF Año 2008 ---")
-print(vifs_por_anio$anio_2008)
-
-print("--- VIF Año 2022 ---")
-print(vifs_por_anio$anio_2022)
-
-library(dplyr)
-library(gt)
 
 # Extraemos los nombres de las variables del primer VIF guardado
 nombres_vars <- names(vifs_por_anio$anio_2001$VIF_Industria)
@@ -394,7 +301,7 @@ tabla_vif <- data.frame(
   mutate(
     Variable = case_match(
       Variable,
-      "indice_nivel_precios" ~ "Índice de nivel de precios",
+      "log(indice_nivel_precios)" ~ "log(Índice de nivel de precios)",
       "recursos_naturales" ~ "Rentas rec. naturales (% PBI)",
       "ahorro_bruto_pbi" ~ "Ahorro bruto (% PBI)",
       "log(pbi_per_capita)" ~ "log(PBI pc)",
@@ -403,7 +310,7 @@ tabla_vif <- data.frame(
   )
 
 # Generamos la tabla con formato
-tabla_vif |> 
+tabla_vif_final <- tabla_vif |> 
   gt() |> 
   tab_header(
     title = "Factor de Inflación de la Varianza (VIF)",
@@ -419,6 +326,10 @@ tabla_vif |>
     decimals = 2
   )
 
+# Imprimimos la tabla
+#tabla_vif_final
+gtsave(tabla_vif_final, filename = "output/tablas/tabla_vif_final.html")
+
 variables2 <- c(
   "crecimiento_industria",
   "industria_per_capita",
@@ -433,13 +344,13 @@ variables2 <- c(
   "pbi_per_capita",
   "pbi_millones")
 # 1. Extraemos el modelo de la lista
-mod_exp_2022 <- modelos_por_anio$anio_2022[["Exp: Control"]]
-mod_exp_2001 <- modelos_por_anio$anio_2001[["Exp: Control"]]
-mod_exp_2008 <- modelos_por_anio$anio_2008[["Exp: Control"]]
+mod_exp_2022 <- modelos_por_anio$anio_2022[["log-log Exp: Control"]]
+mod_exp_2001 <- modelos_por_anio$anio_2001[["log-log Exp: Control"]]
+mod_exp_2008 <- modelos_por_anio$anio_2008[["log-log Exp: Control"]]
 
-mod_ind_2022 <- modelos_por_anio$anio_2022[["Ind: Control"]]
-mod_ind_2001 <- modelos_por_anio$anio_2001[["Ind: Control"]]
-mod_ind_2008 <- modelos_por_anio$anio_2008[["Ind: Control"]]
+mod_ind_2022 <- modelos_por_anio$anio_2022[["log-log Ind: Control"]]
+mod_ind_2001 <- modelos_por_anio$anio_2001[["log-log Ind: Control"]]
+mod_ind_2008 <- modelos_por_anio$anio_2008[["log-log Ind: Control"]]
 
 # ==============================================================================
 # TABLA COMPARATIVA: TEST RESET DE RAMSEY (CON Y SIN OUTLIERS)
@@ -476,15 +387,15 @@ for (a in anios_test) {
   clave_anio <- paste0("anio_", a)
   
   # Industria: Con y Sin outliers
-  mod_ind_con <- modelos_por_anio[[clave_anio]][["Ind: Control"]]
-  mod_ind_sin <- modelos_por_anio_sin_outliers[[clave_anio]][["Ind: Control"]]
+  mod_ind_con <- modelos_por_anio[[clave_anio]][["log-log Ind: Control"]]
+  mod_ind_sin <- modelos_por_anio_sin_outliers[[clave_anio]][["log-log Ind: Control"]]
   
   t_ind_con <- test_reset_adaptativo(mod_ind_con)
   t_ind_sin <- test_reset_adaptativo(mod_ind_sin)
   
   # Exportaciones: Con y Sin outliers
-  mod_exp_con <- modelos_por_anio[[clave_anio]][["Exp: Control"]]
-  mod_exp_sin <- modelos_por_anio_sin_outliers[[clave_anio]][["Exp: Control"]]
+  mod_exp_con <- modelos_por_anio[[clave_anio]][["log-log Exp: Control"]]
+  mod_exp_sin <- modelos_por_anio_sin_outliers[[clave_anio]][["log-log Exp: Control"]]
   
   t_exp_con <- test_reset_adaptativo(mod_exp_con)
   t_exp_sin <- test_reset_adaptativo(mod_exp_sin)
@@ -540,25 +451,25 @@ tabla_reset_gt <- df_tabla_reset |>
   )
 
 # Visualizar en la pestaña Viewer
-tabla_reset_gt
+#tabla_reset_gt
 
 # Guardar en archivo HTML
 gtsave(tabla_reset_gt, filename = "output/tablas/tabla_reset_comparativa.html")
 # 2. Dividimos la ventana en 4 (2 filas x 2 columnas)
-par(mfrow = c(2, 2))
+#par(mfrow = c(2, 2))
 
 # 3. Generamos los gráficos con el color transparente
-plot(mod_exp_2022, pch = 16, col = rgb(0, 0, 1, 0.1))
-plot(mod_exp_2008, pch = 16, col = rgb(0, 0, 1, 0.1))
-plot(mod_exp_2001, pch = 16, col = rgb(0, 0, 1, 0.1))
+#plot(mod_exp_2022, pch = 16, col = rgb(0, 0, 1, 0.1))
+#plot(mod_exp_2008, pch = 16, col = rgb(0, 0, 1, 0.1))
+#plot(mod_exp_2001, pch = 16, col = rgb(0, 0, 1, 0.1))
 
 
-plot(mod_ind_2022, pch = 16, col = rgb(0, 0, 1, 0.1))
-plot(mod_ind_2008, pch = 16, col = rgb(0, 0, 1, 0.1))
-plot(mod_ind_2001, pch = 16, col = rgb(0, 0, 1, 0.1))
+#plot(mod_ind_2022, pch = 16, col = rgb(0, 0, 1, 0.1))
+#plot(mod_ind_2008, pch = 16, col = rgb(0, 0, 1, 0.1))
+#plot(mod_ind_2001, pch = 16, col = rgb(0, 0, 1, 0.1))
 
 # 4. Volvemos la ventana a la normalidad (1 gráfico a la vez)
-par(mfrow = c(1, 1))
+#par(mfrow = c(1, 1))
 
 # Función auxiliar para ver el ranking de observaciones influyentes por país
 top_cook <- function(modelo, datos_df, n = 5) {
@@ -570,20 +481,16 @@ top_cook <- function(modelo, datos_df, n = 5) {
   )
 }
 
-print(top_cook(modelos_por_anio$anio_2022[["Exp: Control"]], wdi_2022))
-print(top_cook(modelos_por_anio$anio_2022[["Ind: Control"]], wdi_2022))
+#print(top_cook(modelos_por_anio$anio_2022[["log-log Exp: Control"]], wdi_2022))
+#print(top_cook(modelos_por_anio$anio_2022[["log-log Ind: Control"]], wdi_2022))
 
-print(top_cook(modelos_por_anio$anio_2001[["Exp: Control"]], wdi_2001))
-print(top_cook(modelos_por_anio$anio_2001[["Ind: Control"]], wdi_2001))
+#print(top_cook(modelos_por_anio$anio_2001[["log-log Exp: Control"]], wdi_2001))
+#print(top_cook(modelos_por_anio$anio_2001[["log-log Ind: Control"]], wdi_2001))
 
-print(top_cook(modelos_por_anio$anio_2008[["Exp: Control"]], wdi_2008))
-print(top_cook(modelos_por_anio$anio_2008[["Ind: Control"]], wdi_2008))
-#eliminamos ukraine(141) por estar en guerra y ser outlier 
-#a el congo(28) por ser un pais particular con una estructura productiva rara
-#lebanon lo eliminamos por estar en una crisis macroeconomica fuerte en ese año
+#print(top_cook(modelos_por_anio$anio_2008[["log-log Exp: Control"]], wdi_2008))
+#print(top_cook(modelos_por_anio$anio_2008[["log-log Ind: Control"]], wdi_2008))
 
-#eliminamos a Zimbabwe por su situacion macro
-#
+
 
 # ==============================================================================
 # GRÁFICOS: RESIDUALS VS LEVERAGE (DIAGNÓSTICO DE VALORES INFLUYENTES)
@@ -600,10 +507,10 @@ graficar_residuos_leverage <- function(modelo, datos_df, titulo, nombre_archivo,
   
   ruta_archivo <- file.path("output/graficos/regresion", nombre_archivo)
   
-  # 1. Guardar a archivo PNG con letras grandes y legibles
+  # 1. Guardar a archivo PNG
   png(ruta_archivo, width = 5, height = 3.7, units = "in", res = 300, pointsize = 11)
   par(
-    mar = c(4.0, 4.1, 3.2, 1.9),  # Márgenes ajustados (abajo, izq, arriba, der)
+    mar = c(4.0, 4.1, 3.2, 3),  # Márgenes ajustados (abajo, izq, arriba, der)
     mgp = c(2.6, 0.8, 0),         # Acerca nombres y números a los ejes
     las = 0                       # Mantiene los números del eje Y en vertical
   )
@@ -631,36 +538,36 @@ graficar_residuos_leverage <- function(modelo, datos_df, titulo, nombre_archivo,
   dev.off()
   
   # 2. Mostrar también en la ventana gráfica activa de RStudio (Plots) con letras grandes
-  par(mar = c(4.8, 5.0, 3.8, 2.2))
-  plot(
-    modelo,
-    which = 5,
-    ann = FALSE,
-    sub.caption = "",               # Elimina el texto de la fórmula lm(...) debajo del eje x
-    labels.id = etiquetas,
-    id.n = id.n,
-    col = colores,
-    pch = 16,
-    cex = 1.1,
-    cex.id = 1.05,
-    cex.caption = 1.2,
-    cex.axis = 1.1,
-    caption = list("", "", "", "", "")
-  )
-  title(
-    main = titulo,
-    xlab = "Apalancamiento",
-    ylab = "Residuos estandarizados",
-    cex.main = 1.35,
-    cex.lab = 1.2
-  )
+  #par(mar = c(4.8, 5.0, 3.8, 2.2))
+  #plot(
+  #  modelo,
+  #  which = 5,
+  #  ann = FALSE,
+  #  sub.caption = "",               # Elimina el texto de la fórmula lm(...) debajo del eje x
+  #  labels.id = etiquetas,
+  #  id.n = id.n,
+  #  col = colores,
+  #  pch = 16,
+  #  cex = 1.1,
+  #  cex.id = 1.05,
+  #  cex.caption = 1.2,
+  #  cex.axis = 1.1,
+  #  caption = list("", "", "", "", "")
+  #)
+  #title(
+  #  main = titulo,
+  #  xlab = "Apalancamiento",
+  #  ylab = "Residuos estandarizados",
+  #  cex.main = 1.35,
+  #  cex.lab = 1.2
+  #)
 }
 
 # --- EXPORTACIONES MANUFACTURERAS ---
 graficar_residuos_leverage(
   modelo = mod_exp_2001,
   datos_df = wdi_2001,
-  titulo = "Exportaciones Manufactureras 2001",
+  titulo = "Exportaciones Manufactureras (per cápita) 2001",
   nombre_archivo = "rvsl_exportaciones_2001.png",
   id.n = 1
 )
@@ -668,7 +575,7 @@ graficar_residuos_leverage(
 graficar_residuos_leverage(
   modelo = mod_exp_2008,
   datos_df = wdi_2008,
-  titulo = "Exportaciones Manufactureras 2008",
+  titulo = "Exportaciones Manufactureras (per cápita) 2008",
   nombre_archivo = "rvsl_exportaciones_2008.png",
   id.n = 2
 )
@@ -676,7 +583,7 @@ graficar_residuos_leverage(
 graficar_residuos_leverage(
   modelo = mod_exp_2022,
   datos_df = wdi_2022,
-  titulo = "Exportaciones Manufactureras 2022",
+  titulo = "Exportaciones Manufactureras (per cápita) 2022",
   nombre_archivo = "rvsl_exportaciones_2022.png",
   id.n = 2
 )
@@ -685,7 +592,7 @@ graficar_residuos_leverage(
 graficar_residuos_leverage(
   modelo = mod_ind_2001,
   datos_df = wdi_2001,
-  titulo = "Industria 2001",
+  titulo = "Industria (per cápita) 2001",
   nombre_archivo = "rvsl_industria_2001.png",
   id.n = 2
 )
@@ -693,7 +600,7 @@ graficar_residuos_leverage(
 graficar_residuos_leverage(
   modelo = mod_ind_2008,
   datos_df = wdi_2008,
-  titulo = "Industria 2008",
+  titulo = "Industria (per cápita) 2008",
   nombre_archivo = "rvsl_industria_2008.png",
   id.n = 1
 )
@@ -701,9 +608,200 @@ graficar_residuos_leverage(
 graficar_residuos_leverage(
   modelo = mod_ind_2022,
   datos_df = wdi_2022,
-  titulo = "Industria 2022",
+  titulo = "Industria (per cápita) 2022",
   nombre_archivo = "rvsl_industria_2022.png",
   id.n = 1
 )
+
+# ==============================================================================
+# TABLA RESUMEN COMPARATIVA: SIMPLE vs CON CONTROLES vs SIN OUTLIERS
+# ==============================================================================
+
+# Función auxiliar para armar la lista de modelos en el orden solicitado
+armar_modelos_resumen <- function(dep) {
+  res <- list()
+  for (a in anios) {
+    simple_name  <- paste0("log-log ", dep, ": Simple")
+    control_name <- paste0("log-log ", dep, ": Control")
+    
+    res[[paste0("Simple (", a, ")")]]       <- modelos_por_anio[[paste0("anio_", a)]][[simple_name]]
+    res[[paste0("Controles (", a, ")")]]    <- modelos_por_anio[[paste0("anio_", a)]][[control_name]]
+    res[[paste0("Sin atípicos (", a, ")")]] <- modelos_por_anio_sin_outliers[[paste0("anio_", a)]][[control_name]]
+  }
+  return(res)
+}
+
+mods_resumen_ind <- armar_modelos_resumen("Ind")
+mods_resumen_exp <- armar_modelos_resumen("Exp")
+
+# Generamos la tabla comparativa estructurada en paneles (Industria y Exportaciones)
+tabla_resumen_modelos <- modelsummary(
+  list(
+    "Panel A: Industria (per cápita)" = mods_resumen_ind,
+    "Panel B: Exportaciones Manufactureras (per cápita)" = mods_resumen_exp
+  ),
+  shape = "rbind",
+  vcov = "HC1",
+  title = "Regresiones Log-Log: Efecto del Nivel de Precios sobre Industria y Exportaciones",
+  coef_map = c(
+    "log(indice_nivel_precios)" = "log(Índice de precios)"
+  ),
+  gof_map = list(
+    list("raw" = "nobs", "clean" = "N", "fmt" = 0),
+    list("raw" = "adj.r.squared", "clean" = "R² ajustado", "fmt" = 3)
+  ),
+  stars = TRUE,
+  statistic = "std.error",
+  fmt = 3,
+  output = "gt"
+) |> 
+  tab_spanner(label = "2001", columns = 2:4) |> 
+  tab_spanner(label = "2008", columns = 5:7) |> 
+  tab_spanner(label = "2022", columns = 8:10) |> 
+  cols_label(
+    `Simple (2001)`       = "Simple",
+    `Controles (2001)`    = "Controles",
+    `Sin atípicos (2001)` = "Sin atípicos",
+    `Simple (2008)`       = "Simple",
+    `Controles (2008)`    = "Controles",
+    `Sin atípicos (2008)` = "Sin atípicos",
+    `Simple (2022)`       = "Simple",
+    `Controles (2022)`    = "Controles",
+    `Sin atípicos (2022)` = "Sin atípicos"
+  ) |> 
+  tab_source_note(
+    source_note = md(paste0(
+      "**Variables de control incluidas en las especificaciones con controles:** ",
+      "Rentas de recursos naturales (% PBI), Ahorro bruto (% PBI) y log(PBI per cápita).<br>",
+      "**Sin atípicos:** Excluye observaciones influyentes detectadas mediante distancia de Cook (D > 0.15)."
+    ))
+  ) |> 
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = cells_row_groups()
+  )
+
+# Imprimir en Viewer y guardar en HTML
+tabla_resumen_modelos
+gtsave(tabla_resumen_modelos, filename = "output/tablas/tabla_resumen_modelos.html")
+
+# ==============================================================================
+# TABLA RESUMEN DE DIAGNÓSTICOS ECONOMÉTRICOS Y TESTS DE ESPECIFICACIÓN
+# ==============================================================================
+
+filas_diagnosticos <- list()
+
+for (a in c(2001, 2008, 2022)) {
+  clave_anio <- paste0("anio_", a)
+  
+  for (dep in c("Ind", "Exp")) {
+    modelo_nombre <- ifelse(dep == "Ind", "Industria (per cápita)", "Exportaciones Manufactureras (per cápita)")
+    mod_con_name  <- paste0("log-log ", dep, ": Control")
+    
+    mod_con <- modelos_por_anio[[clave_anio]][[mod_con_name]]
+    mod_sin <- modelos_por_anio_sin_outliers[[clave_anio]][[mod_con_name]]
+    
+    # 1. Breusch-Pagan (Heterocedasticidad)
+    bp_con <- lmtest::bptest(mod_con)
+    
+    # 2. Ramsey RESET adaptativo (Forma funcional / especificación)
+    reset_con <- test_reset_adaptativo(mod_con)
+    reset_sin <- test_reset_adaptativo(mod_sin)
+    
+    # 3. Multicolinealidad (VIF máximo)
+    vif_vals <- car::vif(mod_con)
+    vif_max  <- max(vif_vals)
+    
+    # 4. Observaciones influyentes (Distancia de Cook > 0.15)
+    outliers_var <- get(paste0("outliers_", a, "_", tolower(dep)))
+    n_outliers   <- length(outliers_var)
+    paises_out   <- paste(outliers_var, collapse = ", ")
+    
+    filas_diagnosticos[[paste0(a, "_", dep)]] <- data.frame(
+      Año          = a,
+      Modelo       = modelo_nombre,
+      BP_pval      = bp_con$p.value,
+      RESET_con    = reset_con$p_valor,
+      RESET_sin    = reset_sin$p_valor,
+      VIF_max      = vif_max,
+      N_outliers   = n_outliers,
+      Paises_out   = ifelse(n_outliers > 0, paises_out, "Ninguno")
+    )
+  }
+}
+
+df_diagnosticos <- do.call(rbind, filas_diagnosticos)
+
+# Generación del boceto de tabla con gt
+tabla_diagnosticos_gt <- df_diagnosticos |>
+  gt(groupname_col = "Año") |>
+  tab_header(
+    title = "Resumen de Diagnósticos Econométricos y Tests de Especificación",
+    subtitle = "Modelos con controles para Industria y Exportaciones (2001, 2008, 2022)"
+  ) |>
+  tab_spanner(
+    label = "Heterocedasticidad (Breusch-Pagan)",
+    columns = BP_pval
+  ) |>
+  tab_spanner(
+    label = "Especificación RESET (p-valor)",
+    columns = c(RESET_con, RESET_sin)
+  ) |>
+  tab_spanner(
+    label = "Multicolinealidad",
+    columns = VIF_max
+  ) |>
+  tab_spanner(
+    label = "Observaciones Influyentes (Cook > 0.15)",
+    columns = c(N_outliers, Paises_out)
+  ) |>
+  cols_label(
+    Modelo     = "Modelo",
+    BP_pval    = "p-valor",
+    RESET_con  = "Muestra compl.",
+    RESET_sin  = "Sin atípicos",
+    VIF_max    = "VIF Máx",
+    N_outliers = "N",
+    Paises_out = "Países identificados"
+  ) |>
+  fmt_number(
+    columns = VIF_max,
+    decimals = 2
+  ) |>
+  fmt_number(
+    columns = c(BP_pval, RESET_con, RESET_sin),
+    decimals = 4
+  ) |>
+  cols_align(
+    align = "center",
+    columns = c(BP_pval, RESET_con, RESET_sin, VIF_max, N_outliers)
+  ) |>
+  cols_align(
+    align = "left",
+    columns = c(Modelo, Paises_out)
+  ) |>
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = cells_column_labels()
+  ) |>
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = cells_row_groups()
+  ) |>
+  tab_source_note(
+    source_note = md(paste0(
+      "**Notas metodológicas:**<br>",
+      "- **Breusch-Pagan:** H0 de homocedasticidad.<br>",
+      "- **Multicolinealidad:** VIF Máx < 5 indica ausencia de multicolinealidad severa entre las covariables.<br>",
+      "- **Distancia de Cook:** Se identifican observaciones influyentes con umbral Di > 0.15."
+    ))
+  )
+
+# Imprimir en Viewer y guardar en HTML
+tabla_diagnosticos_gt
+gtsave(tabla_diagnosticos_gt, filename = "output/tablas/tabla_diagnosticos_resumen.html")
+
+
+
 
 
