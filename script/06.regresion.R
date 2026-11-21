@@ -86,9 +86,9 @@ for (a in anios) {
     output = "gt"
   )
 }
-tablas_por_anio$anio_2022
 tablas_por_anio$anio_2001
 tablas_por_anio$anio_2008
+tablas_por_anio$anio_2022
 gtsave(tablas_por_anio$anio_2001, filename = "output/tablas/tabla_2001.html")
 gtsave(tablas_por_anio$anio_2008, filename = "output/tablas/tabla_2008.html")
 gtsave(tablas_por_anio$anio_2022, filename = "output/tablas/tabla_2022.html")

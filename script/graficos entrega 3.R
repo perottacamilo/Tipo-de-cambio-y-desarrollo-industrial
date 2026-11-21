@@ -64,7 +64,6 @@ theme_owid <- function(base_size = 13) {
 }
 
 pintar <- function(texto, color) sprintf("<span style='color:%s'><b>%s</b></span>", color, texto)
-dir.create("graficos_clase21", showWarnings = FALSE)
 
 # Funciones de ploteo para el exploratorio
 panel_latam <- function(datos, subtitulo = datos$sub_filtrado[1]) {
@@ -210,8 +209,7 @@ caption_filtrado <- paste0(
 )  
 grafico_exploratorio_2 <- juntar(paneles_filtradoes, titulo = titulo_filtrado, subtitulo = subtitulo_filtrado, caption = caption_filtrado)
 
-# CORRECCIÓN DE DISPOSITIVO: Eliminado device = ragg::agg_jpeg para evitar conflicto con showtext
-ggsave("output/graficos/grupo_01_exploratorio.jpg", plot = grafico_exploratorio_2,
+ggsave("output/graficos/grupo_01_exploratoriolala.jpg", plot = grafico_exploratorio_2,
        width = 22, height = 14, units = "cm", dpi = 300)
 # ------------------------------------------------------------------------------
 # 3. PROCESAMIENTO Y GRÁFICO COMUNICATIVO
@@ -301,7 +299,6 @@ g_ind_pc_esp <- ggplot(df_industrializacion, aes(x = year, y = industria_per_cap
     axis.title             = element_text(color = "grey35", size = 27),
   )
 
-# CORRECCIÓN DE DISPOSITIVO: Eliminado device = ragg::agg_jpeg para evitar conflicto con showtext
-ggsave("output/graficos/grupo_01_comunicativo.jpg", plot = g_ind_pc_esp,
+ggsave("output/graficos/grupo_01_comunicativolala.jpg", plot = g_ind_pc_esp,
        width = 22, height = 14, units = "cm", dpi = 300)
 

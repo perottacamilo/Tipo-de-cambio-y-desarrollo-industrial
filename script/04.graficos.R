@@ -472,7 +472,6 @@ theme_owid <- function(base_size = 13) {
 }
 
 pintar <- function(texto, color) sprintf("<span style='color:%s'><b>%s</b></span>", color, texto)
-dir.create("graficos_clase21", showWarnings = FALSE)
 
 # Funciones de ploteo para el exploratorio
 panel_latam <- function(datos, subtitulo = datos$sub_filtrado[1]) {
@@ -690,7 +689,6 @@ ggsave("grupo_01_comunicativolalalal.jpg", plot = g_ind_pc_esp,
 # ==============================================================================
 # SCRIPT MAESTRO: GRÁFICO EXPLORATORIO Y COMUNICATIVO
 # ==============================================================================
-rm(list = ls())
 library(tidyverse)
 library(scales)
 library(ggtext)
@@ -752,7 +750,6 @@ theme_owid <- function(base_size = 13) {
 }
 
 pintar <- function(texto, color) sprintf("<span style='color:%s'><b>%s</b></span>", color, texto)
-dir.create("graficos_clase21", showWarnings = FALSE)
 
 # Funciones de ploteo para el exploratorio
 panel_latam <- function(datos, subtitulo = datos$sub_filtrado[1]) {

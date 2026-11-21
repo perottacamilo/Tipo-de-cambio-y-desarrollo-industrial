@@ -66,7 +66,6 @@ faltantes <- wdi2 |>
   arrange(desc(pct_na))
 
 
-
 #Proceentaje de datos faltantes por variable por cada anio
 faltantes_2001 <- base_2001 |>
   summarise(across(everything(), ~ mean(is.na(.x)) * 100)) |>
@@ -236,10 +235,10 @@ head(faltantes_pais_2022)
 
 
 wdi2.2 <- wdi2.1 |> 
-  filter(!pais %in% c("Kosovo", "South Sudan", "Afghanistan", "Angola", "Yemen", "Eritrea", "Venezuela, RB"))
+  filter(!pais %in% c("Kosovo", "South Sudan", "Afghanistan", "Angola", "Yemen", "Eritrea", "Venezuela, RB", "Somalia, Fed. Rep."))
 
 wdi3.2 <- wdi3.1 |> 
-  filter(!pais %in% c("Kosovo", "South Sudan", "Afghanistan", "Angola", "Yemen", "Eritrea", "Venezuela, RB"))
+  filter(!pais %in% c("Kosovo", "South Sudan", "Afghanistan", "Angola", "Yemen", "Eritrea", "Venezuela, RB", "Somalia, Fed. Rep."))
 
 
 base_2001.2 <- wdi2.2 |>
@@ -356,23 +355,4 @@ colSums(is.na(wdi_filtrado))
 
 #Filtramos (drop.na) solo en las variables que ustilizamos en la regresion
 #Para quedarnos con la mayor cantidad de observaciones posibles
-
-#Elegir vars regresion
-wdi_regresion <- wdi_filtrado |> 
-  drop_na(
-    crecimiento_industria,
-    industria_per_capita,
-    indice_nivel_precios,
-    empleo_industrial,
-    exportacion_manufactura_pc,
-    gasto_gobierno_pbi,
-    valor_agregado_trabajador,
-    ahorro_bruto_pbi,
-    credito_privado_pbi,
-    recursos_naturales,
-    pbi_per_capita,
-    pbi_millones)
-
-write.csv(wdi_regresion, "input/wdi_regresion.csv")
-
 
