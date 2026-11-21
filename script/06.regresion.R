@@ -47,10 +47,10 @@ for (a in anios) {
   
   # 2. Estimación de los 4 modelos seleccionados
   mods <- list(
-    # --- INDUSTRIA (% PBI) ---
-    "Ind: Simple"  = lm(log(industria_pbi) ~ log(indice_nivel_precios), data = df_sub),
+    # --- INDUSTRIA (per cápita) ---
+    "Ind: Simple"  = lm(log(industria_per_capita) ~ log(indice_nivel_precios), data = df_sub),
     
-    "Ind: Control" = lm(log(industria_pbi) ~ log(indice_nivel_precios) + recursos_naturales + 
+    "Ind: Control" = lm(log(industria_per_capita) ~ log(indice_nivel_precios) + recursos_naturales + 
                           ahorro_bruto_pbi + log(pbi_per_capita), data = df_sub),
     
     # --- EXPORTACIONES MANUFACTURERAS ---
@@ -124,8 +124,8 @@ for (a in anios) {
     df_sub <- df_sub |> filter(!pais %in% outliers_2008_ind)
   }
   mods <- list(
-    # --- INDUSTRIA (% PBI) ---
-    "Ind: Control" = lm(log(industria_pbi) ~ log(indice_nivel_precios) + recursos_naturales + 
+    # --- INDUSTRIA (per cápita) ---
+    "Ind: Control" = lm(log(industria_per_capita) ~ log(indice_nivel_precios) + recursos_naturales + 
                           ahorro_bruto_pbi + log(pbi_per_capita), data = df_sub)
   )
   
@@ -219,7 +219,7 @@ for (a in c(2001, 2008, 2022)) {
   # Guardamos los resultados temporalmente
   temp_df <- data.frame(
     Año = c(a, a),
-    Modelo = c("Industria (% PBI)", "Exportaciones Manufactureras"),
+    Modelo = c("Industria (per cápita)", "Exportaciones Manufactureras"),
     BP_Stat = c(bp_ind$statistic, bp_exp$statistic),
     p_valor = c(bp_ind$p.value, bp_exp$p.value)
   )
@@ -348,7 +348,7 @@ tabla_vif |>
 
 variables2 <- c(
   "crecimiento_industria",
-  "industria_pbi",
+  "industria_per_capita",
   "indice_nivel_precios",
   "empleo_industrial",
   "exportacion_manufactura_pc",
@@ -373,10 +373,11 @@ mod_ind_2022_so <- modelos_por_anio_sin_outliers$anio_2022[["Ind: Control"]]
 mod_ind_2008_so <- modelos_por_anio_sin_outliers$anio_2008[["Ind: Control"]]
 mod_ind_2001_so <- modelos_por_anio_sin_outliers$anio_2001[["Ind: Control"]]
 resettest(mod_exp_2022_so)#sin outliers
-resettest( mod_exp_2022, vcov = vcovHC(mod_exp_2022, type = "HC1"))
 resettest(mod_exp_2022, vcov = function(x) vcovHC(x, type = "HC1"))
 resettest(mod_exp_2022)
 resettest(mod_exp_2008)
+resettest(mod_exp_2008, vcov = function(x) vcovHC(x, type = "HC1"))
+
 resettest(mod_exp_2001)
 
 resettest(mod_ind_2022)
@@ -414,7 +415,7 @@ head(sort(cooks.distance(modelos_por_anio$anio_2008[["Ind: Control"]]), decreasi
 
 
 # Cambiá "pais" por el nombre exacto de la columna que identifica a los países en tu base
-paises_grafico_2022 <- wdi_2022[c(77, 28, 141,151,80,150), c("pais", "exportacion_manufactura_pc","industria_pbi")]
+paises_grafico_2022 <- wdi_2022[c(77, 28, 141,151,80,150), c("pais", "exportacion_manufactura_pc","industria_per_capita")]
 paises_grafico_2008 <- wdi_2008[c(77, 57, 19, 145), c("pais", "exportacion_manufactura_pc")]
 paises_grafico_2001 <- wdi_2001[c(28,76, 50, 64,54), c("pais", "exportacion_manufactura_pc")]
 print(paises_grafico_2022)
@@ -551,7 +552,7 @@ tablas_anios <- setNames(
     
     modelsummary(
       list(
-        "Industria (% PBI)" = mod1,
+        "Industria (per cápita)" = mod1,
         "exportacion manufactura" = mod2
       ),
       title = paste0("Tabla: Regresiones simples para el nivel de precios (", a, ")"),
