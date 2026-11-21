@@ -33,8 +33,7 @@ argendata <- read_csv("auxiliar/pib_indust_per_capita_comparado.csv") |>
   select(
     iso3c = geocodigoFundar, 
     year = anio, 
-    industria_pc = gdp_indust_pc # Valor agregado manufacturero per cápita
-  )
+    industria_pc = gdp_indust_pc)
 
 wdi <- wdi |> 
   left_join(argendata, by = c("iso3c", "year"))

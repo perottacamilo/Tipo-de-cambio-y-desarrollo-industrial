@@ -493,7 +493,7 @@ grafico10 <- ggplot(datos_combinados, aes(x = reorder(region, -porcentaje), y = 
        subtitle = "Porcentaje de países en cada categoría sobre el total",
        x = "Región",
        y = "Porcentaje del total de países",
-       fill = "Año de la base") + 
+       fill = "Muestra") + 
   theme_minimal(base_size = 14) + 
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1, size = 13), # Nombres de las regiones (eje X)
@@ -509,29 +509,29 @@ print(grafico10)
 
 
 ingreso1 <- wdi2 %>%
-  count(ingreso) %>%
+  count(ingreso2) %>%
   mutate(porcentaje = (n / sum(n)) * 100,
          base = "Antes de filtrar") 
 
-ingreso2 <- wdi_filtrado %>%
-  count(ingreso) %>%
+ingreso_2 <- wdi_filtrado %>%
+  count(ingreso2) %>%
   mutate(porcentaje = (n / sum(n)) * 100,
          base = "Base filtrada") 
 
-datos_combinados <- bind_rows(ingreso1, ingreso2)
+datos_combinados <- bind_rows(ingreso1, ingreso_2)
 
-grafico11 <- ggplot(datos_combinados, aes(x = reorder(ingreso, -porcentaje), y = porcentaje, fill = base)) +
+grafico11 <- ggplot(datos_combinados, aes(x = reorder(ingreso2, -porcentaje), y = porcentaje, fill = base)) +
   geom_bar(stat = "identity", position = "dodge", color = "black") + 
   labs(title = "Distribución de los ingresos",
        subtitle = "Porcentaje de países en cada categoría sobre el total",
-       x = "Región",
+       x = "Ingreso",
        y = "Porcentaje del total de países",
-       fill = "Año de la base") + 
+       fill = "Muestra") + 
   theme_minimal(base_size = 14) + 
   theme(
-    axis.text.x = element_text(angle = 45, hjust = 1, size = 13), # Nombres de las regiones (eje X)
-    axis.text.y = element_text(size = 13),                        # Números del porcentaje (eje Y)
-    axis.title = element_text(size = 15, face = "bold"),          # Títulos "Región" y "Porcentaje..."
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 13),
+    axis.text.y = element_text(size = 13),
+    axis.title = element_text(size = 15, face = "bold"),
     panel.border = element_rect(colour = "black", fill = NA, linewidth = 1)
   )
 

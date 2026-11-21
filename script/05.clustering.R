@@ -61,6 +61,13 @@ ggsave(file.path("output/graficos/clustering", "heatmap.png"),
        plot = heatmap, width = 12, height = 7, units = "in", dpi = 300)
 
 
+
+
+round(res$var$coord[, 1:4], 3)
+
+
+
+
 # 4. PCA CON FactoMineR (la herramienta que vamos a usar)
 # ==============================================================================
 # FactoMineR::PCA() estandariza por defecto (scale.unit = TRUE) y devuelve,
@@ -69,7 +76,11 @@ res <- PCA(X, scale.unit = TRUE, graph = FALSE)
 coord_pc1 <- res$ind$coord[, 1]
 # ---- 4.1 Cuantos componentes mirar ----
 res$eig
-screeplot <- fviz_eig(res, addlabels = TRUE)
+screeplot <- fviz_eig(res, addlabels = TRUE) +
+  labs(
+    title = "Varianza explicada por componente principal",
+    x = "Dimensiones",
+    y = "Porcentaje de varianza explicada (%)") + tema_agrandado
 print(screeplot)
 
 
@@ -88,8 +99,8 @@ rm(screeplot)
 
 
 tema_agrandado <- theme(
-  axis.text = element_text(size = 13),  # Agranda las etiquetas (los nombres de las variables y los números)
-  axis.title = element_text(size = 13)  # Agranda los títulos ("Contributions (%)", "Variables")
+  axis.text = element_text(size = 18),  # Agranda las etiquetas (los nombres de las variables y los números)
+  axis.title = element_text(size = 18)  # Agranda los títulos ("Contributions (%)", "Variables")
 )
 pc1 <- fviz_contrib(res, choice = "var", axes = 1)  + tema_agrandado # quien arma PC1
 pc2 <- fviz_contrib(res, choice = "var", axes = 2) + tema_agrandado  # quien arma PC2
@@ -133,14 +144,17 @@ wdi_pca <- wdi_pca |>
 
 
 mapa_regiones <- fviz_pca_ind(
-  res, 
-  label = "none", 
+  res,
+  label = "none",
   habillage = factor(wdi_pca$region_resaltada),
-  addEllipses = TRUE, 
+  addEllipses = TRUE,
   labelsize = 7.5,
   ellipse.level = 0.68,
-  palette = c("#3919E0", "#E0195B", "gray85") 
+  palette = c("#3919E0", "#E0195B", "gray85"),
+  title = "PCA - Asia y Latam",
+  legend.title = "Región"
 )
+
 print(mapa_regiones)
 
 
@@ -178,12 +192,20 @@ as.matrix(d)["Argentina", ] |> sort() |> head(6)
 as.matrix(d)["China", ] |> sort() |> head(6)
 
 
+tibble(k = 1:10, altura = rev(hc_ward$height)[1:10]) |>
+  ggplot(aes(k, altura)) + geom_line() + geom_point() +
+  scale_x_continuous(breaks = 1:10) +
+  labs(title = "Altura de las ultimas fusiones", x = "Cantidad de grupos")
+
+
+
+
 
 # ---- A.2 Aglomerar con distintos criterios de linkage ----
 hc_ward     <- hclust(d, method = "ward.D2")
 
 
-k <- 4
+k <- 5
 grupos <- cutree(hc_ward, k = k)
 table(grupos)
 
@@ -222,9 +244,9 @@ res_pca$eig[1:5, ]
 par(mfrow = c(1, 1))
 
 # ---- B.3 HCPC con k = 4 ----
-res_hcpc <- HCPC(res_pca, nb.clust = -1, consol = TRUE, graph = FALSE)
+res_hcpc <- HCPC(res_pca, nb.clust = 5, consol = TRUE, graph = FALSE)
 
-hcpc <- HCPC(res_pca, nb.clust = 5, consol = TRUE, graph = FALSE)
+hcpc <- HCPC(res_pca, nb.clust = 5, consol = TRUE, graph = FALSE) + 
 
 # png("output/graficos/dendograma.png", width = 8, height = 6, units = "in", res = 300)
 
