@@ -685,6 +685,123 @@ tabla_resumen_modelos <- modelsummary(
 tabla_resumen_modelos
 gtsave(tabla_resumen_modelos, filename = "output/tablas/tabla_resumen_modelos.html")
 
+# ==============================================================================
+# TABLA RESUMEN DE DIAGNÓSTICOS ECONOMÉTRICOS Y TESTS DE ESPECIFICACIÓN
+# ==============================================================================
+
+filas_diagnosticos <- list()
+
+for (a in c(2001, 2008, 2022)) {
+  clave_anio <- paste0("anio_", a)
+  
+  for (dep in c("Ind", "Exp")) {
+    modelo_nombre <- ifelse(dep == "Ind", "Industria (per cápita)", "Exportaciones Manufactureras (per cápita)")
+    mod_con_name  <- paste0("log-log ", dep, ": Control")
+    
+    mod_con <- modelos_por_anio[[clave_anio]][[mod_con_name]]
+    mod_sin <- modelos_por_anio_sin_outliers[[clave_anio]][[mod_con_name]]
+    
+    # 1. Breusch-Pagan (Heterocedasticidad)
+    bp_con <- lmtest::bptest(mod_con)
+    
+    # 2. Ramsey RESET adaptativo (Forma funcional / especificación)
+    reset_con <- test_reset_adaptativo(mod_con)
+    reset_sin <- test_reset_adaptativo(mod_sin)
+    
+    # 3. Multicolinealidad (VIF máximo)
+    vif_vals <- car::vif(mod_con)
+    vif_max  <- max(vif_vals)
+    
+    # 4. Observaciones influyentes (Distancia de Cook > 0.15)
+    outliers_var <- get(paste0("outliers_", a, "_", tolower(dep)))
+    n_outliers   <- length(outliers_var)
+    paises_out   <- paste(outliers_var, collapse = ", ")
+    
+    filas_diagnosticos[[paste0(a, "_", dep)]] <- data.frame(
+      Año          = a,
+      Modelo       = modelo_nombre,
+      BP_pval      = bp_con$p.value,
+      RESET_con    = reset_con$p_valor,
+      RESET_sin    = reset_sin$p_valor,
+      VIF_max      = vif_max,
+      N_outliers   = n_outliers,
+      Paises_out   = ifelse(n_outliers > 0, paises_out, "Ninguno")
+    )
+  }
+}
+
+df_diagnosticos <- do.call(rbind, filas_diagnosticos)
+
+# Generación del boceto de tabla con gt
+tabla_diagnosticos_gt <- df_diagnosticos |>
+  gt(groupname_col = "Año") |>
+  tab_header(
+    title = "Resumen de Diagnósticos Econométricos y Tests de Especificación",
+    subtitle = "Modelos con controles para Industria y Exportaciones (2001, 2008, 2022)"
+  ) |>
+  tab_spanner(
+    label = "Heterocedasticidad (Breusch-Pagan)",
+    columns = BP_pval
+  ) |>
+  tab_spanner(
+    label = "Especificación RESET (p-valor)",
+    columns = c(RESET_con, RESET_sin)
+  ) |>
+  tab_spanner(
+    label = "Multicolinealidad",
+    columns = VIF_max
+  ) |>
+  tab_spanner(
+    label = "Observaciones Influyentes (Cook > 0.15)",
+    columns = c(N_outliers, Paises_out)
+  ) |>
+  cols_label(
+    Modelo     = "Modelo",
+    BP_pval    = "p-valor",
+    RESET_con  = "Muestra compl.",
+    RESET_sin  = "Sin atípicos",
+    VIF_max    = "VIF Máx",
+    N_outliers = "N",
+    Paises_out = "Países identificados"
+  ) |>
+  fmt_number(
+    columns = VIF_max,
+    decimals = 2
+  ) |>
+  fmt_number(
+    columns = c(BP_pval, RESET_con, RESET_sin),
+    decimals = 4
+  ) |>
+  cols_align(
+    align = "center",
+    columns = c(BP_pval, RESET_con, RESET_sin, VIF_max, N_outliers)
+  ) |>
+  cols_align(
+    align = "left",
+    columns = c(Modelo, Paises_out)
+  ) |>
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = cells_column_labels()
+  ) |>
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = cells_row_groups()
+  ) |>
+  tab_source_note(
+    source_note = md(paste0(
+      "**Notas metodológicas:**<br>",
+      "- **Breusch-Pagan:** H0 de homocedasticidad.<br>",
+      "- **Multicolinealidad:** VIF Máx < 5 indica ausencia de multicolinealidad severa entre las covariables.<br>",
+      "- **Distancia de Cook:** Se identifican observaciones influyentes con umbral Di > 0.15."
+    ))
+  )
+
+# Imprimir en Viewer y guardar en HTML
+tabla_diagnosticos_gt
+gtsave(tabla_diagnosticos_gt, filename = "output/tablas/tabla_diagnosticos_resumen.html")
+
+
 
 
 
