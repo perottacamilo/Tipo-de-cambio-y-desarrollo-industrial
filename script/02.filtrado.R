@@ -37,7 +37,7 @@ wdi_limpio <- wdi |>
                                       "Alto", "Sin clasificar")), 
          industria_pc_wdi = (industria_pbi * pbi_per_capita) / 100,
          industria_per_capita = coalesce(industria_pc, industria_pc_wdi),
-         exportacion_manufactura_brutas = ((exportacion_manufactura*exportaciones_totales)/100)/1000000) #Se quita el porcentaje y se mide en millones de usd
+         exportacion_manufactura_pc = ((exportacion_manufactura*exportaciones_totales)/100)/poblacion) #Se quita el porcentaje y se calcula el valor per capita
 
 
 write.csv(wdi_limpio, "input/wdi_limpio.csv")
@@ -56,8 +56,8 @@ diccionario <- tribble(
   "iso3c",                      "Código ISO de 3 letras (identificador único)",                                                           "Categórica",          "-",                              "-",              0,                 0,        0,        0,
   "region",                     "Región geográfica del Banco Mundial",                                                                    "Categórica",          "-",                              "7 categorías",   0,                 0,        0,        0,
   "año",                        "Año de la observacion",                                                                                  "Numérica",            "Anual",                          "66 categorías",  0,                 0,        0,        0,
-  "pbi_millones",               "PBI del país en millones de dólares",                                                                    "Numérica",            "Dolares constanes 2015",         "> 0",            2789,              18,       9,        9,
-  "pbi_per_capita",             "PBI per capita ",                                                                                        "Numérica",            "Dolares constanes 2015",         "> 0",            2789,              18,       9,        9,
+  "pbi_millones",               "PBI del país en millones de dólares",                                                                    "Numérica",            "Dolares constantes 2015",         "> 0",            2789,              18,       9,        9,
+  "pbi_per_capita",             "PBI per capita ",                                                                                        "Numérica",            "Dolares constantes 2015",         "> 0",            2789,              18,       9,        9,
   "indice_nivel_precios",            "Factor de Paridad de Poder Adquisitivo (PPA) sobre el tipo de cambio nominal multiplicado por 100",      "Numérica",            "Indice",                         "> 0",            7299,              23,       17,       18,
   "industria_per_capita",            "PBI Industrial per capita",                                                                              "Numérica",            "Dolares constantes 2015",        "> 0",            5267,              12,        8,        6,
   "crecimiento_industria",           "Crecimiento de la industria",                                                                            "Numérica",            "% de crecimiento",               "> 0",            6232,              48,       35,       24,
@@ -72,7 +72,7 @@ diccionario <- tribble(
   "ahorro_bruto_pbi",                "Ahorro Bruto Nacional",                                                                                  "Numérica",            "% del PBI",                      "0 a 100",        7892,              89,       61,       58,
   "credito_privado_pbi",             "Credito al sector privado",                                                                              "Numérica",            "% del PBI",                      "0 a 100",        6685,              76,       54,       55,
   "poblacion_mill",                  "Poblacion del pais en millones de habitantes",                                                           "Numérica",            "Anual",                          "> 0",            0,                 0,        0,        0,
-  "exportacion_manufactura_brutas",  "Exportaciones de manufacturas en valor bruto",                                                           "Numérica",            "Millones de dólares",            ">= 0",           6406,              57,       53,       54)
+  "exportacion_manufactura_pc",      "Exportaciones de manufacturas per capita",                                                               "Numérica",            "Dolares corrientes",            ">= 0",           6406,              57,       53,       54)
   
 tabla_imagen <- diccionario |> 
   gt() |> 

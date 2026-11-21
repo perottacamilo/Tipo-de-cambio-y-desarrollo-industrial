@@ -48,15 +48,15 @@ for (a in anios) {
   # 2. Estimación de los 4 modelos seleccionados
   mods <- list(
     # --- INDUSTRIA (% PBI) ---
-    "Ind: Simple"  = lm(industria_pbi ~ indice_nivel_precios, data = df_sub),
+    "Ind: Simple"  = lm(log(industria_pbi) ~ log(indice_nivel_precios), data = df_sub),
     
-    "Ind: Control" = lm(industria_pbi ~ indice_nivel_precios + recursos_naturales + 
+    "Ind: Control" = lm(log(industria_pbi) ~ log(indice_nivel_precios) + recursos_naturales + 
                           ahorro_bruto_pbi + log(pbi_per_capita), data = df_sub),
     
     # --- EXPORTACIONES MANUFACTURERAS ---
-    "Exp: Simple"  = lm(log(exportacion_manufactura_brutas) ~ indice_nivel_precios, data = df_sub),
+    "Exp: Simple"  = lm(log(exportacion_manufactura_brutas) ~ log(indice_nivel_precios), data = df_sub),
     
-    "Exp: Control" = lm(log(exportacion_manufactura_brutas) ~ indice_nivel_precios + recursos_naturales + 
+    "Exp: Control" = lm(log(exportacion_manufactura_brutas) ~ log(indice_nivel_precios) + recursos_naturales + 
                           ahorro_bruto_pbi + log(pbi_per_capita), data = df_sub)
   )
   
@@ -125,7 +125,7 @@ for (a in anios) {
   }
   mods <- list(
     # --- INDUSTRIA (% PBI) ---
-    "Ind: Control" = lm(industria_pbi ~ indice_nivel_precios + recursos_naturales + 
+    "Ind: Control" = lm(log(industria_pbi) ~ log(indice_nivel_precios) + recursos_naturales + 
                           ahorro_bruto_pbi + log(pbi_per_capita), data = df_sub)
   )
   
@@ -168,7 +168,7 @@ df_sub_2022_exp <- wdi_regresion |>
 # 2. Estimación del modelo controlado para Exportaciones
 mods_exp_2022 <- list(
   "Exp: Control" = lm(
-    log(exportacion_manufactura_brutas) ~ indice_nivel_precios + recursos_naturales + 
+    log(exportacion_manufactura_pc) ~ log(indice_nivel_precios) + recursos_naturales + 
       ahorro_bruto_pbi + log(pbi_per_capita), 
     data = df_sub_2022_exp
   )
