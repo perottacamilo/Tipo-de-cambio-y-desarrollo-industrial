@@ -73,7 +73,7 @@ panel_latam <- function(datos, subtitulo = datos$sub_filtrado[1]) {
   foco  <- filter(datos, grupo_region != "Resto del Mundo")
   destacar <- c("Argentina", "China")
   
-  tit_y <- if (ind == "Industria") "USD por habitante (escala log)" else "% de las exportaciones"
+  tit_y <- if (ind == "Industria") "USD por habitante (escala log)" else "Millones de USD (escala log)"
   tit_x <- if (ind == "Exportaciones") " Índice de nivel de precios (EE. UU. = 100, escala log)" else NULL
   
   ggplot(datos, aes(pib, valor)) +
@@ -92,12 +92,9 @@ panel_latam <- function(datos, subtitulo = datos$sub_filtrado[1]) {
     (if (ind == "Industria") {
       scale_y_log10(labels = fmt_num, expand = expansion(mult = c(0.1, 0.15)))
     } else {
-      scale_y_continuous(labels = fmt_pct, breaks = c(0, 25, 50, 75, 100), limits = c(0, 100))
+      scale_y_log10(labels = fmt_num, expand = expansion(mult = c(0.1, 0.25)))
     }) +
     scale_x_log10(breaks = c(30, 50, 100), labels = fmt_num) +
-    (if (ind == "Exportaciones") coord_cartesian(ylim = c(0, 100)) else NULL) +
-    scale_x_log10(breaks = c(30, 50, 100), labels = fmt_num) +    
-    scale_x_log10(breaks = c(30, 50, 100), labels = fmt_num) +    scale_x_log10(breaks = c(30, 50, 100), labels = fmt_num) +
     coord_cartesian(ylim = if (ind == "Exportaciones") c(1, NA) else NULL) +
     labs(title = datos$titulo[1], subtitle = subtitulo, x = tit_x, y = tit_y) +
     theme_owid(base_size = 9.5) %+replace%
@@ -168,8 +165,8 @@ dispersion <- wdi_filtrado_2 |>
 
 dispersion <- dispersion |>
   mutate(
-    # Industria sigue en logaritmo, Exportaciones pasa a lineal
-    y = if_else(indicador == "Industria", log10(valor), valor), 
+    # Ambas variables monetarias en escala logarítmica
+    y = log10(valor), 
     x = log10(pib)
   ) |>
   group_by(titulo) |>
@@ -196,7 +193,7 @@ paneles_filtradoes <- dispersion |>
                           " · Latam: ", encima_latam, " de ", paises_latam)
   ) |>
   split(~ factor(titulo, levels = orden_paneles)) |>
-  map(\(d) panel_latam(d))
+  purrr::map(\(d) panel_latam(d))
 
 titulo_filtrado <- paste0("PBI Industrial y Exportaciones según el Nivel de Precios:<br>",
                           pintar("Asia Oriental", col_asia), " y ", pintar("América Latina", col_latam),
@@ -204,7 +201,7 @@ titulo_filtrado <- paste0("PBI Industrial y Exportaciones según el Nivel de Pre
 
 subtitulo_filtrado <- "Cada punto es un país; América Latina en azul y Asia en rojo, resto del mundo en gris. La curva es la tendencia estimada con todos los países.  
 Los países por encima de la curva tienen un valor más alto que el esperado dado su nivel de precios.
-<br>PBI Industrial per cápita, en USD constantes de 2015. Exportaciones: manufacturas como % de las exportaciones de mercancías."
+<br>PBI Industrial per cápita, en USD constantes de 2015. Exportaciones: manufacturas brutas en millones de USD (escala logarítmica)."
 
 caption_filtrado <- paste0(
   "Fuente: elaboración propia en base a Banco Mundial (WDI) y Schteingart, D. y Sidicaro, N. (2025). Industria. Argendata. Fundar.\n",

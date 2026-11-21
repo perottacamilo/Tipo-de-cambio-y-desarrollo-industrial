@@ -590,7 +590,7 @@ paneles_filtradoes <- dispersion |>
                                "\nPor encima de la curva mundial. Asia: ", encima_asia, " de ", paises_asia,
                                " · Latam: ", encima_latam, " de ", paises_latam)) |>
   split(~ factor(titulo, levels = orden_paneles)) |>
-  map(\(d) panel_latam(d))
+  purrr::map(\(d) panel_latam(d))
 
 titulo_filtrado <- paste0("Industria y Exportaciones según el Nivel de Precios:<br>",
                           pintar("Asia Oriental", col_asia), " y ", pintar("América Latina", col_latam),
@@ -884,7 +884,7 @@ paneles_filtradoes <- dispersion |>
                           " · Latam: ", encima_latam, " de ", paises_latam)
   ) |>
   split(~ factor(titulo, levels = orden_paneles)) |>
-  map(\(d) panel_latam(d))
+  purrr::map(\(d) panel_latam(d))
 
 titulo_filtrado <- paste0("PBI Industrial y Exportaciones según el Nivel de Precios:<br>",
                           pintar("Asia Oriental", col_asia), " y ", pintar("América Latina", col_latam),
