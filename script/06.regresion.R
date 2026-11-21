@@ -510,7 +510,7 @@ graficar_residuos_leverage <- function(modelo, datos_df, titulo, nombre_archivo,
   # 1. Guardar a archivo PNG
   png(ruta_archivo, width = 5, height = 3.7, units = "in", res = 300, pointsize = 11)
   par(
-    mar = c(4.0, 4.1, 3.2, 1.9),  # Márgenes ajustados (abajo, izq, arriba, der)
+    mar = c(4.0, 4.1, 3.2, 3),  # Márgenes ajustados (abajo, izq, arriba, der)
     mgp = c(2.6, 0.8, 0),         # Acerca nombres y números a los ejes
     las = 0                       # Mantiene los números del eje Y en vertical
   )
@@ -567,7 +567,7 @@ graficar_residuos_leverage <- function(modelo, datos_df, titulo, nombre_archivo,
 graficar_residuos_leverage(
   modelo = mod_exp_2001,
   datos_df = wdi_2001,
-  titulo = "Exportaciones Manufactureras 2001",
+  titulo = "Exportaciones Manufactureras (per cápita) 2001",
   nombre_archivo = "rvsl_exportaciones_2001.png",
   id.n = 1
 )
@@ -575,7 +575,7 @@ graficar_residuos_leverage(
 graficar_residuos_leverage(
   modelo = mod_exp_2008,
   datos_df = wdi_2008,
-  titulo = "Exportaciones Manufactureras 2008",
+  titulo = "Exportaciones Manufactureras (per cápita) 2008",
   nombre_archivo = "rvsl_exportaciones_2008.png",
   id.n = 2
 )
@@ -583,7 +583,7 @@ graficar_residuos_leverage(
 graficar_residuos_leverage(
   modelo = mod_exp_2022,
   datos_df = wdi_2022,
-  titulo = "Exportaciones Manufactureras 2022",
+  titulo = "Exportaciones Manufactureras (per cápita) 2022",
   nombre_archivo = "rvsl_exportaciones_2022.png",
   id.n = 2
 )
@@ -592,7 +592,7 @@ graficar_residuos_leverage(
 graficar_residuos_leverage(
   modelo = mod_ind_2001,
   datos_df = wdi_2001,
-  titulo = "Industria 2001",
+  titulo = "Industria (per cápita) 2001",
   nombre_archivo = "rvsl_industria_2001.png",
   id.n = 2
 )
@@ -600,7 +600,7 @@ graficar_residuos_leverage(
 graficar_residuos_leverage(
   modelo = mod_ind_2008,
   datos_df = wdi_2008,
-  titulo = "Industria 2008",
+  titulo = "Industria (per cápita) 2008",
   nombre_archivo = "rvsl_industria_2008.png",
   id.n = 1
 )
@@ -608,10 +608,83 @@ graficar_residuos_leverage(
 graficar_residuos_leverage(
   modelo = mod_ind_2022,
   datos_df = wdi_2022,
-  titulo = "Industria 2022",
+  titulo = "Industria (per cápita) 2022",
   nombre_archivo = "rvsl_industria_2022.png",
   id.n = 1
 )
+
+# ==============================================================================
+# TABLA RESUMEN COMPARATIVA: SIMPLE vs CON CONTROLES vs SIN OUTLIERS
+# ==============================================================================
+
+# Función auxiliar para armar la lista de modelos en el orden solicitado
+armar_modelos_resumen <- function(dep) {
+  res <- list()
+  for (a in anios) {
+    simple_name  <- paste0("log-log ", dep, ": Simple")
+    control_name <- paste0("log-log ", dep, ": Control")
+    
+    res[[paste0("Simple (", a, ")")]]       <- modelos_por_anio[[paste0("anio_", a)]][[simple_name]]
+    res[[paste0("Controles (", a, ")")]]    <- modelos_por_anio[[paste0("anio_", a)]][[control_name]]
+    res[[paste0("Sin atípicos (", a, ")")]] <- modelos_por_anio_sin_outliers[[paste0("anio_", a)]][[control_name]]
+  }
+  return(res)
+}
+
+mods_resumen_ind <- armar_modelos_resumen("Ind")
+mods_resumen_exp <- armar_modelos_resumen("Exp")
+
+# Generamos la tabla comparativa estructurada en paneles (Industria y Exportaciones)
+tabla_resumen_modelos <- modelsummary(
+  list(
+    "Panel A: Industria (per cápita)" = mods_resumen_ind,
+    "Panel B: Exportaciones Manufactureras (per cápita)" = mods_resumen_exp
+  ),
+  shape = "rbind",
+  vcov = "HC1",
+  title = "Regresiones Log-Log: Efecto del Nivel de Precios sobre Industria y Exportaciones",
+  coef_map = c(
+    "log(indice_nivel_precios)" = "log(Índice de precios)"
+  ),
+  gof_map = list(
+    list("raw" = "nobs", "clean" = "N", "fmt" = 0),
+    list("raw" = "adj.r.squared", "clean" = "R² ajustado", "fmt" = 3)
+  ),
+  stars = TRUE,
+  statistic = "std.error",
+  fmt = 3,
+  output = "gt"
+) |> 
+  tab_spanner(label = "2001", columns = 2:4) |> 
+  tab_spanner(label = "2008", columns = 5:7) |> 
+  tab_spanner(label = "2022", columns = 8:10) |> 
+  cols_label(
+    `Simple (2001)`       = "Simple",
+    `Controles (2001)`    = "Controles",
+    `Sin atípicos (2001)` = "Sin atípicos",
+    `Simple (2008)`       = "Simple",
+    `Controles (2008)`    = "Controles",
+    `Sin atípicos (2008)` = "Sin atípicos",
+    `Simple (2022)`       = "Simple",
+    `Controles (2022)`    = "Controles",
+    `Sin atípicos (2022)` = "Sin atípicos"
+  ) |> 
+  tab_source_note(
+    source_note = md(paste0(
+      "**Variables de control incluidas en las especificaciones con controles:** ",
+      "Rentas de recursos naturales (% PBI), Ahorro bruto (% PBI) y log(PBI per cápita).<br>",
+      "**Sin atípicos:** Excluye observaciones influyentes detectadas mediante distancia de Cook (D > 0.15)."
+    ))
+  ) |> 
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = cells_row_groups()
+  )
+
+# Imprimir en Viewer y guardar en HTML
+tabla_resumen_modelos
+gtsave(tabla_resumen_modelos, filename = "output/tablas/tabla_resumen_modelos.html")
+
 
 
 
