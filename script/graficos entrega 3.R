@@ -138,7 +138,7 @@ juntar <- function(paneles, titulo, subtitulo, caption) {
 # ------------------------------------------------------------------------------
 # 2. PROCESAMIENTO Y GRÁFICO EXPLORATORIO
 # ------------------------------------------------------------------------------
-wdi_filtrado <- read.csv("output/data/wdi_filtrado.csv")
+wdi_filtrado <- read.csv("input/wdi_filtrado.csv")
 
 # CORRECCIÓN METODOLÓGICA: if_else para aislar China sin saltos espurios
 wdi_filtrado_2 <- wdi_filtrado |> 
@@ -150,8 +150,8 @@ dispersion <- wdi_filtrado_2 |>
   filter(!is.na(indice_nivel_precios), region != "Aggregates") |>
   mutate(
     grupo_region = case_when(
-      region == "Latin America & Caribbean" ~ "América Latina",
-      region == "East Asia & Pacific" ~ "Asia Oriental",
+      region %in% c("América Latina y el Caribe", "Latin America & Caribbean") ~ "América Latina",
+      region %in% c("Este de Asia y Pacífico", "East Asia & Pacific") ~ "Asia Oriental",
       TRUE ~ "Resto del Mundo"
     )
   ) |>

@@ -4,7 +4,6 @@
 
 library(readxl)
 library(tidyverse)
-#library(FactoMineR)
 library(factoextra)
 library(cluster)      
 library(factoextra)
@@ -77,7 +76,6 @@ for (a in anios) {
       "indice_nivel_precios"     = "Índice de nivel de precios",
       "recursos_naturales"       = "Rentas rec. naturales (% PBI)",
       "ahorro_bruto_pbi"         = "Ahorro bruto (% PBI)",
-      "gasto_gobierno_pbi"       = "Gasto público (% PBI)",
       "log(pbi_per_capita)"      = "log(PBI pc)"
     ),
     gof_map = list(
@@ -94,7 +92,6 @@ tablas_por_anio$anio_2008
 gtsave(tablas_por_anio$anio_2001, filename = "output/tablas/tabla_2001.html")
 gtsave(tablas_por_anio$anio_2008, filename = "output/tablas/tabla_2008.html")
 gtsave(tablas_por_anio$anio_2022, filename = "output/tablas/tabla_2022.html")
-outliers_2022 <- c("Lebanon", "Congo, Dem. Rep.")
 # Industria: Congo Rep., Libia y Guinea superan el umbral (D_i > 0.15)
 outliers_2001_ind <- c("Congo, Rep.", "Libya", "Guinea")
 # ==============================================================================
@@ -129,7 +126,7 @@ for (a in anios) {
   mods <- list(
     # --- INDUSTRIA (% PBI) ---
     "Ind: Control" = lm(industria_pbi ~ indice_nivel_precios + recursos_naturales + 
-                          ahorro_bruto_pbi + gasto_gobierno_pbi + log(pbi_per_capita), data = df_sub)
+                          ahorro_bruto_pbi + log(pbi_per_capita), data = df_sub)
   )
   
   # Guardar modelos
@@ -148,7 +145,6 @@ for (a in anios) {
       "indice_nivel_precios"     = "Índice de nivel de precios",
       "recursos_naturales"       = "Rentas rec. naturales (% PBI)",
       "ahorro_bruto_pbi"         = "Ahorro bruto (% PBI)",
-      "gasto_gobierno_pbi"       = "Gasto público (% PBI)",
       "log(pbi_per_capita)"      = "log(PBI pc)"
     ),
     gof_map = list(
@@ -173,7 +169,7 @@ df_sub_2022_exp <- wdi_regresion |>
 mods_exp_2022 <- list(
   "Exp: Control" = lm(
     log(exportacion_manufactura_brutas) ~ indice_nivel_precios + recursos_naturales + 
-      ahorro_bruto_pbi + gasto_gobierno_pbi + log(pbi_per_capita), 
+      ahorro_bruto_pbi + log(pbi_per_capita), 
     data = df_sub_2022_exp
   )
 )
@@ -328,7 +324,6 @@ tabla_vif <- data.frame(
       "indice_nivel_precios" ~ "Índice de nivel de precios",
       "recursos_naturales" ~ "Rentas rec. naturales (% PBI)",
       "ahorro_bruto_pbi" ~ "Ahorro bruto (% PBI)",
-      "gasto_gobierno_pbi" ~ "Gasto público (% PBI)",
       "log(pbi_per_capita)" ~ "log(PBI pc)",
       .default = Variable
     )
@@ -377,8 +372,9 @@ mod_exp_2022_so <- modelos_por_anio_sin_outliers$anio_2022[["Exp: Control"]]
 mod_ind_2022_so <- modelos_por_anio_sin_outliers$anio_2022[["Ind: Control"]]
 mod_ind_2008_so <- modelos_por_anio_sin_outliers$anio_2008[["Ind: Control"]]
 mod_ind_2001_so <- modelos_por_anio_sin_outliers$anio_2001[["Ind: Control"]]
-resettest(mods_exp_2022)#sin outliers
-
+resettest(mod_exp_2022_so)#sin outliers
+resettest( mod_exp_2022, vcov = vcovHC(mod_exp_2022, type = "HC1"))
+resettest(mod_exp_2022, vcov = function(x) vcovHC(x, type = "HC1"))
 resettest(mod_exp_2022)
 resettest(mod_exp_2008)
 resettest(mod_exp_2001)
@@ -529,7 +525,7 @@ modelplot(
 ) +
   geom_vline(xintercept = 0, linetype = 2, color = "firebrick") +
   labs(
-    x = "Efecto estimado (puntos porcentuales)",
+    x = "Efecto estimado (Cambio porcentual aprox.)",
     title = "Determinantes de las Exportaciones Manufactureras (2022)",
     subtitle = "Intervalos de confianza al 95% con errores robustos (HC1)"
   ) +
