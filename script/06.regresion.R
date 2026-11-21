@@ -441,23 +441,127 @@ mod_ind_2022 <- modelos_por_anio$anio_2022[["Ind: Control"]]
 mod_ind_2001 <- modelos_por_anio$anio_2001[["Ind: Control"]]
 mod_ind_2008 <- modelos_por_anio$anio_2008[["Ind: Control"]]
 
-mod_exp_2022_so <- modelos_por_anio_sin_outliers$anio_2022[["Exp: Control"]]
-mod_ind_2022_so <- modelos_por_anio_sin_outliers$anio_2022[["Ind: Control"]]
-mod_ind_2008_so <- modelos_por_anio_sin_outliers$anio_2008[["Ind: Control"]]
-mod_ind_2001_so <- modelos_por_anio_sin_outliers$anio_2001[["Ind: Control"]]
-resettest(mod_exp_2022_so)#sin outliers
-resettest(mod_exp_2022, vcov = function(x) vcovHC(x, type = "HC1"))
-resettest(mod_exp_2022)
-resettest(mod_exp_2008)
-resettest(mod_exp_2008, vcov = function(x) vcovHC(x, type = "HC1"))
+# ==============================================================================
+# TABLA COMPARATIVA: TEST RESET DE RAMSEY (CON Y SIN OUTLIERS)
+# ==============================================================================
 
-resettest(mod_exp_2001)
+# Función para ejecutar el test RESET evaluando heterocedasticidad con Breusch-Pagan:
+# Si BP p-valor < 0.05, aplica matriz robusta HC1; caso contrario, usa el test estándar.
+test_reset_adaptativo <- function(modelo) {
+  bp <- lmtest::bptest(modelo)
+  es_hetero <- bp$p.value < 0.05
+  
+  if (es_hetero) {
+    res <- lmtest::resettest(modelo, vcov = function(x) sandwich::vcovHC(x, type = "HC1"))
+    tipo <- "Robusto (HC1)"
+  } else {
+    res <- lmtest::resettest(modelo)
+    tipo <- "Estándar"
+  }
+  
+  data.frame(
+    BP_pval     = bp$p.value,
+    Tipo_Test   = tipo,
+    Estadistico = unname(res$statistic),
+    p_valor     = res$p.value,
+    Diagnostico = ifelse(res$p.value > 0.05, "Correcta", "Posible mala espec.")
+  )
+}
 
-resettest(mod_ind_2022)
-resettest(mod_ind_2008)
-resettest(mod_ind_2001)
-# Guardar a PNG (descomentar si se define tabla_grafica)
-# ggsave("tabla_reset_test.png", tabla_grafica, width = 7, height = 3, dpi = 300)
+# Construcción de la tabla para todos los años y modelos
+anios_test <- c(2001, 2008, 2022)
+filas_reset <- list()
+
+for (a in anios_test) {
+  clave_anio <- paste0("anio_", a)
+  
+  # Industria: Con y Sin outliers
+  mod_ind_con <- modelos_por_anio[[clave_anio]][["Ind: Control"]]
+  mod_ind_sin <- modelos_por_anio_sin_outliers[[clave_anio]][["Ind: Control"]]
+  
+  t_ind_con <- test_reset_adaptativo(mod_ind_con)
+  t_ind_sin <- test_reset_adaptativo(mod_ind_sin)
+  
+  # Exportaciones: Con y Sin outliers
+  mod_exp_con <- modelos_por_anio[[clave_anio]][["Exp: Control"]]
+  mod_exp_sin <- modelos_por_anio_sin_outliers[[clave_anio]][["Exp: Control"]]
+  
+  t_exp_con <- test_reset_adaptativo(mod_exp_con)
+  t_exp_sin <- test_reset_adaptativo(mod_exp_sin)
+  
+  filas_reset[[paste0(a, "_ind")]] <- data.frame(
+    Año = a,
+    Modelo = "Industria (per cápita)",
+    Tipo_con = t_ind_con$Tipo_Test,
+    Stat_con = t_ind_con$Estadistico,
+    Pval_con = t_ind_con$p_valor,
+    Diag_con = t_ind_con$Diagnostico,
+    Tipo_sin = t_ind_sin$Tipo_Test,
+    Stat_sin = t_ind_sin$Estadistico,
+    Pval_sin = t_ind_sin$p_valor,
+    Diag_sin = t_ind_sin$Diagnostico
+  )
+  
+  filas_reset[[paste0(a, "_exp")]] <- data.frame(
+    Año = a,
+    Modelo = "Exportaciones Manufactureras",
+    Tipo_con = t_exp_con$Tipo_Test,
+    Stat_con = t_exp_con$Estadistico,
+    Pval_con = t_exp_con$p_valor,
+    Diag_con = t_exp_con$Diagnostico,
+    Tipo_sin = t_exp_sin$Tipo_Test,
+    Stat_sin = t_exp_sin$Estadistico,
+    Pval_sin = t_exp_sin$p_valor,
+    Diag_sin = t_exp_sin$Diagnostico
+  )
+}
+
+df_tabla_reset <- do.call(rbind, filas_reset)
+
+# Generación de la tabla formateada con gt
+tabla_reset_gt <- df_tabla_reset |>
+  gt(groupname_col = "Año") |>
+  tab_header(
+    title = "Test de Especificación de Ramsey (RESET)",
+    subtitle = "Comparación con y sin observaciones influyentes (corregido por heterocedasticidad con HC1 si BP p < 0.05)"
+  ) |>
+  tab_spanner(
+    label = "Muestra Completa",
+    columns = c(Tipo_con, Stat_con, Pval_con, Diag_con)
+  ) |>
+  tab_spanner(
+    label = "Sin valores atípicos",
+    columns = c(Tipo_sin, Stat_sin, Pval_sin, Diag_sin)
+  ) |>
+  cols_label(
+    Modelo   = "Modelo",
+    Tipo_con = "Test",
+    Stat_con = "Estadístico",
+    Pval_con = "p-valor",
+    Diag_con = "Especificación",
+    Tipo_sin = "Test",
+    Stat_sin = "Estadístico",
+    Pval_sin = "p-valor",
+    Diag_sin = "Especificación"
+  ) |>
+  fmt_number(
+    columns = c(Stat_con, Stat_sin),
+    decimals = 3
+  ) |>
+  fmt_number(
+    columns = c(Pval_con, Pval_sin),
+    decimals = 4
+  ) |>
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = cells_column_labels()
+  )
+
+# Visualizar en la pestaña Viewer
+tabla_reset_gt
+
+# Guardar en archivo HTML
+gtsave(tabla_reset_gt, filename = "output/tablas/tabla_reset_comparativa.html")
 # 2. Dividimos la ventana en 4 (2 filas x 2 columnas)
 par(mfrow = c(2, 2))
 
