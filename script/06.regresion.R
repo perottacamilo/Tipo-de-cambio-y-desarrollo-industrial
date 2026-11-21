@@ -40,11 +40,6 @@ for (a in anios) {
   # 1. Filtrar datos del año
   df_sub <- wdi_regresion |> filter(anio == a)
   
-  # 1b. Excluir outliers solo para la estimación de 2022
- # if (a == 2022) {
-  #  df_sub <- df_sub |> filter(!pais %in% outliers_2022)
-  #}
-  
   # 2. Estimación de los 4 modelos seleccionados
   mods <- list(
     # --- INDUSTRIA (per cápita) ---
@@ -92,20 +87,25 @@ tablas_por_anio$anio_2022
 gtsave(tablas_por_anio$anio_2001, filename = "output/tablas/tabla_2001.html")
 gtsave(tablas_por_anio$anio_2008, filename = "output/tablas/tabla_2008.html")
 gtsave(tablas_por_anio$anio_2022, filename = "output/tablas/tabla_2022.html")
-# Industria: Congo Rep., Libia y Guinea superan el umbral (D_i > 0.15)
-outliers_2001_ind <- c("Congo, Rep.", "Libya", "Guinea")
 # ==============================================================================
-# AÑO 2008
+# DETECCIÓN AUTOMÁTICA DE OBSERVACIONES INFLUYENTES (DISTANCIA DE COOK)
 # ==============================================================================
-# Industria: Lesotho, Hong Kong y Burundi forman el bloque influyente (D_i > 0.20)
-outliers_2008_ind <- c("Lesotho", "Hong Kong SAR, China", "Burundi")
-# ==============================================================================
-# AÑO 2022
-# ==============================================================================
-# Industria: Zimbabue y Libia (D_i > 0.16)
-outliers_2022_ind <- c("Zimbabwe", "Libya", "Zambia")
-# Exportaciones: Líbano y R.D. del Congo (D_i > 0.14)
-outliers_2022_exp <- c("Lebanon", "Congo, Dem. Rep.")
+obtener_outliers_cook <- function(modelo, datos_df, umbral = 0.15) {
+  d_cook <- cooks.distance(modelo)
+  filas <- names(d_cook[d_cook > umbral & !is.na(d_cook)])
+  datos_df[filas, "pais", drop = TRUE]
+}
+
+# Identificación automática de outliers (D_i > 0.15)
+# Industria
+outliers_2001_ind <- obtener_outliers_cook(modelos_por_anio$anio_2001[["Ind: Control"]], wdi_2001, umbral = 0.15)
+outliers_2008_ind <- obtener_outliers_cook(modelos_por_anio$anio_2008[["Ind: Control"]], wdi_2008, umbral = 0.15)
+outliers_2022_ind <- obtener_outliers_cook(modelos_por_anio$anio_2022[["Ind: Control"]], wdi_2022, umbral = 0.15)
+
+# Exportaciones
+outliers_2001_exp <- obtener_outliers_cook(modelos_por_anio$anio_2001[["Exp: Control"]], wdi_2001, umbral = 0.15)
+outliers_2008_exp <- obtener_outliers_cook(modelos_por_anio$anio_2008[["Exp: Control"]], wdi_2008, umbral = 0.15)
+outliers_2022_exp <- obtener_outliers_cook(modelos_por_anio$anio_2022[["Exp: Control"]], wdi_2022, umbral = 0.15)
 modelos_por_anio_sin_outliers <- list()
 tablas_por_anio_2 <- list()
 for (a in anios) {
@@ -162,10 +162,83 @@ gtsave(tablas_por_anio_2$anio_2001, filename = "output/tablas/tabla_2001_outlier
 gtsave(tablas_por_anio_2$anio_2008, filename = "output/tablas/tabla_2008_outlier.html")
 gtsave(tablas_por_anio_2$anio_2022, filename = "output/tablas/tabla_2022_outlier.html")
 
+# 2. Estimación de los modelos controlados para Exportaciones sin outliers
+# --- 2001 ---
+df_sub_2001_exp <- wdi_regresion |> 
+  filter(anio == 2001, !pais %in% outliers_2001_exp)
+
+mods_exp_2001 <- list(
+  "Exp: Control" = lm(
+    log(exportacion_manufactura_pc) ~ log(indice_nivel_precios) + recursos_naturales + 
+      ahorro_bruto_pbi + log(pbi_per_capita), 
+    data = df_sub_2001_exp
+  )
+)
+modelos_por_anio_sin_outliers$anio_2001[["Exp: Control"]] <- mods_exp_2001[["Exp: Control"]]
+
+tabla_2001_exp <- modelsummary(
+  mods_exp_2001,
+  vcov = "HC1",
+  title = "Regresión para Exportaciones (2001)",
+  stars = TRUE,
+  statistic = "std.error",
+  fmt = 3,
+  coef_rename = c(
+    "(Intercept)"          = "Constante",
+    "indice_nivel_precios" = "Índice de nivel de precios",
+    "recursos_naturales"   = "Rentas rec. naturales (% PBI)",
+    "ahorro_bruto_pbi"     = "Ahorro bruto (% PBI)",
+    "log(pbi_per_capita)"  = "log(PBI pc)"
+  ),
+  gof_map = list(
+    list("raw" = "nobs", "clean" = "N", "fmt" = 0),
+    list("raw" = "r.squared", "clean" = "R²", "fmt" = 3),
+    list("raw" = "adj.r.squared", "clean" = "R² ajustado", "fmt" = 3)
+  ),
+  output = "gt"
+)
+gtsave(tabla_2001_exp, filename = "output/tablas/tabla_2001_exp_outlier.html")
+
+# --- 2008 ---
+df_sub_2008_exp <- wdi_regresion |> 
+  filter(anio == 2008, !pais %in% outliers_2008_exp)
+
+mods_exp_2008 <- list(
+  "Exp: Control" = lm(
+    log(exportacion_manufactura_pc) ~ log(indice_nivel_precios) + recursos_naturales + 
+      ahorro_bruto_pbi + log(pbi_per_capita), 
+    data = df_sub_2008_exp
+  )
+)
+modelos_por_anio_sin_outliers$anio_2008[["Exp: Control"]] <- mods_exp_2008[["Exp: Control"]]
+
+tabla_2008_exp <- modelsummary(
+  mods_exp_2008,
+  vcov = "HC1",
+  title = "Regresión para Exportaciones (2008)",
+  stars = TRUE,
+  statistic = "std.error",
+  fmt = 3,
+  coef_rename = c(
+    "(Intercept)"          = "Constante",
+    "indice_nivel_precios" = "Índice de nivel de precios",
+    "recursos_naturales"   = "Rentas rec. naturales (% PBI)",
+    "ahorro_bruto_pbi"     = "Ahorro bruto (% PBI)",
+    "log(pbi_per_capita)"  = "log(PBI pc)"
+  ),
+  gof_map = list(
+    list("raw" = "nobs", "clean" = "N", "fmt" = 0),
+    list("raw" = "r.squared", "clean" = "R²", "fmt" = 3),
+    list("raw" = "adj.r.squared", "clean" = "R² ajustado", "fmt" = 3)
+  ),
+  output = "gt"
+)
+gtsave(tabla_2008_exp, filename = "output/tablas/tabla_2008_exp_outlier.html")
+
+# --- 2022 ---
 df_sub_2022_exp <- wdi_regresion |> 
   filter(anio == 2022, !pais %in% outliers_2022_exp)
 
-# 2. Estimación del modelo controlado para Exportaciones
 mods_exp_2022 <- list(
   "Exp: Control" = lm(
     log(exportacion_manufactura_pc) ~ log(indice_nivel_precios) + recursos_naturales + 
@@ -173,6 +246,7 @@ mods_exp_2022 <- list(
     data = df_sub_2022_exp
   )
 )
+modelos_por_anio_sin_outliers$anio_2022[["Exp: Control"]] <- mods_exp_2022[["Exp: Control"]]
 
 # 3. Generar la tabla con modelsummary
 tabla_2022_exp <- modelsummary(
@@ -187,7 +261,6 @@ tabla_2022_exp <- modelsummary(
     "indice_nivel_precios" = "Índice de nivel de precios",
     "recursos_naturales"   = "Rentas rec. naturales (% PBI)",
     "ahorro_bruto_pbi"     = "Ahorro bruto (% PBI)",
-    "gasto_gobierno_pbi"   = "Gasto público (% PBI)",
     "log(pbi_per_capita)"  = "log(PBI pc)"
   ),
   gof_map = list(
@@ -383,11 +456,8 @@ resettest(mod_exp_2001)
 resettest(mod_ind_2022)
 resettest(mod_ind_2008)
 resettest(mod_ind_2001)
-# 1. Definir lista de modelos
-
-
-# Guardar a PNG
-ggsave("tabla_reset_test.png", tabla_grafica, width = 7, height = 3, dpi = 300)
+# Guardar a PNG (descomentar si se define tabla_grafica)
+# ggsave("tabla_reset_test.png", tabla_grafica, width = 7, height = 3, dpi = 300)
 # 2. Dividimos la ventana en 4 (2 filas x 2 columnas)
 par(mfrow = c(2, 2))
 
@@ -404,23 +474,24 @@ plot(mod_ind_2001, pch = 16, col = rgb(0, 0, 1, 0.1))
 # 4. Volvemos la ventana a la normalidad (1 gráfico a la vez)
 par(mfrow = c(1, 1))
 
-head(sort(cooks.distance(modelos_por_anio$anio_2022[["Exp: Control"]]), decreasing = TRUE), 5)
-head(sort(cooks.distance(modelos_por_anio$anio_2022[["Ind: Control"]]), decreasing = TRUE), 5)
+# Función auxiliar para ver el ranking de observaciones influyentes por país
+top_cook <- function(modelo, datos_df, n = 5) {
+  d_cook <- cooks.distance(modelo)
+  top <- head(sort(d_cook, decreasing = TRUE), n)
+  data.frame(
+    pais = datos_df[names(top), "pais"],
+    cook_distance = round(unname(top), 4)
+  )
+}
 
-head(sort(cooks.distance(modelos_por_anio$anio_2001[["Exp: Control"]]), decreasing = TRUE), 5)
-head(sort(cooks.distance(modelos_por_anio$anio_2001[["Ind: Control"]]), decreasing = TRUE), 7)
+print(top_cook(modelos_por_anio$anio_2022[["Exp: Control"]], wdi_2022))
+print(top_cook(modelos_por_anio$anio_2022[["Ind: Control"]], wdi_2022))
 
-head(sort(cooks.distance(modelos_por_anio$anio_2008[["Exp: Control"]]), decreasing = TRUE), 5)
-head(sort(cooks.distance(modelos_por_anio$anio_2008[["Ind: Control"]]), decreasing = TRUE), 5)
+print(top_cook(modelos_por_anio$anio_2001[["Exp: Control"]], wdi_2001))
+print(top_cook(modelos_por_anio$anio_2001[["Ind: Control"]], wdi_2001))
 
-
-# Cambiá "pais" por el nombre exacto de la columna que identifica a los países en tu base
-paises_grafico_2022 <- wdi_2022[c(77, 28, 141,151,80,150), c("pais", "exportacion_manufactura_pc","industria_per_capita")]
-paises_grafico_2008 <- wdi_2008[c(77, 57, 19, 145), c("pais", "exportacion_manufactura_pc")]
-paises_grafico_2001 <- wdi_2001[c(28,76, 50, 64,54), c("pais", "exportacion_manufactura_pc")]
-print(paises_grafico_2022)
-print(paises_grafico_2008)
-print(paises_grafico_2001)
+print(top_cook(modelos_por_anio$anio_2008[["Exp: Control"]], wdi_2008))
+print(top_cook(modelos_por_anio$anio_2008[["Ind: Control"]], wdi_2008))
 #eliminamos ukraine(141) por estar en guerra y ser outlier 
 #a el congo(28) por ser un pais particular con una estructura productiva rara
 #lebanon lo eliminamos por estar en una crisis macroeconomica fuerte en ese año
@@ -428,204 +499,125 @@ print(paises_grafico_2001)
 #eliminamos a Zimbabwe por su situacion macro
 #
 
-# 1. Extraer los nombres de países respetando las observaciones usadas en el modelo (sin NAs)
-paises_2022_exp <- df_sub[names(residuals(mod_exp_2022)), "pais"]
-
-# 2. Definir un vector de colores: rojo para observaciones influyentes (Cook > 0.1), azul transparente para el resto
-cooks_dist <- cooks.distance(mod_exp_2022)
-colores_puntos <- ifelse(cooks_dist > 0.1, "firebrick", rgb(0, 0, 1, 0.2))
-cooks_2022_exp <- round(cooks.distance(mod_exp_2022), 3)
-
-# 2. Crear un vector de etiquetas que combine el país y la distancia de Cook
-etiquetas_2022_exp <- paste0(paises_2022_exp, " (D = ", cooks_2022_exp, ")")
-# 3. Graficar únicamente el gráfico 5 (Residuals vs Leverage)
-plot(
-  mod_exp_2022, 
-  which = 5,                    # Muestra solo el gráfico de Residuals vs Leverage
-  labels.id = etiquetas_2022_exp,    # Reemplaza los números (28, 77, 141) por los nombres
-  id.n = 2,                     # Etiqueta los 5 casos más extremos
-  col = colores_puntos,         # Aplica color rojo a los outliers
-  pch = 16,
-  main = "Exportaciones Manufactureras 2022",
-  sub = ""
-)
 # ==============================================================================
-# 1. INDUSTRIA 2001
+# GRÁFICOS: RESIDUALS VS LEVERAGE (DIAGNÓSTICO DE VALORES INFLUYENTES)
 # ==============================================================================
-mod_ind_2001   <- modelos_por_anio$anio_2001[["Ind: Control"]]
-df_2001        <- wdi_regresion |> filter(anio == 2001)
-paises_2001    <- df_2001[names(residuals(mod_ind_2001)), "pais"]
-colores_2001   <- ifelse(cooks.distance(mod_ind_2001) > 0.15, "firebrick", rgb(0, 0, 1, 0.2))
-# 1. Obtener la distancia de Cook redondeada a 3 decimales
-cooks_2001 <- round(cooks.distance(mod_ind_2001), 3)
+# Crear carpeta de salida si no existe
+dir.create("output/graficos/regresion", recursive = TRUE, showWarnings = FALSE)
 
-# 2. Crear un vector de etiquetas que combine el país y la distancia de Cook
-etiquetas_2001 <- paste0(paises_2001, " (D = ", cooks_2001, ")")
-plot(
-  mod_ind_2001,
-  which = 5,
-  labels.id = etiquetas_2001,
-  id.n = 3,
-  col = colores_2001,
-  pch = 16,
-  main = "Industria 2001",
-  sub = ""
-)
-# ==============================================================================
-# 2. INDUSTRIA 2008
-# ==============================================================================
-mod_ind_2008   <- modelos_por_anio$anio_2008[["Ind: Control"]]
-df_2008        <- wdi_regresion |> filter(anio == 2008)
-paises_2008    <- df_2008[names(residuals(mod_ind_2008)), "pais"]
-colores_2008   <- ifelse(cooks.distance(mod_ind_2008) > 0.15, "firebrick", rgb(0, 0, 1, 0.2))
-cooks_2008 <- round(cooks.distance(mod_ind_2008), 3)
+# Función para graficar en pantalla y guardar en PNG con ejes en español y subtítulo
+graficar_residuos_leverage <- function(modelo, datos_df, titulo, nombre_archivo, umbral_cook = 0.15, id.n = 3) {
+  paises <- datos_df[names(residuals(modelo)), "pais"]
+  cooks_d <- cooks.distance(modelo)
+  colores <- ifelse(cooks_d > umbral_cook, "firebrick", rgb(0, 0, 1, 0.2))
+  etiquetas <- paste0(paises, " (D = ", round(cooks_d, 3), ")")
+  
+  ruta_archivo <- file.path("output/graficos/regresion", nombre_archivo)
+  
+  # 1. Guardar a archivo PNG con letras grandes y legibles
+  png(ruta_archivo, width = 5, height = 3.7, units = "in", res = 300, pointsize = 11)
+  par(
+    mar = c(4.0, 4.1, 3.2, 1.9),  # Márgenes ajustados (abajo, izq, arriba, der)
+    mgp = c(2.6, 0.8, 0),         # Acerca nombres y números a los ejes
+    las = 0                       # Mantiene los números del eje Y en vertical
+  )
+  plot(
+    modelo,
+    which = 5,
+    ann = FALSE,
+    sub.caption = "",             # Elimina el texto de la fórmula lm(...) debajo del eje x
+    labels.id = etiquetas,
+    id.n = id.n,
+    col = colores,
+    pch = 16,
+    cex = 0.95,                   # Puntos más chicos y proporcionados al texto
+    cex.id = 1.05,
+    cex.caption = 1.1,
+    cex.axis = 1.05,
+    caption = list("", "", "", "", "Residuals vs Leverage")
+  )
+  title(main = titulo, line = 1.65, cex.main = 1.35, font.main = 2)
+  title(
+    xlab = "Apalancamiento (Leverage)",
+    ylab = "Residuos estandarizados",
+    cex.lab = 1.15
+  )
+  dev.off()
+  
+  # 2. Mostrar también en la ventana gráfica activa de RStudio (Plots) con letras grandes
+  par(mar = c(4.8, 5.0, 3.8, 2.2))
+  plot(
+    modelo,
+    which = 5,
+    ann = FALSE,
+    sub.caption = "",               # Elimina el texto de la fórmula lm(...) debajo del eje x
+    labels.id = etiquetas,
+    id.n = id.n,
+    col = colores,
+    pch = 16,
+    cex = 1.1,
+    cex.id = 1.05,
+    cex.caption = 1.2,
+    cex.axis = 1.1,
+    caption = list("", "", "", "", "")
+  )
+  title(
+    main = titulo,
+    xlab = "Apalancamiento",
+    ylab = "Residuos estandarizados",
+    cex.main = 1.35,
+    cex.lab = 1.2
+  )
+}
 
-# 2. Crear un vector de etiquetas que combine el país y la distancia de Cook
-etiquetas_2008 <- paste0(paises_2008, " (D = ", cooks_2008, ")")
-plot(
-  mod_ind_2008,
-  which = 5,
-  labels.id = etiquetas_2008,
-  id.n = 3,
-  col = colores_2008,
-  pch = 16,
-  main = "Industria 2008",
-  sub = ""
-)
-
-# ==============================================================================
-# 3. INDUSTRIA 2022
-# ==============================================================================
-mod_ind_2022   <- modelos_por_anio$anio_2022[["Ind: Control"]]
-df_2022        <- wdi_regresion |> filter(anio == 2022)
-paises_2022    <- df_2022[names(residuals(mod_ind_2022)), "pais"]
-colores_2022   <- ifelse(cooks.distance(mod_ind_2022) > 0.15, "firebrick", rgb(0, 0, 1, 0.2))
-cooks_2022 <- round(cooks.distance(mod_ind_2022), 3)
-
-# 2. Crear un vector de etiquetas que combine el país y la distancia de Cook
-etiquetas_2022 <- paste0(paises_2022, " (D = ", cooks_2022, ")")
-plot(
-  mod_ind_2022,
-  which = 5,
-  labels.id = etiquetas_2022,
-  id.n = 2,
-  col = colores_2022,
-  pch = 16,
-  main = "Industria 2022",
-  sub = ""
+# --- EXPORTACIONES MANUFACTURERAS ---
+graficar_residuos_leverage(
+  modelo = mod_exp_2001,
+  datos_df = wdi_2001,
+  titulo = "Exportaciones Manufactureras 2001",
+  nombre_archivo = "rvsl_exportaciones_2001.png",
+  id.n = 1
 )
 
-library(modelsummary)
-library(ggplot2)
-
-# Gráfico de coeficientes para el modelo de Exportaciones 2022
-modelplot(
-  modelos_por_anio$anio_2022[["Exp: Control"]], 
-  vcov = "HC1", 
-  coef_omit = "(Intercept)"
-) +
-  geom_vline(xintercept = 0, linetype = 2, color = "firebrick") +
-  labs(
-    x = "Efecto estimado (Cambio porcentual aprox.)",
-    title = "Determinantes de las Exportaciones Manufactureras (2022)",
-    subtitle = "Intervalos de confianza al 95% con errores robustos (HC1)"
-  ) +
-  theme_minimal()
-
-
-#Pegue los codigos que estaban al principio de 04.graficos
-
-
-
-
-
-
-anios <- c(2001, 2008, 2022)
-
-# Crear la lista asignando nombres según el año
-tablas_anios <- setNames(
-  lapply(anios, function(a) {
-    df_anio <- wdi2 |> filter(anio == a)
-    
-    mod1 <- lm(industria_per_capita ~ indice_nivel_precios, data = df_anio)
-    mod2 <- lm(log(exportacion_manufactura_pc) ~ indice_nivel_precios, data = df_anio)
-    
-    modelsummary(
-      list(
-        "Industria (per cápita)" = mod1,
-        "exportacion manufactura" = mod2
-      ),
-      title = paste0("Tabla: Regresiones simples para el nivel de precios (", a, ")"),
-      stars = TRUE,
-      statistic = "std.error",
-      fmt = 3,
-      coef_rename = c(
-        "(Intercept)" = "Constante",
-        "indice_nivel_precios" = "Índice de nivel de precios"
-      ),
-      gof_map = list(
-        list("raw" = "nobs", "clean" = "N", "fmt" = 0),
-        list("raw" = "r.squared", "clean" = "R²", "fmt" = 3),
-        list("raw" = "adj.r.squared", "clean" = "R² ajustado", "fmt" = 3)
-      ),
-      output = "gt"
-    )
-  }),
-  nm = paste0("anio_", anios)
+graficar_residuos_leverage(
+  modelo = mod_exp_2008,
+  datos_df = wdi_2008,
+  titulo = "Exportaciones Manufactureras 2008",
+  nombre_archivo = "rvsl_exportaciones_2008.png",
+  id.n = 2
 )
 
-# Ver la tabla del año 2001
-tablas_anios$anio_2001
-
-# Ver la tabla del año 2008
-tablas_anios$anio_2008
-
-# Ver la tabla del año 2022
-tablas_anios$anio_2022
-
-wdi_2001 <- wdi2 |>
-  filter(anio == 2001)
-wdi_2008 <- wdi2 |>
-  filter(anio == 2008)
-wdi_2022<- wdi2 |>
-  filter(anio == 2022)
-
-
-# Estimación de todos los modelos
-mod1_2001 <- lm(industria_per_capita ~ indice_nivel_precios, data = wdi2 |> filter(anio == 2001))
-mod2_2001 <- lm(log(exportacion_manufactura_pc) ~ indice_nivel_precios, data = wdi2 |> filter(anio == 2001))
-
-mod1_2008 <- lm(industria_per_capita ~ indice_nivel_precios, data = wdi2 |> filter(anio == 2008))
-mod2_2008 <- lm(log(exportacion_manufactura_pc) ~ indice_nivel_precios, data = wdi2 |> filter(anio == 2008))
-
-mod1_2022 <- lm(industria_per_capita ~ indice_nivel_precios, data = wdi2 |> filter(anio == 2022))
-mod2_2022 <- lm(log(exportacion_manufactura_pc) ~ indice_nivel_precios, data = wdi2 |> filter(anio == 2022))
-
-# Muestra la tabla visualmente en la pestaña Viewer (al costado)
-modelsummary(
-  list(
-    "Ind 2001" = mod1_2001, "Exp 2001" = mod2_2001,
-    "Ind 2008" = mod1_2008, "Exp 2008" = mod2_2008,
-    "Ind 2022" = mod1_2022, "Exp 2022" = mod2_2022
-  ),
-  title = "Tabla Comparativa: Regresiones simples (2001, 2008, 2022)",
-  stars = TRUE,
-  statistic = "std.error",
-  fmt = 3,
-  coef_rename = c(
-    "(Intercept)" = "Constante",
-    "indice_nivel_precios" = "Índice de nivel de precios"
-  ),
-  gof_map = list(
-    list("raw" = "nobs", "clean" = "N", "fmt" = 0),
-    list("raw" = "r.squared", "clean" = "R²", "fmt" = 3),
-    list("raw" = "adj.r.squared", "clean" = "R² ajustado", "fmt" = 3)
-  ),
-  output = "gt" # <--- Se renderiza visualmente en la pestaña Viewer
+graficar_residuos_leverage(
+  modelo = mod_exp_2022,
+  datos_df = wdi_2022,
+  titulo = "Exportaciones Manufactureras 2022",
+  nombre_archivo = "rvsl_exportaciones_2022.png",
+  id.n = 2
 )
 
+# --- INDUSTRIA ---
+graficar_residuos_leverage(
+  modelo = mod_ind_2001,
+  datos_df = wdi_2001,
+  titulo = "Industria 2001",
+  nombre_archivo = "rvsl_industria_2001.png",
+  id.n = 2
+)
 
+graficar_residuos_leverage(
+  modelo = mod_ind_2008,
+  datos_df = wdi_2008,
+  titulo = "Industria 2008",
+  nombre_archivo = "rvsl_industria_2008.png",
+  id.n = 1
+)
 
-
+graficar_residuos_leverage(
+  modelo = mod_ind_2022,
+  datos_df = wdi_2022,
+  titulo = "Industria 2022",
+  nombre_archivo = "rvsl_industria_2022.png",
+  id.n = 1
+)
 
 
