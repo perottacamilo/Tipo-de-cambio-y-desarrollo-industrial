@@ -13,6 +13,7 @@ library(ggrepel)
 library(showtext)
 library(patchwork)
 library(webshot2)
+library(gt)
 
 rm(list = ls())
 
@@ -137,10 +138,6 @@ print(grafico4)
 
 
 
-library(tidyverse)
-library(scales)
-library(patchwork)
-library(here)
 
 df_2022 <- wdi2 |> 
   filter(anio == 2022) 
@@ -363,7 +360,22 @@ variables <- c(
   "pbi_per_capita",
   "pbi_millones")
 
-
+etiquetas <- c(
+  "crecimiento_industria"      = "Crecimiento industrial (%)",
+  "industria_per_capita"       = "PBI industrial per cápita",
+  "tipo_cambio_real_efectivo"  = "Tipo de cambio real efectivo",
+  "indice_nivel_precios"       = "Índice de nivel de precios",
+  "empleo_industrial"          = "Empleo industrial (%)",
+  "exportacion_manufactura_pc" = "Exportaciones manuf. per cápita",
+  "gasto_gobierno_pbi"         = "Gasto de gobierno (% PBI)",
+  "gastos_totales_gob_pbi"     = "Gasto total del gobierno (% PBI)",
+  "valor_agregado_trabajador"  = "Valor agregado por trabajador",
+  "ahorro_bruto_pbi"           = "Ahorro bruto (% PBI)",
+  "credito_privado_pbi"        = "Crédito privado (% PBI)",
+  "recursos_naturales"         = "Rentas de recursos naturales (% PBI)",
+  "pbi_per_capita"             = "PBI per cápita",
+  "pbi_millones"               = "PBI total (millones USD)"
+)
 
 
 wdi_2 <- wdi2 |> 
@@ -442,6 +454,7 @@ grafico5 <-  ggplot(
     breaks = seq(0, 100, 20),
     labels = function(x) paste0(x, "%"),
     expand = c(0, 0)) +
+  scale_y_discrete(labels = etiquetas) +
   labs(
     title = "Porcentaje de datos faltantes por variable",
     subtitle = "Distribución de faltantes entre 2001, 2008 y 2022",
@@ -546,7 +559,35 @@ ggsave(file.path("output/graficos/eda", "variacion_ingreso.png"),
 
 
 
+vars_clave <- c(
+  "industria_per_capita",
+  "exportacion_manufactura_pc",
+  "indice_nivel_precios")
 
+resumen_stats <- function(df, nombre_muestra) {
+  df |>
+    # Si querés solo 2022, descomentá la línea de abajo:
+    # filter(anio == 2022) |> 
+    select(all_of(vars_clave)) |>
+    pivot_longer(everything(), names_to = "Variable", values_to = "valor") |>
+    group_by(Variable) |>
+    summarise(
+      N       = sum(!is.na(valor)),
+      Media   = round(mean(valor, na.rm = TRUE), 1),
+      Mediana = round(median(valor, na.rm = TRUE), 1),
+      Desvio  = round(sd(valor, na.rm = TRUE), 1),
+      .groups = "drop"
+    ) |>
+    mutate(Muestra = nombre_muestra)
+}
+
+tabla_antes_despues <- bind_rows(
+  resumen_stats(wdi2, "Antes de filtrar"),
+  resumen_stats(wdi_filtrado, "Base filtrada")
+) |>
+  arrange(Variable, Muestra)
+
+print(tabla_antes_despues)
 
 
 

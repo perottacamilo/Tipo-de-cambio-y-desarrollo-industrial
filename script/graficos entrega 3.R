@@ -200,7 +200,7 @@ titulo_filtrado <- paste0("PBI Industrial y Exportaciones según el Nivel de Pre
 
 subtitulo_filtrado <- "Cada punto es un país; América Latina en azul y Asia en rojo, resto del mundo en gris. La curva es la tendencia estimada con todos los países.  
 <br>Los países por encima de la curva tienen un valor más alto que el esperado dado su nivel de precios.
-<br>PBI Industrial per cápita, en USD constantes de 2015. Exportaciones: manufacturas per cápita en USD (escala logarítmica)."
+<br>PBI Industrial per cápita, en USD constantes de 2015. Exportaciones: manufacturas per cápita en USD corrientes (escala logarítmica)."
 
 caption_filtrado <- paste0(
   "Fuente: elaboración propia en base a Banco Mundial (WDI) y Schteingart, D. y Sidicaro, N. (2025). Industria. Argendata. Fundar.\n",

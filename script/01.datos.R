@@ -6,8 +6,6 @@ library(readxl)
 
 rm(list = ls())
 
-getwd()
-
 wdi <- WDI(indicator = c(crecimiento_industria = "NV.IND.TOTL.KD.ZG",
   industria_pbi = "NV.IND.MANF.ZS", 
   tipo_cambio_real_efectivo = "PX.REX.REER",

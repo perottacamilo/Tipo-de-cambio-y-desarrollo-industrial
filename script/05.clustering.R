@@ -126,7 +126,8 @@ ggsave(file.path("output/graficos/clustering", "pc4.png"),
 
 
 mapa_paises <- fviz_pca_ind(res, repel = TRUE, labelsize = 3, col.ind = "cos2",
-                            gradient.cols = c("gray80", "steelblue", "firebrick"))
+                            gradient.cols = c("gray80", "steelblue", "firebrick"), 
+                            title = "Mapa países - PCA")
 print(mapa_paises)
 
 
