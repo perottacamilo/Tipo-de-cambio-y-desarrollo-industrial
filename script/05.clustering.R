@@ -50,7 +50,8 @@ heatmap <- cor(X) |>
   geom_tile(color = "white") +
   geom_text(aes(label = round(r, 2)), size = 3) +
   scale_fill_gradient2(low = "firebrick", mid = "white", high = "steelblue", limits = c(-1, 1)) +
-  labs(x = NULL, y = NULL, title = "Correlaciones entre las variables activas") +
+  labs(x = NULL, y = NULL, title = "Correlaciones entre las variables activas",
+       caption  = "Fuente: Elaboración propia en base al Banco Mundial, WDI; y ArgenData.") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 print(heatmap)
 
@@ -63,7 +64,6 @@ ggsave(file.path("output/graficos/clustering", "heatmap.png"),
 
 
 
-round(res$var$coord[, 1:4], 3)
 
 
 
@@ -72,15 +72,24 @@ round(res$var$coord[, 1:4], 3)
 # ==============================================================================
 # FactoMineR::PCA() estandariza por defecto (scale.unit = TRUE) y devuelve,
 
+tema_agrandado <- theme(
+  axis.text = element_text(size = 18),  
+  axis.title = element_text(size = 18))
+
+
+
+
 res <- PCA(X, scale.unit = TRUE, graph = FALSE)
 coord_pc1 <- res$ind$coord[, 1]
+round(res$var$coord[, 1:4], 3)
 # ---- 4.1 Cuantos componentes mirar ----
 res$eig
 screeplot <- fviz_eig(res, addlabels = TRUE) +
   labs(
     title = "Varianza explicada por componente principal",
     x = "Dimensiones",
-    y = "Porcentaje de varianza explicada (%)") + tema_agrandado
+    y = "Porcentaje de varianza explicada (%)",
+    caption  = "Fuente: Elaboración propia en base al Banco Mundial, WDI; y ArgenData.") + tema_agrandado
 print(screeplot)
 
 
@@ -98,19 +107,65 @@ rm(screeplot)
 
 
 
-tema_agrandado <- theme(
-  axis.text = element_text(size = 18),  # Agranda las etiquetas (los nombres de las variables y los números)
-  axis.title = element_text(size = 18)  # Agranda los títulos ("Contributions (%)", "Variables")
-)
-pc1 <- fviz_contrib(res, choice = "var", axes = 1)  + tema_agrandado # quien arma PC1
-pc2 <- fviz_contrib(res, choice = "var", axes = 2) + tema_agrandado  # quien arma PC2
-pc3 <- fviz_contrib(res, choice = "var", axes = 3)  + tema_agrandado # quien arma PC3
-pc4 <- fviz_contrib(res, choice = "var", axes = 4) + tema_agrandado  # quien arma PC4
 
-print(pc1)
-print(pc2)
-print(pc3)
-print(pc4)
+pc1 <- fviz_contrib(res, choice = "var", axes = 1)  + tema_agrandado + 
+  labs(
+    title   = NULL,
+    y       = "Contribución (%)",
+    caption = "Fuente: Elaboración propia en base al Banco Mundial, WDI; y ArgenData."
+  ) +
+  theme(
+    plot.title            = element_blank(),
+    axis.text.x           = element_text(angle = 45, hjust = 1, size = 35),
+    axis.text.y           = element_text(size = 30),
+    axis.title.y          = element_text(size = 30, face = "bold"),
+    panel.border          = element_rect(colour = "black", fill = NA, linewidth = 1),
+    plot.caption          = element_text(hjust = 0, size = 35, color = "gray30", margin = margin(t = 12)),
+    plot.caption.position = "plot")
+
+pc2 <- fviz_contrib(res, choice = "var", axes = 2) + tema_agrandado  + 
+  labs(
+    title   = NULL,
+    y       = "Contribución (%)",
+    caption = "Fuente: Elaboración propia en base al Banco Mundial, WDI; y ArgenData."
+  ) +
+  theme(
+    plot.title            = element_blank(),
+    axis.text.x           = element_text(angle = 45, hjust = 1, size = 35),
+    axis.text.y           = element_text(size = 30),
+    axis.title.y          = element_text(size = 30, face = "bold"),
+    panel.border          = element_rect(colour = "black", fill = NA, linewidth = 1),
+    plot.caption          = element_text(hjust = 0, size = 35, color = "gray30", margin = margin(t = 12)),
+    plot.caption.position = "plot")
+
+pc3 <- fviz_contrib(res, choice = "var", axes = 3)  + tema_agrandado + 
+  labs(
+    title   = NULL,
+    y       = "Contribución (%)",
+    caption = "Fuente: Elaboración propia en base al Banco Mundial, WDI; y ArgenData."
+  ) +
+  theme(
+    plot.title            = element_blank(),
+    axis.text.x           = element_text(angle = 45, hjust = 1, size = 35),
+    axis.text.y           = element_text(size = 30),
+    axis.title.y          = element_text(size = 30, face = "bold"),
+    panel.border          = element_rect(colour = "black", fill = NA, linewidth = 1),
+    plot.caption          = element_text(hjust = 0, size = 35, color = "gray30", margin = margin(t = 12)),
+    plot.caption.position = "plot")
+pc4 <- fviz_contrib(res, choice = "var", axes = 4) + tema_agrandado + 
+  labs(
+    title   = NULL,
+    y       = "Contribución (%)",
+    caption = "Fuente: Elaboración propia en base al Banco Mundial, WDI; y ArgenData."
+  ) +
+  theme(
+    plot.title            = element_blank(),
+    axis.text.x           = element_text(angle = 45, hjust = 1, size = 35),
+    axis.text.y           = element_text(size = 30),
+    axis.title.y          = element_text(size = 30, face = "bold"),
+    panel.border          = element_rect(colour = "black", fill = NA, linewidth = 1),
+    plot.caption          = element_text(hjust = 0, size = 35, color = "gray30", margin = margin(t = 12)),
+    plot.caption.position = "plot")
 
 
 #ANEXO
@@ -123,11 +178,16 @@ ggsave(file.path("output/graficos/clustering", "pc3.png"),
 ggsave(file.path("output/graficos/clustering", "pc4.png"), 
        plot = pc4, width = 12, height = 7, units = "in", dpi = 300)
 
+print(pc1)
+print(pc2)
+print(pc3)
+print(pc4)
 
 
 mapa_paises <- fviz_pca_ind(res, repel = TRUE, labelsize = 3, col.ind = "cos2",
                             gradient.cols = c("gray80", "steelblue", "firebrick"), 
-                            title = "Mapa países - PCA")
+                            title = "Mapa países - PCA",
+                            caption  = "Fuente: Elaboración propia en base al Banco Mundial, WDI; y ArgenData.")
 print(mapa_paises)
 
 
@@ -153,11 +213,20 @@ mapa_regiones <- fviz_pca_ind(
   ellipse.level = 0.68,
   palette = c("#3919E0", "#E0195B", "gray85"),
   title = "PCA - Asia y Latam",
-  legend.title = "Región"
-)
+  legend.title = "Región",
+  caption  = "Fuente: Elaboración propia en base al Banco Mundial, WDI; y ArgenData."
+) +
+  theme(
+    axis.text.x           = element_text(angle = 45, hjust = 1, size = 13),
+    axis.text.y           = element_text(size = 13),
+    axis.title            = element_text(size = 15, face = "bold"),
+    panel.border          = element_rect(colour = "black", fill = NA, linewidth = 1),
+    plot.caption          = element_text(hjust = 0, size = 10, color = "gray30", margin = margin(t = 12)),
+    plot.caption.position = "plot",
+    theme(panel.grid = element_blank())
+  )
 
 print(mapa_regiones)
-
 
 #PRESENTACION o ANEXO
 #ESTE O EL ANTERIOR, NO LOS DOS
@@ -196,7 +265,8 @@ as.matrix(d)["China", ] |> sort() |> head(6)
 tibble(k = 1:10, altura = rev(hc_ward$height)[1:10]) |>
   ggplot(aes(k, altura)) + geom_line() + geom_point() +
   scale_x_continuous(breaks = 1:10) +
-  labs(title = "Altura de las ultimas fusiones", x = "Cantidad de grupos")
+  labs(title = "Altura de las ultimas fusiones", x = "Cantidad de grupos",
+       caption  = "Fuente: Elaboración propia en base al Banco Mundial, WDI; y ArgenData.")
 
 
 
@@ -219,7 +289,10 @@ split(wdi_pca$pais, grupos)
 # Silueta de cada pais: quien esta "en el borde" entre dos grupos?
 sil <- silhouette(grupos, d)
 
-silhouette <- fviz_silhouette(sil, label = FALSE)
+silhouette <- fviz_silhouette(sil, label = FALSE) +
+  labs(title = "Gráfico de siluetas", y = "Ancho de silueta",
+       caption  = "Fuente: Elaboración propia en base al Banco Mundial, WDI; y ArgenData.")
+
 
 print(silhouette)
 
@@ -247,7 +320,7 @@ par(mfrow = c(1, 1))
 # ---- B.3 HCPC con k = 4 ----
 res_hcpc <- HCPC(res_pca, nb.clust = 5, consol = TRUE, graph = FALSE)
 
-hcpc <- HCPC(res_pca, nb.clust = 5, consol = TRUE, graph = FALSE) + 
+hcpc <- HCPC(res_pca, nb.clust = 5, consol = TRUE, graph = FALSE)  
 
 # png("output/graficos/dendograma.png", width = 8, height = 6, units = "in", res = 300)
 
@@ -264,7 +337,7 @@ plot(res_hcpc, choice = "bar")           # ganancia de inercia por cada fusion
 rm(dendograma)
 
 hcpc5 <- fviz_cluster(hcpc, repel = TRUE, labelsize = 7.5, show.clust.cent = TRUE,
-                      main = "HCPC: 5 grupos en el plano PC1-PC2")
+                      main = "HCPC: 5 grupos en el plano PC1-PC2") + labs(caption  = "Fuente: Elaboración propia en base al Banco Mundial, WDI; y ArgenData.")
 
 print(hcpc5)
 

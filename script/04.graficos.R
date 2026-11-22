@@ -505,7 +505,8 @@ grafico10 <- ggplot(datos_combinados, aes(x = reorder(region, -porcentaje), y = 
        subtitle = "Porcentaje de países en cada categoría sobre el total",
        x = "Región",
        y = "Porcentaje del total de países",
-       fill = "Muestra") + 
+       fill = "Muestra",
+       caption  = "Fuente: Elaboración propia en base al Banco Mundial, WDI; y ArgenData.") + 
   theme_minimal(base_size = 14) + 
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1, size = 13), # Nombres de las regiones (eje X)
