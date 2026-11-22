@@ -57,7 +57,7 @@ variables <- c(
 
 
 
-
+colSums(is.na(wdi2))
 
 #Que porcentaje de NA tiene cada varible (en los tres anios elegidos)
 faltantes <- wdi2 |>

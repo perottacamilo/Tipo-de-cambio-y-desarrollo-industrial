@@ -333,7 +333,6 @@ dev.off()
 
 
 
-
 alta2  <- wdi_2022$industria_per_capita[wdi_2022$region == "Este de Asia y Pacífico"]
 baja2  <- wdi_2022$industria_per_capita[wdi_2022$region %in% c("América Latina y el Caribe", "")]
 
