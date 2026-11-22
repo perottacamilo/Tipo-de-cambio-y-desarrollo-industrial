@@ -259,17 +259,8 @@ na_2022.2 <- wdi3.2 |>
 #Con el resto de NAs vamos a interpolar los anios de interes con el promedio de los anios lindantes
 #Si alguno de los dos anios lindantes llegara a tener tambien NA, entonces la observacion va a ser descartada
 # Promedio de vecinos; si falta uno, usa el otro; si faltan ambos, NA
-#nuevo
-imputar_vecinos <- function(x, anio) {
-  ant <- if_else(lag(anio) == anio - 1, lag(x), NA_real_)
-  sig <- if_else(lead(anio) == anio + 1, lead(x), NA_real_)
-  case_when(
-    !is.na(ant) & !is.na(sig) ~ (ant + sig) / 2,
-    !is.na(ant)               ~ ant,
-    !is.na(sig)               ~ sig,
-    TRUE                      ~ NA_real_
-  )
-}
+# Carga de función propia desde utils/
+source("utils/imputar_vecinos.R")
 
 
 wdi_filtrado <- wdi3.2 |> 
