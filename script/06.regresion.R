@@ -789,12 +789,12 @@ juntar_rvsl <- function(paneles, titulo, subtitulo, caption) {
 titulo_rvsl <- paste0(
   "Diagnóstico de Residuos vs. Apalancamiento (*Leverage*):<br>",
   "Observaciones influyentes identificadas mediante la ",
-  pintar("Distancia de Cook", col[["rojo"]]), " (2001, 2008 y 2022)"
+  pintar("Distancia de Cook", col[["rojo"]])
 )
 
 subtitulo_rvsl <- paste0(
   "Cada punto representa un país en las estimaciones con controles. ",
-  "En ", pintar("rojo", col[["rojo"]]), " se identifican los países atípicos (D<sub>i</sub> > 0,15).<br>",
+  "En ", pintar("rojo", col[["rojo"]]), " se identifican los países atípicos.<br>",
   "La curva gris muestra la tendencia local LOESS y la línea de puntos roja señala el contorno crítico de Cook (D = 0,15)."
 )
 
