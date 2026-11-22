@@ -15,6 +15,11 @@ library(patchwork)
 library(webshot2)
 library(gt)
 
+# ==============================================================================
+# CARGA DE FUNCIONES AUXILIARES PROPIAS (utils/)
+# ==============================================================================
+invisible(lapply(list.files("utils", full.names = TRUE), source))
+
 
 wdi2 <- read.csv("input/wdi2.csv")
 
@@ -26,44 +31,7 @@ datos_2022 <- wdi2 |> filter(anio == 2022)
 
 
 #GRAFICO DIAPOSITIVA 6/7
-hacer_hist <- function(df, var, titulo, escala_log = TRUE) {
-  x_vals  <- df[[var]]
-  media   <- mean(x_vals, na.rm = TRUE)
-  mediana <- median(x_vals, na.rm = TRUE)
-  
-  p <- ggplot(df, aes(x = .data[[var]])) +
-    geom_histogram(bins = 22, fill = "#4A779D", color = "white", linewidth = 0.3) +
-    geom_vline(xintercept = media, color = "#C0392B", linewidth = 1.1) +
-    geom_vline(xintercept = mediana, color = "#1B7837", linetype = "dashed", linewidth = 1.1) +
-    labs(
-      title = titulo,
-      x = NULL,
-      y = "Cantidad de países"
-    ) +
-    theme_minimal(base_size = 13) +
-    theme(
-      plot.title       = element_text(face = "bold", hjust = 0.5, size = 13),
-      panel.grid.minor = element_blank(),
-      panel.grid.major.x = element_blank(),
-      panel.border     = element_rect(color = "black", fill = NA, linewidth = 0.7),
-      plot.margin      = margin(t = 10, r = 22, b = 10, l = 10)
-    )
-  
-  if (escala_log) {
-    p <- p + scale_x_log10(
-      breaks = c(10, 100, 1000, 10000, 100000),
-      labels = label_number(big.mark = ".", decimal.mark = ","),
-      expand = expansion(mult = c(0.04, 0.08))
-    )
-  } else {
-    p <- p + scale_x_continuous(
-      breaks = seq(25, 125, 25),
-      expand = expansion(mult = c(0.04, 0.06))
-    )
-  }
-  
-  return(p)
-}
+# (Función hacer_hist cargada desde utils/hacer_hist.R)
 
 # 1. Exportaciones manufactureras per cápita
 g_exp <- hacer_hist(
@@ -93,6 +61,7 @@ print(g_precios)
 print(g_ind)
 print(g_exp)
 
+dir.create("output/graficos/eda", recursive = TRUE, showWarnings = FALSE)
 ggsave("output/graficos/eda/hist_exportaciones.png", g_exp,     width = 6, height = 4.2, dpi = 300, bg = "white")
 ggsave("output/graficos/eda/hist_industria.png",     g_ind,     width = 6, height = 4.2, dpi = 300, bg = "white")
 ggsave("output/graficos/eda/hist_precios.png",       g_precios, width = 6, height = 4.2, dpi = 300, bg = "white")
@@ -302,7 +271,7 @@ ingreso_2 <- wdi_filtrado %>%
 
 datos_combinados2 <- bind_rows(ingreso1, ingreso_2)
 
-grafico11 <- ggplot(datos_combinados, aes(x = reorder(ingreso2, -porcentaje), y = porcentaje, fill = base)) +
+grafico11 <- ggplot(datos_combinados2, aes(x = reorder(ingreso2, -porcentaje), y = porcentaje, fill = base)) +
   geom_bar(stat = "identity", position = "dodge", color = "black") + 
   labs(title = "Distribución de los ingresos",
        subtitle = "Porcentaje de países en cada categoría sobre el total",
@@ -363,98 +332,7 @@ fmt_num <- label_number(big.mark = ".", decimal.mark = ",", drop0trailing = TRUE
 fmt_pct <- label_number(suffix = "%", big.mark = ".", decimal.mark = ",", drop0trailing = TRUE)
 base_indice <- "EE. UU. = 100"
 
-# Tema base OWID
-theme_owid <- function(base_size = 13) {
-  theme_minimal(base_size = base_size, base_family = fuente_texto) +
-    theme(
-      plot.title.position   = "plot",
-      plot.caption.position = "plot",
-      plot.title    = element_markdown(family = fuente_titulo, size = rel(2.9), color = gris_titulo,
-                                       lineheight = 1.05, margin = margin(b = 10)),
-      plot.subtitle = element_text(size = rel(1.75), color = gris_texto,
-                                   lineheight = 1.15, margin = margin(b = 20)),
-      plot.caption  = element_text(size = rel(0.95), color = gris_suave, hjust = 0,
-                                   margin = margin(t = 18)),
-      panel.grid.major.x = element_blank(),
-      panel.grid.minor   = element_blank(),
-      panel.grid.major.y = element_line(color = "#DDDDDD", linetype = "dashed", linewidth = 0.4),
-      axis.line.x  = element_line(color = "#999999", linewidth = 0.4),
-      axis.ticks.x = element_line(color = "#999999", linewidth = 0.4),
-      axis.text    = element_text(color = "#666666", size = rel(1.05)),
-      axis.title   = element_blank(),
-      legend.position = "none",
-      plot.background = element_rect(fill = "white", color = NA),
-      plot.margin = margin(20, 22, 15, 20)
-    )
-}
-
-pintar <- function(texto, color) sprintf("<span style='color:%s'><b>%s</b></span>", color, texto)
-
-# Funciones de ploteo para el exploratorio
-panel_latam <- function(datos, subtitulo = datos$sub_filtrado[1]) {
-  ind <- datos$indicador[1]
-  resto <- filter(datos, grupo_region == "Resto del Mundo")
-  foco  <- filter(datos, grupo_region != "Resto del Mundo")
-  destacar <- c("Argentina", "China")
-  
-  tit_y <- "USD por habitante (escala log)"
-  tit_x <- if (ind == "Exportaciones") " Índice de nivel de precios (EE. UU. = 100, escala log)" else NULL
-  
-  ggplot(datos, aes(pib, valor)) +
-    geom_point(data = resto, shape = 21, size = 1.1, stroke = 0.25,
-               color = "#9E9E9E", fill = alpha(col[["gris"]], 0.55)) +
-    geom_smooth(method = "loess", formula = y ~ x, se = FALSE,
-                color = gris_titulo, linewidth = 0.5) +
-    geom_point(data = foco, aes(fill = grupo_region), shape = 21, size = 1.7,
-               stroke = 0.4, color = "white") +
-    geom_label_repel(data = filter(datos, codigo %in% destacar), aes(label = codigo),
-                     family = fuente_texto, fontface = "bold", size = 5,
-                     fill = alpha("white", 0.85), label.size = 0, label.padding = unit(1.5, "pt"),
-                     color = gris_titulo, min.segment.length = 0, segment.color = "#777777",
-                     nudge_y = 0.3, seed = 1) +
-    scale_fill_manual(values = c("América Latina" = col_latam, "Asia Oriental" = col_asia)) +
-    (if (ind == "Industria") {
-      scale_y_log10(labels = fmt_num, expand = expansion(mult = c(0.1, 0.15)))
-    } else {
-      scale_y_log10(labels = fmt_num, expand = expansion(mult = c(0.1, 0.25)))
-    }) +
-    scale_x_log10(breaks = c(30, 50, 100), labels = fmt_num) +
-    coord_cartesian(ylim = if (ind == "Exportaciones") c(1, NA) else NULL) +
-    labs(title = datos$titulo[1], subtitle = subtitulo, x = tit_x, y = tit_y) +
-    theme_owid(base_size = 9.5) %+replace%
-    theme(
-      plot.title    = element_text(family = fuente_texto, face = "bold", size = rel(3.5),
-                                   color = gris_titulo, hjust = 0, margin = margin(b = 3)),
-      plot.subtitle = element_text(size = rel(2), color = gris_texto, hjust = 0,
-                                   lineheight = 0.6, margin = margin(b = 14)),
-      axis.title.x  = element_text(size = rel(1.75), color = gris_texto, margin = margin(t = 6)),
-      axis.title.y  = element_text(size = rel(1.75), color = gris_texto, angle = 90, margin = margin(r = 6)),
-      panel.grid.major.x = element_blank(), panel.grid.major.y = element_blank(), panel.grid.minor = element_blank(),
-      axis.line.x = element_blank(), axis.ticks.x = element_blank(),
-      plot.background = element_rect(fill = "#FAFAFA", color = "#E3E3E3"),
-      plot.margin = margin(8, 10, 8, 8)
-    )
-}
-
-juntar <- function(paneles, titulo, subtitulo, caption) {
-  wrap_plots(paneles, ncol = 3) +
-    plot_annotation(
-      title = titulo, 
-      subtitle = subtitulo, 
-      caption = caption, 
-      theme = theme_owid() +
-        theme(
-          plot.title    = ggtext::element_markdown(family = fuente_texto, face = "bold",
-                                                   size = 45, hjust = 0, halign = 0,
-                                                   lineheight = 0.4, margin = margin(b = 6)),
-          plot.subtitle = ggtext::element_markdown(size = 30, hjust = 0, halign = 0,
-                                                   lineheight = 0.35, margin = margin(b = 12)),
-          plot.caption  = element_text(size = 18, hjust = 0, lineheight = 0.4, 
-                                       color = gris_texto, margin = margin(t = 10)),
-          plot.margin   = margin(5, 5, 5, 5)
-        )
-    )
-}
+# Funciones theme_owid, pintar, panel_latam y juntar cargadas desde utils/
 
 # ------------------------------------------------------------------------------
 # GRÁFICO EXPLORATORIO

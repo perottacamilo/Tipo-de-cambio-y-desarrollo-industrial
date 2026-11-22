@@ -41,8 +41,9 @@ El proyecto está diseñado bajo una arquitectura modular y 100% reproducible en
 3. **Tratamiento de Datos Faltantes e Imputación (`script/03.datos faltantes.R`):**
    - Diagnóstico sistemático de patrones de no-respuesta.
    - Imputación mediante interpolación temporal por vecinos adyacentes (`utils/imputar_vecinos.R`) para los años 2001, 2008 y 2022, generando la base analítica consolidada `input/wdi_filtrado.csv`.
-4. **Visualizaciones y Storytelling (`script/04.graficos.R` y `script/graficos entrega 3.R`):**
+4. **Visualizaciones y Storytelling (`script/graficos 2.R`):**
    - Distribuciones empíricas de variables clave con histogramas estandarizados (`utils/hacer_hist.R`).
+   - Diagnóstico visual de cobertura temporal y faltantes (`output/graficos/eda/`).
    - Mosaico exploratorio multianual estilo Our World in Data (`utils/panel_latam.R`, `utils/juntar.R`, `utils/theme_owid.R`).
    - Gráfico comunicacional de series de tiempo con eventos históricos de quiebre estructural (ingreso de China a la OMC en 2001, Crisis Financiera Global de 2008). Exportados en `output/graficos/`.
 5. **Clustering y Reducción Dimensional (`script/05.clustering.R`):**
@@ -84,8 +85,15 @@ Trabajo-Practico-Ciencia-de-Datos/
 │   │   ├── tabla_reset_comparativa.html
 │   │   └── tabla_sin_outliers.html
 │   └── graficos/   # Visualizaciones generadas por los scripts (PNG / JPG)
-│       ├── grupo_01_exploratoriolala.jpg
-│       ├── grupo_01_comunicativolala.jpg
+│       ├── eda/
+│       │   ├── hist_exportaciones.png
+│       │   ├── hist_industria.png
+│       │   ├── hist_precios.png
+│       │   ├── datos_faltanes_vars.png
+│       │   ├── variacion_region.png
+│       │   └── variacion_ingreso.png
+│       ├── grupo_01_exploratorio.png
+│       ├── grupo_01_comunicativo.png
 │       └── regresion/
 │           ├── rvsl_exploratorio_completo.jpg
 │           ├── rvsl_exploratorio_completo.png
@@ -99,10 +107,9 @@ Trabajo-Practico-Ciencia-de-Datos/
 │   ├── 01.datos.R
 │   ├── 02.filtrado.R
 │   ├── 03.datos faltantes.R
-│   ├── 04.graficos.R
 │   ├── 05.clustering.R
 │   ├── 06.regresion.R
-│   └── graficos entrega 3.R
+│   └── graficos 2.R  # Script definitivo de gráficos y visualizaciones
 ├── utils/          # Funciones propias modularizadas (un script por función)
 │   ├── armar_modelos_resumen.R
 │   ├── graficar_residuos_leverage.R
@@ -114,7 +121,6 @@ Trabajo-Practico-Ciencia-de-Datos/
 │   ├── panel_latam.R
 │   ├── panel_rvsl.R
 │   ├── pintar.R
-│   ├── resumen_stats.R
 │   ├── test_reset_adaptativo.R
 │   ├── theme_owid.R
 │   ├── top_cook.R
@@ -157,9 +163,8 @@ source("script/02.filtrado.R")
 # 3. Diagnóstico e imputación temporal de valores faltantes
 source("script/03.datos faltantes.R")
 
-# 4. Generación de estadísticas descriptivas y gráficos principales
-source("script/04.graficos.R")
-source("script/graficos entrega 3.R")
+# 4. Generación de gráficos principales y exploratorios (script definitivo)
+source("script/graficos 2.R")
 
 # 5. Análisis multivariado de componentes principales y clustering
 source("script/05.clustering.R")
