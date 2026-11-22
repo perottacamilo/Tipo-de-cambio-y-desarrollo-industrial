@@ -553,7 +553,7 @@ subtitulo_rvsl <- paste0(
 )
 
 caption_rvsl <- paste0(
-  "Fuente: elaboración propia en base a Banco Mundial (WDI) y Argendata (Fundar).\n",
+  "Fuente: elaboración propia en base a Banco Mundial (WDI) y Schteingart, D. y Sidicaro, N. (2025). Industria. Argendata. Fundar.\n",
   "Notas: Modelos log-log con controles. Umbral de corte de influencia empírica fijado en Di > 0,15."
 )
 
@@ -564,8 +564,6 @@ grafico_rvsl_exploratorio <- juntar_rvsl(
   caption = caption_rvsl
 )
 
-ggsave("output/graficos/regresion/rvsl_exploratorio_completo.jpg", plot = grafico_rvsl_exploratorio,
-       width = 22, height = 14, units = "cm", dpi = 300)
 ggsave("output/graficos/regresion/rvsl_exploratorio_completo.png", plot = grafico_rvsl_exploratorio,
        width = 22, height = 14, units = "cm", dpi = 300)
 
