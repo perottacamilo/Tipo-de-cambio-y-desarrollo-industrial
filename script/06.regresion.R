@@ -471,12 +471,53 @@ gtsave(tabla_reset_gt, filename = "output/tablas/tabla_reset_comparativa.html")
 # 4. Volvemos la ventana a la normalidad (1 gráfico a la vez)
 #par(mfrow = c(1, 1))
 
+# ==============================================================================
+# DICCIONARIO DE TRADUCCIÓN DE PAÍSES AL ESPAÑOL
+# ==============================================================================
+paises_espanol <- c(
+  "Congo, Rep."          = "Congo",
+  "Congo, Dem. Rep."     = "R. D. Congo",
+  "Sierra Leone"         = "Sierra Leona",
+  "Sudan"                = "Sudán",
+  "Hong Kong SAR, China" = "Hong Kong",
+  "Iraq"                 = "Irak",
+  "Libya"                = "Libia",
+  "Gambia, The"          = "Gambia",
+  "Yemen, Rep."          = "Yemen",
+  "Algeria"              = "Argelia",
+  "Cambodia"             = "Camboya",
+  "Oman"                 = "Omán",
+  "Timor-Leste"          = "Timor Oriental",
+  "Botswana"             = "Botsuana",
+  "Burundi"              = "Burundi",
+  "Paraguay"             = "Paraguay",
+  "Nepal"                = "Nepal",
+  "Zambia"               = "Zambia",
+  "Egypt, Arab Rep."     = "Egipto",
+  "Iran, Islamic Rep."   = "Irán",
+  "Syrian Arab Republic" = "Siria",
+  "Russian Federation"   = "Rusia",
+  "United States"        = "Estados Unidos",
+  "United Kingdom"       = "Reino Unido",
+  "Germany"              = "Alemania",
+  "France"               = "Francia",
+  "Italy"                = "Italia",
+  "Spain"                = "España",
+  "Korea, Rep."          = "Corea del Sur",
+  "Korea, Dem. People's Rep." = "Corea del Norte",
+  "Venezuela, RB"        = "Venezuela"
+)
+
+traducir_pais <- function(x) {
+  unname(ifelse(x %in% names(paises_espanol), paises_espanol[x], x))
+}
+
 # Función auxiliar para ver el ranking de observaciones influyentes por país
 top_cook <- function(modelo, datos_df, n = 5) {
   d_cook <- cooks.distance(modelo)
   top <- head(sort(d_cook, decreasing = TRUE), n)
   data.frame(
-    pais = datos_df[names(top), "pais"],
+    pais = traducir_pais(datos_df[names(top), "pais"]),
     cook_distance = round(unname(top), 4)
   )
 }
@@ -493,83 +534,182 @@ top_cook <- function(modelo, datos_df, n = 5) {
 
 
 # ==============================================================================
-# GRÁFICOS: RESIDUALS VS LEVERAGE (DIAGNÓSTICO DE VALORES INFLUYENTES)
+# GRÁFICOS: RESIDUALS VS LEVERAGE (FORMATO EXPLORATORIO - OWID)
 # ==============================================================================
+suppressPackageStartupMessages({
+  library(scales)
+  library(ggtext)
+  library(patchwork)
+  library(showtext)
+})
+
+# 1. Configuración tipográfica y tema visual estilo "graficos entrega 3.R"
+fuentes_ok <- tryCatch({
+  font_add_google("Playfair Display", "playfair", regular.wt = 600, bold.wt = 700)
+  font_add_google("Lato", "lato", regular.wt = 400, bold.wt = 700)
+  TRUE
+}, error = function(e) FALSE)
+
+fuente_titulo <- if (fuentes_ok) "playfair" else "serif"
+fuente_texto  <- if (fuentes_ok) "lato" else "sans"
+
+showtext_auto()
+showtext_opts(dpi = 96)
+
+col <- c(rojo = "#B13507", azul = "#286BBB", gris = "#BDBDBD")
+col_asia    <- "#E0195B"
+col_latam   <- "#3919E0"
+gris_titulo <- "#363636"
+gris_texto  <- "#5B5B5B"
+gris_suave  <- "#858585"
+
+theme_owid <- function(base_size = 13) {
+  theme_minimal(base_size = base_size, base_family = fuente_texto) +
+    theme(
+      plot.title.position   = "plot",
+      plot.caption.position = "plot",
+      plot.title    = element_markdown(family = fuente_titulo, size = rel(2.9), color = gris_titulo,
+                                       lineheight = 1.05, margin = margin(b = 10)),
+      plot.subtitle = element_text(size = rel(1.75), color = gris_texto,
+                                   lineheight = 1.15, margin = margin(b = 20)),
+      plot.caption  = element_text(size = rel(0.95), color = gris_suave, hjust = 0,
+                                   margin = margin(t = 18)),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor   = element_blank(),
+      panel.grid.major.y = element_line(color = "#DDDDDD", linetype = "dashed", linewidth = 0.4),
+      axis.line.x  = element_line(color = "#999999", linewidth = 0.4),
+      axis.ticks.x = element_line(color = "#999999", linewidth = 0.4),
+      axis.text    = element_text(color = "#666666", size = rel(1.05)),
+      axis.title   = element_blank(),
+      legend.position = "none",
+      plot.background = element_rect(fill = "white", color = NA),
+      plot.margin = margin(20, 22, 15, 20)
+    )
+}
+
+pintar <- function(texto, color) sprintf("<span style='color:%s'><b>%s</b></span>", color, texto)
+
 # Crear carpeta de salida si no existe
 dir.create("output/graficos/regresion", recursive = TRUE, showWarnings = FALSE)
 
-# Función para graficar en pantalla y guardar en PNG con ejes en español y subtítulo
-graficar_residuos_leverage <- function(modelo, datos_df, titulo, nombre_archivo, umbral_cook = 0.15, id.n = 3) {
-  paises <- datos_df[names(residuals(modelo)), "pais"]
-  cooks_d <- cooks.distance(modelo)
-  colores <- ifelse(cooks_d > umbral_cook, "firebrick", rgb(0, 0, 1, 0.2))
-  etiquetas <- paste0(paises, " (D = ", round(cooks_d, 3), ")")
+# Función para armar panel ggplot de Residuos vs Leverage
+panel_rvsl <- function(modelo, datos_df, titulo, subtitulo = NULL,
+                       ind = "Industria", umbral_cook = 0.15, es_individual = FALSE) {
+  res_std    <- rstandard(modelo)
+  lev        <- hatvalues(modelo)
+  cooks_d    <- cooks.distance(modelo)
+  paises_raw <- datos_df[names(res_std), "pais"]
+  paises     <- traducir_pais(paises_raw)
+  p_k        <- length(coef(modelo))
   
-  ruta_archivo <- file.path("output/graficos/regresion", nombre_archivo)
+  df <- data.frame(
+    pais       = paises,
+    leverage   = unname(lev),
+    res_std    = unname(res_std),
+    cook       = unname(cooks_d),
+    es_outlier = unname(cooks_d > umbral_cook),
+    stringsAsFactors = FALSE
+  )
   
-  # 1. Guardar a archivo PNG
-  png(ruta_archivo, width = 5, height = 3.7, units = "in", res = 300, pointsize = 11)
-  par(
-    mar = c(4.0, 4.1, 3.2, 3),  # Márgenes ajustados (abajo, izq, arriba, der)
-    mgp = c(2.6, 0.8, 0),         # Acerca nombres y números a los ejes
-    las = 0                       # Mantiene los números del eje Y en vertical
-  )
-  plot(
-    modelo,
-    which = 5,
-    ann = FALSE,
-    sub.caption = "",             # Elimina el texto de la fórmula lm(...) debajo del eje x
-    labels.id = etiquetas,
-    id.n = id.n,
-    col = colores,
-    pch = 16,
-    cex = 0.95,                   # Puntos más chicos y proporcionados al texto
-    cex.id = 1.05,
-    cex.caption = 1.1,
-    cex.axis = 1.05,
-    caption = list("", "", "", "", "")
-  )
-  title(main = titulo, line = 1.65, cex.main = 1.35, font.main = 2)
-  title(
-    xlab = "Apalancamiento (Leverage)",
-    ylab = "Residuos estandarizados",
-    cex.lab = 1.15
-  )
-  dev.off()
+  outliers <- df$pais[df$es_outlier]
+  if (is.null(subtitulo)) {
+    if (length(outliers) > 0) {
+      subtitulo <- paste0("Atípicos (D > 0,15): ", paste(outliers, collapse = ", "))
+    } else {
+      subtitulo <- "Sin atípicos severos (D > 0,15)"
+    }
+  }
   
-  # 2. Mostrar también en la ventana gráfica activa de RStudio (Plots) con letras grandes
-  #par(mar = c(4.8, 5.0, 3.8, 2.2))
-  #plot(
-  #  modelo,
-  #  which = 5,
-  #  ann = FALSE,
-  #  sub.caption = "",               # Elimina el texto de la fórmula lm(...) debajo del eje x
-  #  labels.id = etiquetas,
-  #  id.n = id.n,
-  #  col = colores,
-  #  pch = 16,
-  #  cex = 1.1,
-  #  cex.id = 1.05,
-  #  cex.caption = 1.2,
-  #  cex.axis = 1.1,
-  #  caption = list("", "", "", "", "")
-  #)
-  #title(
-  #  main = titulo,
-  #  xlab = "Apalancamiento",
-  #  ylab = "Residuos estandarizados",
-  #  cex.main = 1.35,
-  #  cex.lab = 1.2
-  #)
+  # Curva de contorno crítico de Cook D = 0.15
+  max_h  <- max(df$leverage, na.rm = TRUE) * 1.15
+  grid_h <- seq(0.005, min(max_h, 0.45), length.out = 150)
+  val_r  <- sqrt(p_k * umbral_cook * (1 - grid_h) / grid_h)
+  df_cook_line <- data.frame(
+    h = c(grid_h, grid_h),
+    r = c(val_r, -val_r),
+    curva = rep(c("pos", "neg"), each = length(grid_h))
+  ) %>% filter(abs(r) <= max(abs(df$res_std), na.rm = TRUE) * 1.25)
+  
+  tit_y <- if (es_individual) "Residuos estandarizados" else "Residuos estandarizados"
+  tit_x <- if (es_individual || ind == "Exportaciones") "Apalancamiento (Leverage)" else NULL
+  
+  p <- ggplot(df, aes(x = leverage, y = res_std)) +
+    geom_hline(yintercept = 0, linetype = "dashed", color = "#BBBBBB", linewidth = 0.4) +
+    # Puntos regulares
+    geom_point(data = filter(df, !es_outlier), shape = 21, size = if (es_individual) 1.8 else 1.3,
+               stroke = 0.25, color = "#9E9E9E", fill = alpha(col[["gris"]], 0.65)) +
+    # Curva loess de tendencia
+    geom_smooth(method = "loess", formula = y ~ x, se = FALSE,
+                color = gris_titulo, linewidth = if (es_individual) 0.6 else 0.5) +
+    # Puntos influyentes en rojo
+    geom_point(data = filter(df, es_outlier), shape = 21, size = if (es_individual) 2.6 else 2.0,
+               stroke = 0.4, color = "white", fill = col[["rojo"]]) +
+    # Línea de isocontorno de Cook D = 0.15 si cae en el rango
+    { if(nrow(df_cook_line) > 0)
+        geom_line(data = df_cook_line, aes(x = h, y = r, group = curva),
+                  linetype = "dotted", color = alpha(col[["rojo"]], 0.7), linewidth = 0.4)
+    } +
+    # Etiquetas de países atípicos
+    geom_label_repel(
+      data = filter(df, es_outlier),
+      aes(label = paste0(pais, "\n(D = ", round(cook, 3), ")")),
+      family = fuente_texto,
+      fontface = "bold",
+      size = if (es_individual) 4.2 else 3.8,
+      fill = alpha("white", 0.85),
+      label.size = 0,
+      label.padding = unit(1.5, "pt"),
+      color = gris_titulo,
+      min.segment.length = 0,
+      segment.color = "#777777",
+      nudge_y = 0.35,
+      seed = 1
+    ) +
+    labs(title = titulo, subtitle = subtitulo, x = tit_x, y = tit_y) +
+    theme_owid(base_size = if (es_individual) 11 else 9.5) %+replace%
+    theme(
+      plot.title    = element_text(family = fuente_texto, face = "bold",
+                                   size = if (es_individual) rel(1.5) else rel(3.5),
+                                   color = gris_titulo, hjust = 0, margin = margin(b = 3)),
+      plot.subtitle = element_text(size = if (es_individual) rel(1.05) else rel(2),
+                                   color = gris_texto, hjust = 0,
+                                   lineheight = 0.6, margin = margin(b = 14)),
+      axis.title.x  = element_text(size = if (es_individual) rel(1.05) else rel(1.75),
+                                   color = gris_texto, margin = margin(t = 6)),
+      axis.title.y  = element_text(size = if (es_individual) rel(1.05) else rel(1.75),
+                                   color = gris_texto, angle = 90, margin = margin(r = 6)),
+      panel.grid.major.x = element_blank(), panel.grid.major.y = element_blank(), panel.grid.minor = element_blank(),
+      axis.line.x = element_blank(), axis.ticks.x = element_blank(),
+      plot.background = element_rect(fill = "#FAFAFA", color = "#E3E3E3"),
+      plot.margin = margin(8, 10, 8, 8)
+    )
+  
+  p
 }
 
-# --- EXPORTACIONES MANUFACTURERAS ---
+# Función para guardar cada gráfico individual en PNG
+graficar_residuos_leverage <- function(modelo, datos_df, titulo, nombre_archivo,
+                                      umbral_cook = 0.15, ind = "Industria") {
+  p <- panel_rvsl(
+    modelo = modelo,
+    datos_df = datos_df,
+    titulo = titulo,
+    ind = ind,
+    umbral_cook = umbral_cook,
+    es_individual = TRUE
+  )
+  ruta_archivo <- file.path("output/graficos/regresion", nombre_archivo)
+  ggsave(ruta_archivo, plot = p, width = 6.2, height = 4.2, dpi = 300)
+  invisible(p)
+}
+
+# --- GUARDAR GRÁFICOS INDIVIDUALES ---
 graficar_residuos_leverage(
   modelo = mod_exp_2001,
   datos_df = wdi_2001,
   titulo = "Exportaciones Manufactureras (per cápita) 2001",
   nombre_archivo = "rvsl_exportaciones_2001.png",
-  id.n = 1
+  ind = "Exportaciones"
 )
 
 graficar_residuos_leverage(
@@ -577,7 +717,7 @@ graficar_residuos_leverage(
   datos_df = wdi_2008,
   titulo = "Exportaciones Manufactureras (per cápita) 2008",
   nombre_archivo = "rvsl_exportaciones_2008.png",
-  id.n = 2
+  ind = "Exportaciones"
 )
 
 graficar_residuos_leverage(
@@ -585,16 +725,15 @@ graficar_residuos_leverage(
   datos_df = wdi_2022,
   titulo = "Exportaciones Manufactureras (per cápita) 2022",
   nombre_archivo = "rvsl_exportaciones_2022.png",
-  id.n = 2
+  ind = "Exportaciones"
 )
 
-# --- INDUSTRIA ---
 graficar_residuos_leverage(
   modelo = mod_ind_2001,
   datos_df = wdi_2001,
   titulo = "Industria (per cápita) 2001",
   nombre_archivo = "rvsl_industria_2001.png",
-  id.n = 2
+  ind = "Industria"
 )
 
 graficar_residuos_leverage(
@@ -602,7 +741,7 @@ graficar_residuos_leverage(
   datos_df = wdi_2008,
   titulo = "Industria (per cápita) 2008",
   nombre_archivo = "rvsl_industria_2008.png",
-  id.n = 1
+  ind = "Industria"
 )
 
 graficar_residuos_leverage(
@@ -610,8 +749,71 @@ graficar_residuos_leverage(
   datos_df = wdi_2022,
   titulo = "Industria (per cápita) 2022",
   nombre_archivo = "rvsl_industria_2022.png",
-  id.n = 1
+  ind = "Industria"
 )
+
+# --- CREAR Y GUARDAR EL GRÁFICO COMPLETO DE 6 PANELES (ESTILO EXPLORATORIO) ---
+p_ind_2001 <- panel_rvsl(mod_ind_2001, wdi_2001, "Industria (2001)", ind = "Industria")
+p_ind_2008 <- panel_rvsl(mod_ind_2008, wdi_2008, "Industria (2008)", ind = "Industria")
+p_ind_2022 <- panel_rvsl(mod_ind_2022, wdi_2022, "Industria (2022)", ind = "Industria")
+
+p_exp_2001 <- panel_rvsl(mod_exp_2001, wdi_2001, "Exportaciones (2001)", ind = "Exportaciones")
+p_exp_2008 <- panel_rvsl(mod_exp_2008, wdi_2008, "Exportaciones (2008)", ind = "Exportaciones")
+p_exp_2022 <- panel_rvsl(mod_exp_2022, wdi_2022, "Exportaciones (2022)", ind = "Exportaciones")
+
+paneles_rvsl <- list(
+  p_ind_2001, p_ind_2008, p_ind_2022,
+  p_exp_2001, p_exp_2008, p_exp_2022
+)
+
+juntar_rvsl <- function(paneles, titulo, subtitulo, caption) {
+  wrap_plots(paneles, ncol = 3) +
+    plot_annotation(
+      title = titulo, 
+      subtitle = subtitulo, 
+      caption = caption, 
+      theme = theme_owid() +
+        theme(
+          plot.title    = ggtext::element_markdown(family = fuente_texto, face = "bold",
+                                                   size = 45, hjust = 0, halign = 0,
+                                                   lineheight = 0.4, margin = margin(b = 6)),
+          plot.subtitle = ggtext::element_markdown(size = 30, hjust = 0, halign = 0,
+                                                   lineheight = 0.35, margin = margin(b = 12)),
+          plot.caption  = element_text(size = 18, hjust = 0, lineheight = 0.4, 
+                                       color = gris_texto, margin = margin(t = 10)),
+          plot.margin   = margin(5, 5, 5, 5)
+        )
+    )
+}
+
+titulo_rvsl <- paste0(
+  "Diagnóstico de Residuos vs. Apalancamiento (*Leverage*):<br>",
+  "Observaciones influyentes identificadas mediante la ",
+  pintar("Distancia de Cook", col[["rojo"]]), " (2001, 2008 y 2022)"
+)
+
+subtitulo_rvsl <- paste0(
+  "Cada punto representa un país en las estimaciones con controles. ",
+  "En ", pintar("rojo", col[["rojo"]]), " se identifican los países atípicos (D<sub>i</sub> > 0,15).<br>",
+  "La curva gris muestra la tendencia local LOESS y la línea de puntos roja señala el contorno crítico de Cook (D = 0,15)."
+)
+
+caption_rvsl <- paste0(
+  "Fuente: elaboración propia en base a Banco Mundial (WDI) y Argendata (Fundar).\n",
+  "Notas: Modelos log-log con controles. Umbral de corte de influencia empírica fijado en Di > 0,15."
+)
+
+grafico_rvsl_exploratorio <- juntar_rvsl(
+  paneles = paneles_rvsl,
+  titulo = titulo_rvsl,
+  subtitulo = subtitulo_rvsl,
+  caption = caption_rvsl
+)
+
+ggsave("output/graficos/regresion/rvsl_exploratorio_completo.jpg", plot = grafico_rvsl_exploratorio,
+       width = 22, height = 14, units = "cm", dpi = 300)
+ggsave("output/graficos/regresion/rvsl_exploratorio_completo.png", plot = grafico_rvsl_exploratorio,
+       width = 22, height = 14, units = "cm", dpi = 300)
 
 # ==============================================================================
 # TABLA RESUMEN COMPARATIVA: SIMPLE vs CON CONTROLES vs SIN OUTLIERS
@@ -714,8 +916,9 @@ for (a in c(2001, 2008, 2022)) {
     
     # 4. Observaciones influyentes (Distancia de Cook > 0.15)
     outliers_var <- get(paste0("outliers_", a, "_", tolower(dep)))
-    n_outliers   <- length(outliers_var)
-    paises_out   <- paste(outliers_var, collapse = ", ")
+    outliers_var_es <- traducir_pais(outliers_var)
+    n_outliers   <- length(outliers_var_es)
+    paises_out   <- paste(outliers_var_es, collapse = ", ")
     
     filas_diagnosticos[[paste0(a, "_", dep)]] <- data.frame(
       Año          = a,
@@ -800,6 +1003,7 @@ tabla_diagnosticos_gt <- df_diagnosticos |>
 # Imprimir en Viewer y guardar en HTML
 tabla_diagnosticos_gt
 gtsave(tabla_diagnosticos_gt, filename = "output/tablas/tabla_diagnosticos_resumen.html")
+
 
 
 

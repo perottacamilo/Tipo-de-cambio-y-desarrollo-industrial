@@ -278,7 +278,7 @@ g_ind_pc_esp <- ggplot(df_industrializacion, aes(x = year, y = industria_per_cap
       "Nota: PBI industrial per cápita en USD constantes de 2015. Argentina está calculada a precios constantes de 2004.\n",
       "Asia Oriental y América Latina: promedio simple de los países de cada región."
     ),
-    x = NULL, y = "PBI Industrial per cápita"
+    x = NULL, y = NULL
   ) +
   theme_minimal(base_size = 15) +
   theme(
