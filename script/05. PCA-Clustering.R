@@ -1,6 +1,7 @@
 # ==============================================================================
 # 0. CONFIGURACIÓN, LIBRERÍAS Y PREPARACIÓN DE DATOS
 # ==============================================================================
+
 library(tidyverse)
 library(FactoMineR)
 library(factoextra)
