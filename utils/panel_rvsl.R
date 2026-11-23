@@ -70,15 +70,12 @@ panel_rvsl <- function(modelo, datos_df, titulo, subtitulo = NULL,
         geom_line(data = df_cook_line, aes(x = h, y = r, group = curva),
                   linetype = "dotted", color = alpha(col[["rojo"]], 0.7), linewidth = 0.4)
     } +
-    geom_label_repel(
+    geom_text_repel(
       data = dplyr::filter(df, es_outlier),
-      aes(label = paste0(pais, "\n(D = ", round(cook, 3), ")")),
+      aes(label = paste0(pais, " (", round(cook, 3), ")")),
       family = fuente_texto,
       fontface = "bold",
       size = if (es_individual) 4.2 else 3.8,
-      fill = alpha("white", 0.85),
-      label.size = 0,
-      label.padding = unit(1.5, "pt"),
       color = gris_titulo,
       min.segment.length = 0,
       segment.color = "#777777",
