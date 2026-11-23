@@ -330,3 +330,4 @@ split(wdi_pca$pais, grupo_hcpc)            # Listado de países por cluster
 hcpc$desc.var$quanti                       # Variables significativas por grupo (v.test)
 hcpc$desc.ind$para                         # Paragons: países más representativos
 hcpc$desc.ind$dist                         # Países más distintos dentro de su grupo
+
