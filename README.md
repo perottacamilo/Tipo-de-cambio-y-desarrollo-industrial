@@ -85,7 +85,7 @@ Trabajo-Practico-Ciencia-de-Datos/
 
 ## Reproducción
 
-El procesamiento de datos, análisis cuantitativo y generación de visualizaciones se realizaron íntegramente en **R** (mediante **RStudio**):
+El procesamiento de datos, análisis cuantitativo y generación de visualizaciones se realizaron íntegramente en **R** (mediante **RStudio**), para la correcta ejecución del trabajo:
 
 1. Clonar el repositorio
 2. Abrir el archivo `.Rproj` (necesario para que funcionen las rutas relativas)
