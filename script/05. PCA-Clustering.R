@@ -14,6 +14,7 @@ library(cluster)
 library(ggrepel)
 
 theme_set(theme_minimal(base_size = 12))
+showtext_auto(FALSE)
 
 # Ruta de salida y fuente común para todos los gráficos
 ruta_pca   <- "output/graficos/clustering"
@@ -113,12 +114,14 @@ pc1 <- fviz_contrib(res, choice = "var", axes = 1)  + ejes +
   ) +
   theme(
     plot.title            = element_blank(),
-    axis.text.x           = element_text(angle = 45, hjust = 1, size = 35),
-    axis.text.y           = element_text(size = 30),
-    axis.title.y          = element_text(size = 30, face = "bold"),
+    axis.text.x           = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y           = element_text(size = 12),
+    axis.title.y          = element_text(size = 14, face = "bold"),
     panel.border          = element_rect(colour = "black", fill = NA, linewidth = 1),
-    plot.caption          = element_text(hjust = 0, size = 35, color = "gray30", margin = margin(t = 12)),
-    plot.caption.position = "plot")
+    plot.caption          = element_text(hjust = 0, size = 10, color = "gray30", margin = margin(t = 12)),
+    plot.caption.position = "plot",
+    panel.grid            = element_blank(),
+  )
 
 pc2 <- fviz_contrib(res, choice = "var", axes = 2) + ejes  + 
   labs(
@@ -128,12 +131,14 @@ pc2 <- fviz_contrib(res, choice = "var", axes = 2) + ejes  +
   ) +
   theme(
     plot.title            = element_blank(),
-    axis.text.x           = element_text(angle = 45, hjust = 1, size = 35),
-    axis.text.y           = element_text(size = 30),
-    axis.title.y          = element_text(size = 30, face = "bold"),
+    axis.text.x           = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y           = element_text(size = 12),
+    axis.title.y          = element_text(size = 14, face = "bold"),
     panel.border          = element_rect(colour = "black", fill = NA, linewidth = 1),
-    plot.caption          = element_text(hjust = 0, size = 35, color = "gray30", margin = margin(t = 12)),
-    plot.caption.position = "plot")
+    plot.caption          = element_text(hjust = 0, size = 10, color = "gray30", margin = margin(t = 12)),
+    plot.caption.position = "plot",
+    panel.grid            = element_blank(),
+  )
 
 pc3 <- fviz_contrib(res, choice = "var", axes = 3)  + ejes + 
   labs(
@@ -143,12 +148,14 @@ pc3 <- fviz_contrib(res, choice = "var", axes = 3)  + ejes +
   ) +
   theme(
     plot.title            = element_blank(),
-    axis.text.x           = element_text(angle = 45, hjust = 1, size = 35),
-    axis.text.y           = element_text(size = 30),
-    axis.title.y          = element_text(size = 30, face = "bold"),
+    axis.text.x           = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y           = element_text(size = 12),
+    axis.title.y          = element_text(size = 14, face = "bold"),
     panel.border          = element_rect(colour = "black", fill = NA, linewidth = 1),
-    plot.caption          = element_text(hjust = 0, size = 35, color = "gray30", margin = margin(t = 12)),
-    plot.caption.position = "plot")
+    plot.caption          = element_text(hjust = 0, size = 10, color = "gray30", margin = margin(t = 12)),
+    plot.caption.position = "plot",
+    panel.grid            = element_blank(),
+  )
 
 pc4 <- fviz_contrib(res, choice = "var", axes = 4) + ejes + 
   labs(
@@ -158,12 +165,14 @@ pc4 <- fviz_contrib(res, choice = "var", axes = 4) + ejes +
   ) +
   theme(
     plot.title            = element_blank(),
-    axis.text.x           = element_text(angle = 45, hjust = 1, size = 35),
-    axis.text.y           = element_text(size = 30),
-    axis.title.y          = element_text(size = 30, face = "bold"),
+    axis.text.x           = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y           = element_text(size = 12),
+    axis.title.y          = element_text(size = 14, face = "bold"),
     panel.border          = element_rect(colour = "black", fill = NA, linewidth = 1),
-    plot.caption          = element_text(hjust = 0, size = 35, color = "gray30", margin = margin(t = 12)),
-    plot.caption.position = "plot")
+    plot.caption          = element_text(hjust = 0, size = 10, color = "gray30", margin = margin(t = 12)),
+    plot.caption.position = "plot",
+    panel.grid            = element_blank(),
+  )
 
 
 ggsave(file.path(ruta_pca, "pc1.png"), 
@@ -172,7 +181,7 @@ ggsave(file.path(ruta_pca, "pc2.png"),
        plot = pc2, width = 12, height = 7, units = "in", dpi = 300)
 ggsave(file.path(ruta_pca, "pc3.png"), 
        plot = pc3, width = 12, height = 7, units = "in", dpi = 300)
-ggsave(file.path(tuta_pca, "pc4.png"), 
+ggsave(file.path(ruta_pca, "pc4.png"), 
        plot = pc4, width = 12, height = 7, units = "in", dpi = 300)
 
 print(pc1)
@@ -290,13 +299,13 @@ wdi_pca |>
   head(10)
 
 # --- 3.2 HCPC: Clustering jerárquico sobre los componentes del PCA ------------
-# Usa directamente el objeto `res` de la Sección 2 (sin volver a correr PCA)
+
 hcpc <- HCPC(res, nb.clust = 5, consol = TRUE, graph = FALSE)
 
 # Dendrograma y ganancia de inercia (Anexo)
 par(mfrow = c(1, 1))
-plot(hcpc, choice = "tree")
 plot(hcpc, choice = "bar")
+
 
 # Mapa de los 5 clusters en el plano PC1-PC2 (Presentación)
 hcpc5 <- fviz_cluster(

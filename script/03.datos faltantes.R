@@ -56,7 +56,6 @@ variables <- c(
   "pbi_millones")
 
 
-
 colSums(is.na(wdi2))
 
 #Que porcentaje de NA tiene cada varible (en los tres anios elegidos)
@@ -241,21 +240,6 @@ wdi3.2 <- wdi3.1 |>
   filter(!pais %in% c("Kosovo", "South Sudan", "Afghanistan", "Angola", "Yemen", "Eritrea", "Venezuela, RB", "Somalia, Fed. Rep."))
 
 
-base_2001.2 <- wdi2.2 |>
-  filter(anio == 2001)
-base_2008.2 <- wdi2.2 |>
-  filter(anio == 2008)
-base_2022.2<- wdi2.2 |>
-  filter(anio == 2022)
-
-
-na_2001.2 <- wdi3.2 |> 
-  filter(anio %in% c(2000, 2001, 2002))
-na_2008.2 <- wdi3.2 |> 
-  filter(anio %in% c(2007, 2008, 2009))
-na_2022.2 <- wdi3.2 |> 
-  filter(anio %in% c(2021, 2022, 2023))
-
 #Con el resto de NAs vamos a interpolar los anios de interes con el promedio de los anios lindantes
 #Si alguno de los dos anios lindantes llegara a tener tambien NA, entonces la observacion va a ser descartada
 # Promedio de vecinos; si falta uno, usa el otro; si faltan ambos, NA
@@ -332,18 +316,7 @@ reporte_eliminados <- anti_join(wdi_filtrado, wdi_final, by = c("pais", "anio"))
          ingreso) |> 
   arrange(pais, anio)
 
-#Decidir si cuando se hace drop.na() se eligen todas las variables
-#En tal caso la base wdi_final no va a tener ningun NA
-#O si se elimina si hay NA en las variables de interes (i.e. las de la regresion)
-
-#En el caso del clustering si es necesario que no haya ningun NA
-
 print(reporte_eliminados, n = Inf)
 
-
 colSums(is.na(wdi_filtrado))
-
-
-#Filtramos (drop.na) solo en las variables que ustilizamos en la regresion
-#Para quedarnos con la mayor cantidad de observaciones posibles
-
+colSums(is.na(wdi_final))
