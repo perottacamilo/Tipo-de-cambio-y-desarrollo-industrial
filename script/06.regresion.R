@@ -578,7 +578,7 @@ titulo_rvsl <- paste0(
 subtitulo_rvsl <- paste0(
   "Cada punto representa un país en las estimaciones con controles. ",
   "En ", pintar("rojo", col[["rojo"]]), " se identifican los países atípicos.<br>",
-  "La curva gris muestra la tendencia local LOESS y la línea de puntos roja señala el contorno crítico de Cook (D = 0,15)."
+  "La curva gris muestra la tendencia estimada y la línea de puntos roja señala el contorno crítico de Cook (D = 0,15)."
 )
 
 caption_rvsl <- paste0(
