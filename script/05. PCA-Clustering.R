@@ -18,7 +18,7 @@ showtext_auto(FALSE)
 
 # Ruta de salida y fuente común para todos los gráficos
 ruta_pca   <- "output/graficos/clustering"
-fuente_txt <- "Fuente: Elaboración propia en base al Banco Mundial, WDI; y ArgenData."
+fuente_txt <- "Fuente: elaboración propia en base a Banco Mundial (WDI) y Schteingart, D. y Sidicaro, N. (2025). Industria. Argendata. Fundar."
 
 # Cargar base final y preparar corte 2022 con logaritmos
 wdi_final <- read.csv("input/wdi_final.csv")
@@ -84,16 +84,15 @@ round(res$var$coord[, 1:4], 3)
 
 tema_agrandado <- theme(
   axis.text  = element_text(size = 18),
-  axis.title = element_text(size = 18)
-)
+  axis.title = element_text(size = 18),
+  panel.grid = element_blank())
 
 screeplot <- fviz_eig(res, addlabels = TRUE) +
   labs(
     title   = "Varianza explicada por componente principal",
     x       = "Dimensiones",
     y       = "Porcentaje de varianza explicada (%)",
-    caption = fuente_txt
-  ) +
+    caption = fuente_txt) +
   tema_agrandado
 
 print(screeplot)
