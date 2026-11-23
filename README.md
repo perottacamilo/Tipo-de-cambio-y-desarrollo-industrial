@@ -89,7 +89,7 @@ El procesamiento de datos, análisis cuantitativo y generación de visualizacion
 
 1. Clonar el repositorio
 2. Abrir el archivo `.Rproj` (necesario para que funcionen las rutas relativas)
-3. Instalar los paquetes necesaios si hace falta:
+3. Instalar los paquetes necesarios si hace falta:
 
 ```r
 install.packages(c(
