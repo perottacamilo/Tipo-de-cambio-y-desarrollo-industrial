@@ -1,7 +1,8 @@
 # Tipo de cambio y desarrollo industrial
 ### Trabajo Práctico Integrador — Ciencia de Datos para Economía y Negocios
 **Facultad de Ciencias Económicas — Universidad de Buenos Aires (FCE-UBA)**  
-**Segundo Cuatrimestre 2026**
+**Docente:** Nicolás Sidicaro — **Ayudante:** Maida Beltrán  
+**2do Cuatrimestre 2026**
 
 ---
 
