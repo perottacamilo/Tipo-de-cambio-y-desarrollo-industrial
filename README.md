@@ -52,8 +52,6 @@ Analizar la relación empírica entre el nivel relativo de precios (Índice de N
 
 ## Análisis realizado
 
-El procesamiento de datos, análisis cuantitativo y generación de visualizaciones se realizaron íntegramente en **R** (mediante **RStudio**):
-
 1. Descarga de indicadores WDI vía API y empalme con la serie de PBI industrial per cápita de Argendata.
 2. Limpieza de agregados, traducción de regiones e ingresos, construcción de variables per cápita y generación del diccionario de variables.
 3. Exclusión de microestados y paises con menos de un millón de habitantes, depuración de variables y países con alta proporción de faltantes e interpolación por años adyacentes (±1) para 2001, 2008 y 2022.
@@ -84,9 +82,7 @@ Trabajo-Practico-Ciencia-de-Datos/
 
 ## Reproducción
 
-### Software requerido
-
-- **R** (>= 4.3.0) y **RStudio** (abrir `Trabajo-Practico-Ciencia-de-Datos.Rproj` para conservar las rutas relativas).
+El procesamiento de datos, análisis cuantitativo y generación de visualizaciones se realizaron íntegramente en **R** (mediante **RStudio**):
 
 ### Paquetes necesarios
 
