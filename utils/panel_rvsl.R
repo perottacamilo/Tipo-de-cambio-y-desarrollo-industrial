@@ -37,14 +37,7 @@ panel_rvsl <- function(modelo, datos_df, titulo, subtitulo = NULL,
     stringsAsFactors = FALSE
   )
   
-  outliers <- df$pais[df$es_outlier]
-  if (is.null(subtitulo) && !es_individual) {
-    if (length(outliers) > 0) {
-      subtitulo <- paste0("Atípicos (D > 0,15): ", paste(outliers, collapse = ", "))
-    } else {
-      subtitulo <- "Sin atípicos severos (D > 0,15)"
-    }
-  }
+  # Sin subtítulo automático: los atípicos ya se señalan con etiquetas en el gráfico
   
   max_h  <- max(df$leverage, na.rm = TRUE) * 1.15
   grid_h <- seq(0.005, min(max_h, 0.45), length.out = 150)

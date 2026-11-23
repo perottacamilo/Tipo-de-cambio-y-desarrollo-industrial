@@ -511,55 +511,6 @@ gtsave(tabla_reset_gt, filename = "output/tablas/tabla_reset_comparativa.html")
 # Crear carpeta de salida si no existe
 dir.create("output/graficos/regresion", recursive = TRUE, showWarnings = FALSE)
 
-# --- GUARDAR GRÁFICOS INDIVIDUALES ---
-graficar_residuos_leverage(
-  modelo = mod_exp_2001,
-  datos_df = wdi_2001,
-  titulo = "Exportaciones Manufactureras (per cápita) 2001",
-  nombre_archivo = "rvsl_exportaciones_2001.png",
-  ind = "Exportaciones"
-)
-
-graficar_residuos_leverage(
-  modelo = mod_exp_2008,
-  datos_df = wdi_2008,
-  titulo = "Exportaciones Manufactureras (per cápita) 2008",
-  nombre_archivo = "rvsl_exportaciones_2008.png",
-  ind = "Exportaciones"
-)
-
-graficar_residuos_leverage(
-  modelo = mod_exp_2022,
-  datos_df = wdi_2022,
-  titulo = "Exportaciones Manufactureras (per cápita) 2022",
-  nombre_archivo = "rvsl_exportaciones_2022.png",
-  ind = "Exportaciones"
-)
-
-graficar_residuos_leverage(
-  modelo = mod_ind_2001,
-  datos_df = wdi_2001,
-  titulo = "Industria (per cápita) 2001",
-  nombre_archivo = "rvsl_industria_2001.png",
-  ind = "Industria"
-)
-
-graficar_residuos_leverage(
-  modelo = mod_ind_2008,
-  datos_df = wdi_2008,
-  titulo = "Industria (per cápita) 2008",
-  nombre_archivo = "rvsl_industria_2008.png",
-  ind = "Industria"
-)
-
-graficar_residuos_leverage(
-  modelo = mod_ind_2022,
-  datos_df = wdi_2022,
-  titulo = "Industria (per cápita) 2022",
-  nombre_archivo = "rvsl_industria_2022.png",
-  ind = "Industria"
-)
-
 # --- CREAR Y GUARDAR EL GRÁFICO COMPLETO DE 6 PANELES (ESTILO EXPLORATORIO) ---
 p_ind_2001 <- panel_rvsl(mod_ind_2001, wdi_2001, "Industria (2001)", ind = "Industria")
 p_ind_2008 <- panel_rvsl(mod_ind_2008, wdi_2008, "Industria (2008)", ind = "Industria")
@@ -780,6 +731,8 @@ tabla_diagnosticos_gt <- df_diagnosticos |>
 tabla_diagnosticos_gt
 gtsave(tabla_diagnosticos_gt, filename = "output/tablas/tabla_diagnosticos_resumen.png")
 gtsave(tabla_diagnosticos_gt, filename = "output/tablas/tabla_diagnosticos_resumen.html")
+
+
 
 
 
