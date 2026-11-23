@@ -1,13 +1,13 @@
 # ==============================================================================
 # 0. CONFIGURACIÓN Y LIBRERÍAS
 # ==============================================================================
-
 options(scipen = 999)
 
 library(tidyverse)
 library(gt)
+library(here)
 
-
+source(here::here("utils", "traducir_pais_wdi.R"))
 # ==============================================================================
 # 1. CARGA, LIMPIEZA Y TRANSFORMACIÓN DE LA BASE COMPLETA (WDI + ARGENDATA)
 # ==============================================================================
@@ -50,7 +50,9 @@ wdi_limpio <- wdi |>
     # Industria: prioriza Argendata (industria_pc) y completa faltantes con WDI
     industria_pc_wdi           = (industria_pbi * pbi_per_capita) / 100,
     industria_per_capita       = coalesce(industria_pc, industria_pc_wdi),
-    exportacion_manufactura_pc = ((exportacion_manufactura * exportaciones_totales) / 100) / poblacion)
+    exportacion_manufactura_pc = ((exportacion_manufactura * exportaciones_totales) / 100) / poblacion) |> 
+  mutate(pais = traducir_pais_wdi(pais))
+
 
 write.csv(wdi_limpio, "input/wdi_limpio.csv", row.names = FALSE)
 

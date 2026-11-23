@@ -113,11 +113,11 @@ setdiff(wdi3$pais, wdi_analisis_3_inp$pais)
 # ==============================================================================
 wdi2.1 <- wdi2 |>
   select(-tipo_cambio_real_efectivo, -gastos_totales_gob_pbi) |>
-  filter(!pais %in% c("Korea, Dem. People's Rep.", "Cuba"))
+  filter(!pais %in% c("Corea del Norte", "Cuba"))
 
 wdi3.1 <- wdi3 |>
   select(-tipo_cambio_real_efectivo, -gastos_totales_gob_pbi) |>
-  filter(!pais %in% c("Korea, Dem. People's Rep.", "Cuba"))
+  filter(!pais %in% c("Corea del Norte", "Cuba"))
 
 base_2001.1 <- wdi2.1 |> filter(anio == 2001)
 base_2008.1 <- wdi2.1 |> filter(anio == 2008)
@@ -204,14 +204,14 @@ head(faltantes_pais_2022)
 # ==============================================================================
 wdi2.2 <- wdi2.1 |>
   filter(!pais %in% c(
-    "Kosovo", "South Sudan", "Afghanistan", "Angola",
-    "Yemen", "Eritrea", "Venezuela, RB", "Somalia, Fed. Rep."
+    "Kosovo", "Sudán del Sur", "Afganistán", "Angola",
+    "Yemen", "Eritrea", "Venezuela", "Somalia"
   ))
 
 wdi3.2 <- wdi3.1 |>
   filter(!pais %in% c(
-    "Kosovo", "South Sudan", "Afghanistan", "Angola",
-    "Yemen", "Eritrea", "Venezuela, RB", "Somalia, Fed. Rep."
+    "Kosovo", "Sudán del Sur", "Afganistán", "Angola",
+    "Yemen", "Eritrea", "Venezuela", "Somalia"
   ))
 
 
