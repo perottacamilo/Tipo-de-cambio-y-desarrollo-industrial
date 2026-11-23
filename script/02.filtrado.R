@@ -97,12 +97,13 @@ gtsave(tabla_imagen, "output/tablas/diccionario_imagen.png")
 
 
 wdi2 <- wdi_limpio |> 
-  filter(anio %in% c(2001, 2008, 2022))
-  
+  filter(anio %in% c(2001, 2008, 2022)) |> 
+  arrange(pais, anio)
+
 write.csv(wdi2, "input/wdi2.csv")
 
   wdi3 <- wdi_limpio |>
-    filter(anio %in% c(2000, 2001, 2002, 2007, 2008, 2009, 2021, 2022, 2023), poblacion_mill >= 1) |> 
+    filter(anio %in% c(2000, 2001, 2002, 2007, 2008, 2009, 2021, 2022, 2023)) |> 
     arrange(pais, anio)
 
 write.csv(wdi3, "input/wdi3.csv")
