@@ -1,12 +1,8 @@
 # ==============================================================================
 # 0. CONFIGURACIÓN, LIBRERÍAS, TIPOGRAFÍAS Y BASES
 # ==============================================================================
-#
-# install.packages(c("tidyverse", "scale", "ggtext", "ggrepel", "showtext", "patchwork"))
-#
 # ==============================================================================
 
-rm(list = ls())
 options(scipen = 999)
 
 library(tidyverse)

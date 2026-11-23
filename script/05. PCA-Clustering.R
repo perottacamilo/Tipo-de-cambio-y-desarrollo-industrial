@@ -1,11 +1,6 @@
 # ==============================================================================
 # 0. CONFIGURACIÓN, LIBRERÍAS Y PREPARACIÓN DE DATOS
-#
-# install.packages(c("tidyverse", "FactoMineR", "factoextra", "cluster"))
-#
 # ==============================================================================
-rm(list = ls())
-
 library(tidyverse)
 library(FactoMineR)
 library(factoextra)

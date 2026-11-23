@@ -1,14 +1,10 @@
 # ==============================================================================
 # 0. CONFIGURACIÓN Y LIBRERÍAS
 #
-# install.packages(c("WDI", "tidyverse"))
-#
 # ==============================================================================
 
 library(tidyverse)
 library(WDI)
-
-rm(list = ls())
 
 wdi <- WDI(indicator = c(crecimiento_industria = "NV.IND.TOTL.KD.ZG",
   industria_pbi = "NV.IND.MANF.ZS", 
