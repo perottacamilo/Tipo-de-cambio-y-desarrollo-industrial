@@ -1,25 +1,14 @@
-# Script Analisis cuantitativo - Regresiones y Clustering
+# Script Analisis cuantitativo - Regresiones
 #options(timeout = 600)
-# install.packages(c("FactoMineR", "factoextra", "ggrepel", "cluster", "mclust", "lmtest", "sandwich", "car", "modelsummary" ))
+# install.packages(c("tidyverse", "ggrepel", "ggtext", "patchwork", "showtext", "lmtest", "sandwich", "car", "modelsummary", "gt", "webshot2"))
 
-library(readxl)
 library(tidyverse)
-library(factoextra)
-library(cluster)      
-library(factoextra)
 library(ggrepel)
-library(mclust)
-library(lmtest)       
-library(sandwich)     
-library(car)           
-library(modelsummary)
-library(gt)
-library(dplyr)
 library(lmtest)
 library(sandwich)
 library(car)
-library(tseries)
-library(ggplot2)
+library(modelsummary)
+library(gt)
 # ===============
 rm(list = ls())
 

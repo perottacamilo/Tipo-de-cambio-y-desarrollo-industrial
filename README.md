@@ -22,9 +22,8 @@
 ### Contexto y Problemática
 El presente trabajo de investigación aplicada analiza la relación empírica entre el **nivel relativo de precios** (Índice de Nivel de Precios relativo a EE. UU., medido a través del factor de conversión PPA sobre tipo de cambio nominal) y el desempeño de la estructura productiva en términos de **PBI industrial per cápita** y **exportaciones manufactureras per cápita** a escala internacional.
 
-### Hipótesis de Trabajo
-1. **Curva de desarrollo y competitividad precio:** En línea con las teorías estructuralistas y la hipótesis Balassa-Samuelson, existe una relación positiva no condicionada entre el nivel de ingresos y el nivel de precios. No obstante, al aislar el efecto del ingreso per cápita y controles macroeconómicos clave, las desviaciones de precios apreciadas (sobrevaluación cambiaria relativa) encarecen la estructura de costos y desincentivan la inserción exportadora manufacturera de alto valor agregado.
-2. **Divergencia regional (América Latina vs. Asia Oriental):** A lo largo del período 1990–2023 (con cortes analíticos en **2001**, **2008** y **2022**), los países de **Asia Oriental** (con el liderazgo de China a partir de su ingreso a la OMC) lograron desacoplarse virtuosamente hacia mayores densidades industriales per cápita y mayor inserción exportadora, mientras que **América Latina** (y **Argentina** en particular) exhibe trayectorias de rezago productivo, volatilidad cambiaria y vulnerabilidad externa.
+### Hipótesis Central
+El desarrollo industrial del Este de Asia y el Pacífico (principalmente China) está influenciado por un tipo de cambio real depreciado (índice de nivel de precios bajo). Esto le permitió mejorar su PBI industrial y sus exportaciones manufactureras entre 2001 y 2022. En contraste, en Latinoamérica, el encarecimiento relativo de sus economías provocó una pérdida de competitividad. Esto derivó en un estancamiento de su PBI industrial durante el mismo período.
 
 ---
 
@@ -163,9 +162,9 @@ Trabajo-Practico-Ciencia-de-Datos/
 Ejecutar la siguiente instrucción en la consola de R para instalar cualquier dependencia faltante:
 ```r
 paquetes <- c(
-  "tidyverse", "readxl", "scales", "ggtext", "ggrepel", "showtext",
+  "tidyverse", "WDI", "scales", "ggtext", "ggrepel", "showtext",
   "patchwork", "modelsummary", "gt", "car", "sandwich", "lmtest",
-  "tseries", "FactoMineR", "factoextra", "cluster", "mclust", "webshot2"
+  "FactoMineR", "factoextra", "cluster", "webshot2"
 )
 paquetes_faltantes <- setdiff(paquetes, installed.packages()[, "Package"])
 if (length(paquetes_faltantes) > 0) {
@@ -200,4 +199,4 @@ source("script/06.regresion.R")
 
 ## 8. Conclusiones Principales
 
-Tanto el gráfico de dispersión con curva de tendencia como las regresiones simples muestran una relación positiva entre el índice de nivel de precios, la producción industrial y las exportaciones manufactureras. Sin embargo, al incorporar controles por ingreso, recursos naturales y ahorro bruto, la relación se invierte: si bien en algunos años pierde significatividad estadística, en otros se observa que un encarecimiento relativo del país se asocia con caídas en la producción industrial y, en mayor proporción, en las exportaciones manufactureras. En consonancia con el gráfico exploratorio, el análisis de componentes principales (PCA) y el clustering jerárquico revelan que los países latinoamericanos se concentran muy próximos entre sí, mientras que los asiáticos muestran una mayor dispersión a lo largo de las dimensiones, distribuyéndose entre economías más desarrolladas y otras con mayores tasas de crecimiento y ahorro. El hecho de que América Latina no registre valores elevados en ninguna de las dos dimensiones refleja que la región no presenta altas tasas de crecimiento y ahorro ni alcanza el nivel de desarrollo de las naciones más ricas.
+La evidencia respalda parcialmente la hipótesis inicial. Si bien el gráfico de dispersión con curva de tendencia y las regresiones simples muestran una relación positiva entre el índice de nivel de precios, la producción industrial y las exportaciones manufactureras, al controlar por ingreso, recursos naturales y ahorro bruto la relación se invierte: en algunos años pierde significatividad, pero en otros confirma que, a igualdad de ingreso y estructura, un encarecimiento relativo del país perjudica las exportaciones manufactureras y, en menor medida, la producción industrial. Sin embargo, el tipo de cambio real no explica por sí solo la brecha entre regiones: en los gráficos exploratorios se observa que los países asiáticos sostienen altos niveles industriales y exportadores en distintos niveles de precios —incluso encareciéndose relativamente, como ocurre con China. En la misma línea, el PCA y el clustering jerárquico de 2022 muestran que Asia no es un bloque homogéneo, sino que presenta una fuerte dispersión a lo largo de las dimensiones (con economías como China, Japón y Corea del Sur ubicadas en el grupo desarrollado y otras en el intermedio, variando entre mayor desarrollo y mayores tasas de crecimiento y ahorro), mientras que América Latina permanece concentrada en torno a valores medios y agrupada en un perfil industrial intermedio, sin destacar en desarrollo estructural (Dim. 1) ni en ahorro y crecimiento industrial (Dim. 2).

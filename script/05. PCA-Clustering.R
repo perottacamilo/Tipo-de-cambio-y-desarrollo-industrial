@@ -1,7 +1,7 @@
 # ==============================================================================
 # 0. CONFIGURACIÓN, LIBRERÍAS Y PREPARACIÓN DE DATOS
 #
-# install.packages(c("tidyverse", "FactoMiner", "factoextra", "cluster", "ggrepel"))
+# install.packages(c("tidyverse", "FactoMineR", "factoextra", "cluster"))
 # ==============================================================================
 rm(list = ls())
 options(scipen = 999)
@@ -11,10 +11,9 @@ library(tidyverse)
 library(FactoMineR)
 library(factoextra)
 library(cluster)
-library(ggrepel)
 
 theme_set(theme_minimal(base_size = 12))
-showtext_auto(FALSE)
+if (requireNamespace("showtext", quietly = TRUE)) showtext::showtext_auto(FALSE)
 
 # Ruta de salida y fuente común para todos los gráficos
 ruta_pca   <- "output/graficos/clustering"

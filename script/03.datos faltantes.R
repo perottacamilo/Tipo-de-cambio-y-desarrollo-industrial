@@ -1,11 +1,10 @@
 # ==============================================================================
 # 0. CONFIGURACIÓN Y LIBRERÍAS
 # ==============================================================================
-# install.packages(c("dplyr", "tidyr", "readxl"))
+# install.packages(c("dplyr", "tidyr"))
 
 library(dplyr)
 library(tidyr)
-library(readxl)
 
 rm(list = ls())
 

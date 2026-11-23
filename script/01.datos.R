@@ -1,8 +1,7 @@
-# install.packages(c("WDI","readxl", "tidyverse"))
+# install.packages(c("WDI", "tidyverse"))
 
 library(tidyverse)
 library(WDI)
-library(readxl)
 
 rm(list = ls())
 
