@@ -670,19 +670,19 @@ tabla_diagnosticos_gt <- df_diagnosticos |>
     subtitle = "Modelos con controles para Industria y Exportaciones (2001, 2008, 2022)"
   ) |>
   tab_spanner(
-    label = "Heterocedasticidad (Breusch-Pagan)",
+    label = md("Heterocedasticidad<br>(Breusch-Pagan)"),
     columns = BP_pval
   ) |>
   tab_spanner(
-    label = "Especificación RESET (p-valor)",
+    label = md("Especificación RESET<br>(p-valor)"),
     columns = c(RESET_con, RESET_sin)
   ) |>
   tab_spanner(
-    label = "Multicolinealidad",
+    label = md("Multicolinealidad<br>&nbsp;"),
     columns = VIF_max
   ) |>
   tab_spanner(
-    label = "Observaciones Influyentes (Cook > 0.15)",
+    label = md("Observaciones Influyentes<br>(Cook > 0.15)"),
     columns = c(N_outliers, Paises_out)
   ) |>
   cols_label(
@@ -722,6 +722,7 @@ tabla_diagnosticos_gt <- df_diagnosticos |>
     source_note = md(paste0(
       "**Notas metodológicas:**<br>",
       "- **Breusch-Pagan:** H0 de homocedasticidad.<br>",
+      "- **RESET de Ramsey:** H0 de correcta especificación de la forma funcional.<br>",
       "- **Multicolinealidad:** VIF Máx < 5 indica ausencia de multicolinealidad severa entre las covariables.<br>",
       "- **Distancia de Cook:** Se identifican observaciones influyentes con umbral Di > 0.15."
     ))
