@@ -1,6 +1,9 @@
-# Script Analisis cuantitativo - Regresiones
-#options(timeout = 600)
+# Script Analisis cuantitativo - Regresiones ===================================
+# options(timeout = 600)
+#
 # install.packages(c("tidyverse", "ggrepel", "ggtext", "patchwork", "showtext", "lmtest", "sandwich", "car", "modelsummary", "gt", "webshot2"))
+#
+# ==============================================================================
 
 library(tidyverse)
 library(ggrepel)
@@ -9,7 +12,7 @@ library(sandwich)
 library(car)
 library(modelsummary)
 library(gt)
-# ===============
+
 rm(list = ls())
 
 # ==============================================================================

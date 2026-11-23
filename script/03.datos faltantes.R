@@ -60,7 +60,6 @@ variables <- c(
 # ==============================================================================
 # 2. DIAGNÓSTICO DE FALTANTES POR VARIABLE (TOTAL Y POR AÑO)
 # ==============================================================================
-colSums(is.na(wdi2))
 
 # Porcentaje de NA por variable en el total de los tres cortes
 faltantes <- wdi2 |>

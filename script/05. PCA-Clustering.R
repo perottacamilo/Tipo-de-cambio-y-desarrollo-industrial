@@ -2,15 +2,17 @@
 # 0. CONFIGURACIÓN, LIBRERÍAS Y PREPARACIÓN DE DATOS
 #
 # install.packages(c("tidyverse", "FactoMineR", "factoextra", "cluster"))
+#
 # ==============================================================================
 rm(list = ls())
-options(scipen = 999)
-set.seed(2026)
 
 library(tidyverse)
 library(FactoMineR)
 library(factoextra)
 library(cluster)
+
+options(scipen = 999)
+set.seed(2026)
 
 theme_set(theme_minimal(base_size = 12))
 if (requireNamespace("showtext", quietly = TRUE)) showtext::showtext_auto(FALSE)

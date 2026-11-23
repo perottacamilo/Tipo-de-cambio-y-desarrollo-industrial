@@ -35,6 +35,7 @@ Analizar la relación empírica entre el nivel relativo de precios (Índice de N
 | `indice_nivel_precios` | Factor de Paridad de Poder Adquisitivo (PPA) sobre el tipo de cambio nominal multiplicado por 100 | Numérica | Índice (EE.UU. = 100) | > 0 | 7299 | 23 | 17 | 18 |
 | `industria_per_capita` | PBI industrial per cápita | Numérica | Dólares constantes 2015 | > 0 | 5267 | 12 | 8 | 6 |
 | `crecimiento_industria` | Variación anual del sector industrial | Numérica | % de crecimiento | Sin límite | 6232 | 48 | 35 | 24 |
+| `industria_pbi` | Valor agregado de la industria manufacturera como porcentaje del PBI | Numérica | % del PBI | 0 a 100 | 6069 | 47 | 29 | 28 |
 | `tipo_cambio_real_efectivo` | Nivel de competitividad con base = 2010 | Numérica | Índice | > 0 | 10172 | 123 | 123 | 126 |
 | `recursos_naturales` | Rentas económicas provenientes de los recursos naturales | Numérica | % del PBI | 0 a 100 | 5087 | 17 | 10 | 217 |
 | `empleo_industrial` | Empleo en el sector industrial | Numérica | % del total de empleados | 0 a 100 | 7791 | 30 | 30 | 31 |
@@ -45,7 +46,9 @@ Analizar la relación empírica entre el nivel relativo de precios (Índice de N
 | `valor_agregado_trabajador` | Valor agregado por trabajador industrial | Numérica | Dólares constantes 2015 | > 0 | 8735 | 61 | 46 | 44 |
 | `ahorro_bruto_pbi` | Ahorro bruto nacional | Numérica | % del PBI | 0 a 100 | 7892 | 89 | 61 | 58 |
 | `credito_privado_pbi` | Crédito interno al sector privado | Numérica | % del PBI | 0 a 100 | 6685 | 76 | 54 | 55 |
+| `industria_pc` | PBI industrial per cápita (serie Argendata) | Numérica | Dólares constantes 2015 | > 0 | 3882 | 15 | 11 | 11 |
 | `poblacion_mill` | Población del país en millones de habitantes | Numérica | Millones de habitantes | > 0 | 0 | 0 | 0 | 0 |
+| `industria_pc_wdi` | PBI industrial per cápita estimado con indicadores WDI | Numérica | Dólares constantes 2015 | > 0 | 6167 | 50 | 30 | 29 |
 | `exportacion_manufactura_pc` | Exportaciones de manufacturas per cápita | Numérica | Dólares corrientes | >= 0 | 6406 | 57 | 53 | 54 |
 
 *Nota: en `script/03.datos faltantes.R` se descartan `tipo_cambio_real_efectivo` y `gastos_totales_gob_pbi` por superar el 40% de faltantes.*
