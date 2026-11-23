@@ -89,8 +89,7 @@ diccionario <- tribble(
   "poblacion_mill",             "Población del país en millones de habitantes",                                                      "Numérica",   "Millones de habitantes",  "> 0",           0,           0,        0,        0,
   "industria_pc_wdi",           "PBI industrial per cápita estimado con indicadores WDI",                                            "Numérica",   "Dólares constantes 2015", "> 0",           6167,        50,       30,       29,
   "industria_per_capita",       "PBI industrial per cápita",                                                                         "Numérica",   "Dólares constantes 2015", "> 0",           3047,        12,       8,        6,
-  "exportacion_manufactura_pc", "Exportaciones de manufacturas per cápita",                                                          "Numérica",   "Dólares corrientes",      ">= 0",          6406,        57,       53,       54
-)
+  "exportacion_manufactura_pc", "Exportaciones de manufacturas per cápita",                                                          "Numérica",   "Dólares corrientes",      ">= 0",          6406,        57,       53,       54)
 
 diccionario <- diccionario |>
   gt() |>
@@ -102,7 +101,7 @@ diccionario <- diccionario |>
   cols_align(align = "center")
 
 print(diccionario)
-gtsave(diccionario, "output/tablas/diccionario_imagen.png")
+gtsave(diccionario, "output/tablas/diccionario.png")
 
 
 # ==============================================================================

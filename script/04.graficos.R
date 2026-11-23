@@ -38,7 +38,7 @@ base_indice <- "EE. UU. = 100"
 
 fmt_num    <- label_number(big.mark = ".", decimal.mark = ",", drop0trailing = TRUE)
 fmt_pct    <- label_number(suffix = "%", big.mark = ".", decimal.mark = ",", drop0trailing = TRUE)
-fuente_txt <- "Fuente: Elaboración propia en base al Banco Mundial, WDI; y ArgenData."
+fuente_txt <- "Fuente: elaboración propia en base a Banco Mundial (WDI) y Schteingart, D. y Sidicaro, N. (2025). Industria. Argendata. Fundar."
 
 dir.create("output/graficos/eda", recursive = TRUE, showWarnings = FALSE)
 
@@ -246,7 +246,7 @@ grafico_df <- faltantes |>
 totales <- totales |>
   mutate(variable = factor(variable, levels = variable))
 
-grafico5 <- ggplot(grafico_df, aes(x = porcentaje, y = variable, fill = factor(anio))) +
+grafico_faltantes <- ggplot(grafico_df, aes(x = porcentaje, y = variable, fill = factor(anio))) +
   geom_col(position = position_stack(reverse = TRUE), width = 0.7, color = "white", linewidth = 0.4) +
   geom_text(
     aes(label = ifelse(porcentaje >= 3, paste0(round(porcentaje, 1), "%"), "")),
@@ -278,8 +278,8 @@ grafico5 <- ggplot(grafico_df, aes(x = porcentaje, y = variable, fill = factor(a
     axis.text.y        = element_text(size = 10)
   )
 
-print(grafico5)
-ggsave("output/graficos/eda/datos_faltanes_vars.png", plot = grafico5, width = 12, height = 7, dpi = 300)
+print(grafico_faltantes)
+ggsave("output/graficos/eda/datos_faltanes_vars.png", plot = grafico_faltantes, width = 12, height = 7, dpi = 300)
 
 
 # ==============================================================================
@@ -293,7 +293,7 @@ filtrado2 <- wdi_filtrado |> count(region) |> mutate(porcentaje = (n / sum(n)) *
 datos_combinados <- bind_rows(filtrado1, filtrado2) |>
   mutate(region = if_else(str_detect(region, "Afganistán"), "Medio Oriente*", region))
 
-grafico10 <- ggplot(datos_combinados, aes(x = reorder(region, -porcentaje), y = porcentaje, fill = base)) +
+diferencia_regiones <- ggplot(datos_combinados, aes(x = reorder(region, -porcentaje), y = porcentaje, fill = base)) +
   geom_bar(stat = "identity", position = "dodge", color = "black") +
   labs(
     title    = "Distribución global por región",
@@ -313,8 +313,8 @@ grafico10 <- ggplot(datos_combinados, aes(x = reorder(region, -porcentaje), y = 
     plot.caption.position = "plot"
   )
 
-print(grafico10)
-ggsave("output/graficos/eda/variacion_region.png", plot = grafico10, width = 12, height = 7, dpi = 300)
+print(diferencia_regiones)
+ggsave("output/graficos/eda/variacion_region.png", plot = diferencia_regiones, width = 12, height = 7, dpi = 300)
 
 # --- 4.2 Distribución por nivel de ingreso (Antes vs. Después) ----------------
 ingreso1  <- wdi2 |> count(ingreso2) |> mutate(porcentaje = (n / sum(n)) * 100, base = "Antes de filtrar")
@@ -322,7 +322,7 @@ ingreso_2 <- wdi_filtrado |> count(ingreso2) |> mutate(porcentaje = (n / sum(n))
 
 datos_combinados2 <- bind_rows(ingreso1, ingreso_2)
 
-grafico11 <- ggplot(datos_combinados2, aes(x = reorder(ingreso2, -porcentaje), y = porcentaje, fill = base)) +
+diferencia_ingreso <- ggplot(datos_combinados2, aes(x = reorder(ingreso2, -porcentaje), y = porcentaje, fill = base)) +
   geom_bar(stat = "identity", position = "dodge", color = "black") +
   labs(
     title    = "Distribución de los ingresos",
@@ -342,8 +342,8 @@ grafico11 <- ggplot(datos_combinados2, aes(x = reorder(ingreso2, -porcentaje), y
     plot.caption.position = "plot"
   )
 
-print(grafico11)
-ggsave("output/graficos/eda/variacion_ingreso.png", plot = grafico11, width = 12, height = 7, dpi = 300)
+print(diferencia_ingreso)
+ggsave("output/graficos/eda/variacion_ingreso.png", plot = diferencia_ingreso, width = 12, height = 7, dpi = 300)
 
 # --- 4.3 Tabla descriptiva antes vs. después del filtrado (Anexo Pág. 2) ------
 vars_clave <- c("industria_per_capita", "exportacion_manufactura_pc", "indice_nivel_precios")

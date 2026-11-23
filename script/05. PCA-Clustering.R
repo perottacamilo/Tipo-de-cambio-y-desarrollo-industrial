@@ -258,18 +258,28 @@ as.matrix(d)["China", ]     |> sort() |> head(6)
 hc_ward <- hclust(d, method = "ward.D2")
 
 # Gráfico de altura de fusiones (Anexo)
-alturas_plot <- tibble(k = 1:10, altura = rev(hc_ward$height)[1:10]) |>
+alturas_plot <- tibble(k = 1:8, altura = rev(hc_ward$height)[1:8]) |>
   ggplot(aes(k, altura)) +
   geom_line() +
   geom_point() +
-  scale_x_continuous(breaks = 1:10) +
+  scale_x_continuous(breaks = 1:8) +
   labs(
     title   = "Altura de las últimas fusiones",
     x       = "Cantidad de grupos",
     y       = "Altura",
-    caption = fuente_txt
+    caption = fuente_txt) + 
+  theme(plot.title = element_text(size = 20),
+    axis.text.x           = element_text(angle = 0, hjust = 1, size = 12),
+    axis.text.y           = element_text(size = 15),
+    axis.title.y          = element_text(size = 15, face = "bold"),
+    panel.border          = element_rect(colour = "gray30", fill = NA, linewidth = 1),
+    plot.caption          = element_text(hjust = 0, size = 14, color = "gray30", margin = margin(t = 12)),
+    plot.caption.position = "plot",
+    panel.grid            = element_blank(),
   )
+
 print(alturas_plot)
+ggsave(file.path(ruta_pca, "altura_fusiones.png"), plot = alturas_plot, width = 12, height = 7, dpi = 300)
 
 # Silueta (Anexo)
 k      <- 5
@@ -300,7 +310,6 @@ hcpc <- HCPC(res, nb.clust = 5, consol = TRUE, graph = FALSE)
 
 # Dendrograma y ganancia de inercia (Anexo)
 par(mfrow = c(1, 1))
-plot(hcpc, choice = "bar")
 
 
 # Mapa de los 5 clusters en el plano PC1-PC2 (Presentación)

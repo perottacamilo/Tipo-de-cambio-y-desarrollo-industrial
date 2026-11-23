@@ -200,7 +200,7 @@ head(faltantes_pais_2022)
 
 
 # ==============================================================================
-# 6. SEGUNDA DEPURACIÓN (PAÍSES CON >= 50% DE FALTANTES) -> BASES (.2)
+# 6. SEGUNDA DEPURACIÓN (PAÍSES CON >= 50% DE FALTANTES
 # ==============================================================================
 wdi2.2 <- wdi2.1 |>
   filter(!pais %in% c(
