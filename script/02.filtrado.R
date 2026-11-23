@@ -2,6 +2,7 @@
 # 0. CONFIGURACIÓN Y LIBRERÍAS
 #
 # install.packages(c("tidyverse", "gt"))
+#
 # ==============================================================================
 rm(list = ls())
 options(scipen = 999)
@@ -70,24 +71,24 @@ diccionario <- tribble(
   ~variable,                    ~descripcion,                                                                                        ~tipo,        ~unidad,                   ~rango_teorico,  ~na_totales, ~na_2001, ~na_2008, ~na_2022,
   "pais",                       "Nombre del país",                                                                                   "Categórica", "-",                       "-",             0,           0,        0,        0,
   "iso3c",                      "Código ISO de 3 letras (identificador único)",                                                      "Categórica", "-",                       "-",             0,           0,        0,        0,
-  "region",                     "Región geográfica del Banco Mundial",                                                               "Categórica", "-",                       "7 categorías",  0,           0,        0,        0,
   "anio",                       "Año de la observación",                                                                             "Numérica",   "Anual",                   "66 años",       0,           0,        0,        0,
-  "pbi_millones",               "PBI del país en millones de dólares",                                                               "Numérica",   "Dólares constantes 2015", "> 0",           2789,        18,       9,        9,
-  "pbi_per_capita",             "PBI per cápita",                                                                                    "Numérica",   "Dólares constantes 2015", "> 0",           2789,        18,       9,        9,
-  "indice_nivel_precios",       "Factor de Paridad de Poder Adquisitivo (PPA) sobre el tipo de cambio nominal multiplicado por 100", "Numérica",   "Índice (EE.UU. = 100)",   "> 0",           7299,        23,       17,       18,
-  "industria_per_capita",       "PBI industrial per cápita",                                                                         "Numérica",   "Dólares constantes 2015", "> 0",           5267,        12,       8,        6,
   "crecimiento_industria",      "Variación anual del sector industrial",                                                             "Numérica",   "% de crecimiento",        "Sin límite",    6232,        48,       35,       24,
   "tipo_cambio_real_efectivo",  "Nivel de competitividad con base = 2010",                                                           "Numérica",   "Índice",                  "> 0",           10172,       123,      123,      126,
-  "recursos_naturales",         "Rentas económicas provenientes de los recursos naturales",                                          "Numérica",   "% del PBI",               "0 a 100",       5087,        17,       10,       217,
   "empleo_industrial",          "Empleo en el sector industrial",                                                                    "Numérica",   "% del total de empleados","0 a 100",       7791,        30,       30,       31,
-  "ingreso",                    "Clasificación de ingreso per cápita del país",                                                      "Categórica", "-",                       "5 categorías",  0,           0,        0,        0,
   "exportacion_manufactura",    "Porcentaje de exportaciones manufactureras sobre el total de mercancías",                           "Numérica",   "% del total",             "0 a 100",       6383,        53,       50,       53,
   "gasto_gobierno_pbi",         "Gasto de consumo final del gobierno",                                                               "Numérica",   "% del PBI",               "0 a 100",       5593,        58,       46,       41,
   "gastos_totales_gob_pbi",     "Gasto total del gobierno como % del PBI (incluye subsidios)",                                       "Numérica",   "% del PBI",               "0 a 100",       9870,        126,      100,      106,
   "valor_agregado_trabajador",  "Valor agregado por trabajador industrial",                                                          "Numérica",   "Dólares constantes 2015", "> 0",           8735,        61,       46,       44,
   "ahorro_bruto_pbi",           "Ahorro bruto nacional",                                                                             "Numérica",   "% del PBI",               "0 a 100",       7892,        89,       61,       58,
   "credito_privado_pbi",        "Crédito interno al sector privado",                                                                 "Numérica",   "% del PBI",               "0 a 100",       6685,        76,       54,       55,
+  "pbi_per_capita",             "PBI per cápita",                                                                                    "Numérica",   "Dólares constantes 2015", "> 0",           2789,        18,       9,        9,
+  "pbi_millones",               "PBI del país en millones de dólares",                                                               "Numérica",   "Dólares constantes 2015", "> 0",           2789,        18,       9,        9,
+  "indice_nivel_precios",       "Factor de Paridad de Poder Adquisitivo (PPA) sobre el tipo de cambio nominal multiplicado por 100", "Numérica",   "Índice (EE.UU. = 100)",   "> 0",           7299,        23,       17,       18,
+  "recursos_naturales",         "Rentas económicas provenientes de los recursos naturales",                                          "Numérica",   "% del PBI",               "0 a 100",       5087,        17,       10,       217,
+  "region",                     "Región geográfica del Banco Mundial",                                                               "Categórica", "-",                       "7 categorías",  0,           0,        0,        0,
+  "ingreso",                    "Clasificación de ingreso per cápita del país",                                                      "Categórica", "-",                       "5 categorías",  0,           0,        0,        0,
   "poblacion_mill",             "Población del país en millones de habitantes",                                                      "Numérica",   "Millones de habitantes",  "> 0",           0,           0,        0,        0,
+  "industria_per_capita",       "PBI industrial per cápita",                                                                         "Numérica",   "Dólares constantes 2015", "> 0",           5267,        12,       8,        6,
   "exportacion_manufactura_pc", "Exportaciones de manufacturas per cápita",                                                          "Numérica",   "Dólares corrientes",      ">= 0",          6406,        57,       53,       54
 )
 
