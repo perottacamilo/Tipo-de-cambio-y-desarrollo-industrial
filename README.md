@@ -12,9 +12,9 @@
 ---
 
 ## 2. Integrantes del Grupo
-- **Thomas Hannon**
-- **Ignacio Keena**
 - **Camilo Perotta**
+- **Ignacio Keena**
+- **Thomas Hannon**
 
 ---
 
