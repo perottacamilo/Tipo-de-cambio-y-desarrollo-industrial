@@ -94,8 +94,11 @@ for (a in anios) {
 #tablas_por_anio$anio_2001
 #tablas_por_anio$anio_2008
 #tablas_por_anio$anio_2022
+gtsave(tablas_por_anio$anio_2001, filename = "output/tablas/tabla_2001.png")
 gtsave(tablas_por_anio$anio_2001, filename = "output/tablas/tabla_2001.html")
+gtsave(tablas_por_anio$anio_2008, filename = "output/tablas/tabla_2008.png")
 gtsave(tablas_por_anio$anio_2008, filename = "output/tablas/tabla_2008.html")
+gtsave(tablas_por_anio$anio_2022, filename = "output/tablas/tabla_2022.png")
 gtsave(tablas_por_anio$anio_2022, filename = "output/tablas/tabla_2022.html")
 # ==============================================================================
 # DETECCIÓN AUTOMÁTICA DE OBSERVACIONES INFLUYENTES (DISTANCIA DE COOK)
@@ -200,8 +203,9 @@ tabla_sin_outliers <- modelsummary(
   tab_spanner(label = "Industria (per cápita)", columns = 2:4) |> 
   tab_spanner(label = "Exportaciones Manufactureras (per cápita)", columns = 5:7)
 
-# Visualizar en RStudio Viewer y guardar en HTML
+# Visualizar en RStudio Viewer y guardar en PNG y HTML
 #tabla_sin_outliers
+gtsave(tabla_sin_outliers, filename = "output/tablas/tabla_sin_outliers.png")
 gtsave(tabla_sin_outliers, filename = "output/tablas/tabla_sin_outliers.html")
 #####tests de Breusch-Pagan#####
 # 1. Creamos un data.frame vacío para ir guardando los resultados
@@ -256,6 +260,7 @@ tabla_bp_final <- resultados_bp |>
 
 # Imprimimos la tabla
 #tabla_bp_final
+gtsave(tabla_bp_final, filename = "output/tablas/tabla_bp_final.png")
 gtsave(tabla_bp_final, filename = "output/tablas/tabla_bp_final.html")
 
 # ==============================================================================
@@ -291,44 +296,74 @@ for (a in c(2001, 2008, 2022)) {
 # Extraemos los nombres de las variables del primer VIF guardado
 nombres_vars <- names(vifs_por_anio$anio_2001$VIF_Industria)
 
-# Armamos el dataframe juntando los años
+# Armamos el dataframe juntando los años para ambos modelos (Industria y Exportaciones)
 tabla_vif <- data.frame(
   Variable = nombres_vars,
-  VIF_2001 = vifs_por_anio$anio_2001$VIF_Industria,
-  VIF_2008 = vifs_por_anio$anio_2008$VIF_Industria,
-  VIF_2022 = vifs_por_anio$anio_2022$VIF_Industria
+  Ind_2001 = vifs_por_anio$anio_2001$VIF_Industria,
+  Ind_2008 = vifs_por_anio$anio_2008$VIF_Industria,
+  Ind_2022 = vifs_por_anio$anio_2022$VIF_Industria,
+  Exp_2001 = vifs_por_anio$anio_2001$VIF_Exportaciones,
+  Exp_2008 = vifs_por_anio$anio_2008$VIF_Exportaciones,
+  Exp_2022 = vifs_por_anio$anio_2022$VIF_Exportaciones
 ) |> 
   # Renombramos las variables para que queden presentables
   mutate(
     Variable = case_match(
       Variable,
       "log(indice_nivel_precios)" ~ "log(Índice de nivel de precios)",
-      "recursos_naturales" ~ "Rentas rec. naturales (% PBI)",
-      "ahorro_bruto_pbi" ~ "Ahorro bruto (% PBI)",
-      "log(pbi_per_capita)" ~ "log(PBI pc)",
+      "recursos_naturales"        ~ "Rentas rec. naturales (% PBI)",
+      "ahorro_bruto_pbi"          ~ "Ahorro bruto (% PBI)",
+      "log(pbi_per_capita)"       ~ "log(PBI per cápita)",
       .default = Variable
     )
   )
 
-# Generamos la tabla con formato
+# Generamos la tabla con formato agrupada por modelo con spanners
 tabla_vif_final <- tabla_vif |> 
   gt() |> 
   tab_header(
     title = "Factor de Inflación de la Varianza (VIF)",
-    subtitle = "Idéntico para los modelos de Industria y Exportaciones"
+    subtitle = "Diagnóstico de multicolinealidad para los modelos con controles"
+  ) |> 
+  tab_spanner(
+    label = "Modelo Industria (per cápita)",
+    columns = c(Ind_2001, Ind_2008, Ind_2022)
+  ) |> 
+  tab_spanner(
+    label = "Modelo Exportaciones (per cápita)",
+    columns = c(Exp_2001, Exp_2008, Exp_2022)
   ) |> 
   cols_label(
-    VIF_2001 = "VIF (2001)",
-    VIF_2008 = "VIF (2008)",
-    VIF_2022 = "VIF (2022)"
+    Variable = "Variable Explicativa",
+    Ind_2001 = "2001",
+    Ind_2008 = "2008",
+    Ind_2022 = "2022",
+    Exp_2001 = "2001",
+    Exp_2008 = "2008",
+    Exp_2022 = "2022"
   ) |> 
   fmt_number(
-    columns = starts_with("VIF"),
+    columns = c(starts_with("Ind_"), starts_with("Exp_")),
     decimals = 2
+  ) |> 
+  cols_align(
+    align = "center",
+    columns = c(starts_with("Ind_"), starts_with("Exp_"))
+  ) |> 
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = list(
+      cells_column_labels(),
+      cells_column_spanners()
+    )
+  ) |> 
+  tab_source_note(
+    source_note = "Nota: Valores de VIF < 5 indican ausencia de multicolinealidad severa. Las leves diferencias entre ambos modelos se deben a la muestra efectiva de países disponibles con datos completos para cada variable dependiente."
   )
 
 # Imprimimos la tabla
 #tabla_vif_final
+gtsave(tabla_vif_final, filename = "output/tablas/tabla_vif_final.png")
 gtsave(tabla_vif_final, filename = "output/tablas/tabla_vif_final.html")
 
 variables2 <- c(
@@ -432,7 +467,8 @@ tabla_reset_gt <- df_tabla_reset |>
 # Visualizar en la pestaña Viewer
 #tabla_reset_gt
 
-# Guardar en archivo HTML
+# Guardar en archivo PNG y HTML
+gtsave(tabla_reset_gt, filename = "output/tablas/tabla_reset_comparativa.png")
 gtsave(tabla_reset_gt, filename = "output/tablas/tabla_reset_comparativa.html")
 # 2. Dividimos la ventana en 4 (2 filas x 2 columnas)
 #par(mfrow = c(2, 2))
@@ -549,12 +585,12 @@ titulo_rvsl <- paste0(
 subtitulo_rvsl <- paste0(
   "Cada punto representa un país en las estimaciones con controles. ",
   "En ", pintar("rojo", col[["rojo"]]), " se identifican los países atípicos.<br>",
-  "La curva gris muestra la tendencia local LOESS y la línea de puntos roja señala el contorno crítico de Cook (D = 0,15)."
+  "La curva gris muestra la tendencia estimada y la línea de puntos roja señala el contorno crítico de Cook (D = 0,15)."
 )
 
 caption_rvsl <- paste0(
   "Fuente: elaboración propia en base a Banco Mundial (WDI) y Schteingart, D. y Sidicaro, N. (2025). Industria. Argendata. Fundar.\n",
-  "Notas: Modelos log-log con controles. Umbral de corte de influencia empírica fijado en Di > 0,15."
+  "Nota: Modelos log-log con controles."
 )
 
 grafico_rvsl_exploratorio <- juntar_rvsl(
@@ -622,8 +658,9 @@ tabla_resumen_modelos <- modelsummary(
     locations = cells_row_groups()
   )
 
-# Imprimir en Viewer y guardar en HTML
+# Imprimir en Viewer y guardar en PNG y HTML
 tabla_resumen_modelos
+gtsave(tabla_resumen_modelos, filename = "output/tablas/tabla_resumen_modelos.png")
 gtsave(tabla_resumen_modelos, filename = "output/tablas/tabla_resumen_modelos.html")
 
 # ==============================================================================
@@ -739,8 +776,9 @@ tabla_diagnosticos_gt <- df_diagnosticos |>
     ))
   )
 
-# Imprimir en Viewer y guardar en HTML
+# Imprimir en Viewer y guardar en PNG y HTML
 tabla_diagnosticos_gt
+gtsave(tabla_diagnosticos_gt, filename = "output/tablas/tabla_diagnosticos_resumen.png")
 gtsave(tabla_diagnosticos_gt, filename = "output/tablas/tabla_diagnosticos_resumen.html")
 
 
