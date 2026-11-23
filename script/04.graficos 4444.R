@@ -156,7 +156,7 @@ g_ind_pc_esp <- ggplot(df_industrializacion, aes(x = year, y = industria_per_cap
     axis.title          = element_text(color = "grey35", size = 27)
   )
 
-ggsave("output/graficos/grupo_01_comunicativo.png", plot = g_ind_pc_esp,
+ggsave("output/graficos/grafico_comunicativo.png", plot = g_ind_pc_esp,
        width = 22, height = 14, units = "cm", dpi = 300)
 
 showtext_auto(FALSE)
@@ -467,7 +467,8 @@ grafico_exploratorio <- juntar(
   caption   = caption_filtrado
 )
 
-ggsave("output/graficos/grupo_01_exploratorio.png", plot = grafico_exploratorio,
+ggsave("output/graficos/grafico_exploratorio.png", plot = grafico_exploratorio,
        width = 22, height = 14, units = "cm", dpi = 300)
 
 showtext_auto(FALSE)
+
