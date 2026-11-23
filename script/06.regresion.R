@@ -291,40 +291,69 @@ for (a in c(2001, 2008, 2022)) {
 # Extraemos los nombres de las variables del primer VIF guardado
 nombres_vars <- names(vifs_por_anio$anio_2001$VIF_Industria)
 
-# Armamos el dataframe juntando los años
+# Armamos el dataframe juntando los años para ambos modelos (Industria y Exportaciones)
 tabla_vif <- data.frame(
   Variable = nombres_vars,
-  VIF_2001 = vifs_por_anio$anio_2001$VIF_Industria,
-  VIF_2008 = vifs_por_anio$anio_2008$VIF_Industria,
-  VIF_2022 = vifs_por_anio$anio_2022$VIF_Industria
+  Ind_2001 = vifs_por_anio$anio_2001$VIF_Industria,
+  Ind_2008 = vifs_por_anio$anio_2008$VIF_Industria,
+  Ind_2022 = vifs_por_anio$anio_2022$VIF_Industria,
+  Exp_2001 = vifs_por_anio$anio_2001$VIF_Exportaciones,
+  Exp_2008 = vifs_por_anio$anio_2008$VIF_Exportaciones,
+  Exp_2022 = vifs_por_anio$anio_2022$VIF_Exportaciones
 ) |> 
   # Renombramos las variables para que queden presentables
   mutate(
     Variable = case_match(
       Variable,
       "log(indice_nivel_precios)" ~ "log(Índice de nivel de precios)",
-      "recursos_naturales" ~ "Rentas rec. naturales (% PBI)",
-      "ahorro_bruto_pbi" ~ "Ahorro bruto (% PBI)",
-      "log(pbi_per_capita)" ~ "log(PBI pc)",
+      "recursos_naturales"        ~ "Rentas rec. naturales (% PBI)",
+      "ahorro_bruto_pbi"          ~ "Ahorro bruto (% PBI)",
+      "log(pbi_per_capita)"       ~ "log(PBI per cápita)",
       .default = Variable
     )
   )
 
-# Generamos la tabla con formato
+# Generamos la tabla con formato agrupada por modelo con spanners
 tabla_vif_final <- tabla_vif |> 
   gt() |> 
   tab_header(
     title = "Factor de Inflación de la Varianza (VIF)",
-    subtitle = "Idéntico para los modelos de Industria y Exportaciones"
+    subtitle = "Diagnóstico de multicolinealidad para los modelos con controles"
+  ) |> 
+  tab_spanner(
+    label = "Modelo Industria (per cápita)",
+    columns = c(Ind_2001, Ind_2008, Ind_2022)
+  ) |> 
+  tab_spanner(
+    label = "Modelo Exportaciones (per cápita)",
+    columns = c(Exp_2001, Exp_2008, Exp_2022)
   ) |> 
   cols_label(
-    VIF_2001 = "VIF (2001)",
-    VIF_2008 = "VIF (2008)",
-    VIF_2022 = "VIF (2022)"
+    Variable = "Variable Explicativa",
+    Ind_2001 = "2001",
+    Ind_2008 = "2008",
+    Ind_2022 = "2022",
+    Exp_2001 = "2001",
+    Exp_2008 = "2008",
+    Exp_2022 = "2022"
   ) |> 
   fmt_number(
-    columns = starts_with("VIF"),
+    columns = c(starts_with("Ind_"), starts_with("Exp_")),
     decimals = 2
+  ) |> 
+  cols_align(
+    align = "center",
+    columns = c(starts_with("Ind_"), starts_with("Exp_"))
+  ) |> 
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = list(
+      cells_column_labels(),
+      cells_column_spanners()
+    )
+  ) |> 
+  tab_source_note(
+    source_note = "Nota: Valores de VIF < 5 indican ausencia de multicolinealidad severa. Las leves diferencias entre ambos modelos se deben a la muestra efectiva de países disponibles con datos completos para cada variable dependiente."
   )
 
 # Imprimimos la tabla
