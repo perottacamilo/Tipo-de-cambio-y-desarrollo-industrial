@@ -21,16 +21,40 @@ Analizar la relación empírica entre el nivel relativo de precios (Índice de N
 - **Fuente complementaria:** [Industria — Argendata (Fundar)](https://argendata.fund.ar), Schteingart y Sidicaro (2025), para armonizar el PBI industrial per cápita y evitar rupturas estadísticas.
 - **Período:** 1960–2025 (evolución 1990–2023 y cortes analíticos en 2001, 2008 y 2022).
 - **Unidad de análisis:** países con población superior a 1 millón de habitantes.
-- **Variables principales:** PBI industrial per cápita (`industria_per_capita`, USD const. 2015, Argendata `gdp_indust_pc` + WDI `NV.IND.MANF.ZS`), exportaciones manufactureras per cápita (`exportacion_manufactura_pc`, USD corr., construida con `TX.VAL.MANF.ZS.UN`, `TX.VAL.MRCH.CD.WT` y `SP.POP.TOTL`) e índice de nivel de precios (`indice_nivel_precios`, EE. UU. = 100, `PA.NUS.GDP.PLI`).
-- **Variables estructurales y de control:** PBI per cápita (`pbi_per_capita`, `NY.GDP.PCAP.KD`), PBI en millones (`pbi_millones`, `NY.GDP.MKTP.KD`), crecimiento industrial (`crecimiento_industria`, `NV.IND.TOTL.KD.ZG`), empleo industrial (`empleo_industrial`, `SL.IND.EMPL.ZS`), valor agregado por trabajador industrial (`valor_agregado_trabajador`, `NV.IND.EMPL.KD`), rentas de recursos naturales (`recursos_naturales`, `NY.GDP.TOTL.RT.ZS`), ahorro bruto (`ahorro_bruto_pbi`, `NY.GNS.ICTR.ZS`), gasto de consumo del gobierno (`gasto_gobierno_pbi`, `NE.CON.GOVT.ZS`) y crédito privado (`credito_privado_pbi`, `FS.AST.PRVT.GD.ZS`).
-- **Identificación y filtro:** `pais`, `iso3c`, `anio`, `region`, `ingreso` y población en millones (`poblacion_mill`, `SP.POP.TOTL`).
-- **Variables descartadas (>40% de faltantes):** tipo de cambio real efectivo (`tipo_cambio_real_efectivo`, `PX.REX.REER`) y gasto total del gobierno (`gastos_totales_gob_pbi`, `GC.XPN.TOTL.GD.ZS`).
+
+### Diccionario de variables
+
+| Variable | Descripción | Tipo | Unidad | Rango teórico | NA totales | NA 2001 | NA 2008 | NA 2022 |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| `pais` | Nombre del país | Categórica | - | - | 0 | 0 | 0 | 0 |
+| `iso3c` | Código ISO de 3 letras (identificador único) | Categórica | - | - | 0 | 0 | 0 | 0 |
+| `region` | Región geográfica del Banco Mundial | Categórica | - | 7 categorías | 0 | 0 | 0 | 0 |
+| `anio` | Año de la observación | Numérica | Anual | 66 años | 0 | 0 | 0 | 0 |
+| `pbi_millones` | PBI del país en millones de dólares | Numérica | Dólares constantes 2015 | > 0 | 2789 | 18 | 9 | 9 |
+| `pbi_per_capita` | PBI per cápita | Numérica | Dólares constantes 2015 | > 0 | 2789 | 18 | 9 | 9 |
+| `indice_nivel_precios` | Factor de Paridad de Poder Adquisitivo (PPA) sobre el tipo de cambio nominal multiplicado por 100 | Numérica | Índice (EE.UU. = 100) | > 0 | 7299 | 23 | 17 | 18 |
+| `industria_per_capita` | PBI industrial per cápita | Numérica | Dólares constantes 2015 | > 0 | 5267 | 12 | 8 | 6 |
+| `crecimiento_industria` | Variación anual del sector industrial | Numérica | % de crecimiento | Sin límite | 6232 | 48 | 35 | 24 |
+| `tipo_cambio_real_efectivo` | Nivel de competitividad con base = 2010 | Numérica | Índice | > 0 | 10172 | 123 | 123 | 126 |
+| `recursos_naturales` | Rentas económicas provenientes de los recursos naturales | Numérica | % del PBI | 0 a 100 | 5087 | 17 | 10 | 217 |
+| `empleo_industrial` | Empleo en el sector industrial | Numérica | % del total de empleados | 0 a 100 | 7791 | 30 | 30 | 31 |
+| `ingreso` | Clasificación de ingreso per cápita del país | Categórica | - | 5 categorías | 0 | 0 | 0 | 0 |
+| `exportacion_manufactura` | Porcentaje de exportaciones manufactureras sobre el total de mercancías | Numérica | % del total | 0 a 100 | 6383 | 53 | 50 | 53 |
+| `gasto_gobierno_pbi` | Gasto de consumo final del gobierno | Numérica | % del PBI | 0 a 100 | 5593 | 58 | 46 | 41 |
+| `gastos_totales_gob_pbi` | Gasto total del gobierno como % del PBI (incluye subsidios) | Numérica | % del PBI | 0 a 100 | 9870 | 126 | 100 | 106 |
+| `valor_agregado_trabajador` | Valor agregado por trabajador industrial | Numérica | Dólares constantes 2015 | > 0 | 8735 | 61 | 46 | 44 |
+| `ahorro_bruto_pbi` | Ahorro bruto nacional | Numérica | % del PBI | 0 a 100 | 7892 | 89 | 61 | 58 |
+| `credito_privado_pbi` | Crédito interno al sector privado | Numérica | % del PBI | 0 a 100 | 6685 | 76 | 54 | 55 |
+| `poblacion_mill` | Población del país en millones de habitantes | Numérica | Millones de habitantes | > 0 | 0 | 0 | 0 | 0 |
+| `exportacion_manufactura_pc` | Exportaciones de manufacturas per cápita | Numérica | Dólares corrientes | >= 0 | 6406 | 57 | 53 | 54 |
+
+*Nota: en `script/03.datos faltantes.R` se descartan `tipo_cambio_real_efectivo` y `gastos_totales_gob_pbi` por superar el 40% de faltantes.*
 
 ## Análisis realizado
 
 1. Descarga de indicadores WDI vía API y empalme con la serie de PBI industrial per cápita de Argendata.
 2. Limpieza de agregados, traducción de regiones e ingresos, construcción de variables per cápita y generación del diccionario de variables.
-3. Exclusión de microestados (<1 millón de habitantes), depuración de variables y países con alta proporción de faltantes e interpolación por años adyacentes (±1) para 2001, 2008 y 2022.
+3. Exclusión de microestados y paises con menos de un millón de habitantes, depuración de variables y países con alta proporción de faltantes e interpolación por años adyacentes (±1) para 2001, 2008 y 2022.
 4. Análisis exploratorio y visualizaciones: distribuciones, faltantes, gráfico de dispersión con curva de tendencia (2001, 2008 y 2022) y evolución del PBI industrial per cápita (1990–2023).
 5. Análisis de Componentes Principales (PCA) sobre 11 variables estandarizadas y clustering jerárquico (Ward y HCPC en 5 grupos) para 2022.
 6. Regresiones log-log (simples, con controles y sin atípicos) para industria y exportaciones en 2001, 2008 y 2022, con diagnósticos de heterocedasticidad (Breusch-Pagan, errores robustos HC1), multicolinealidad (VIF), especificación (RESET) y observaciones influyentes (Distancia de Cook > 0,15).
