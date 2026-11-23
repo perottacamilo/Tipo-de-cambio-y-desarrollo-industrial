@@ -38,7 +38,7 @@ panel_rvsl <- function(modelo, datos_df, titulo, subtitulo = NULL,
   )
   
   outliers <- df$pais[df$es_outlier]
-  if (is.null(subtitulo)) {
+  if (is.null(subtitulo) && !es_individual) {
     if (length(outliers) > 0) {
       subtitulo <- paste0("Atípicos (D > 0,15): ", paste(outliers, collapse = ", "))
     } else {
@@ -87,7 +87,8 @@ panel_rvsl <- function(modelo, datos_df, titulo, subtitulo = NULL,
     theme(
       plot.title    = element_text(family = fuente_texto, face = "bold",
                                    size = if (es_individual) rel(1.5) else rel(3.5),
-                                   color = gris_titulo, hjust = 0, margin = margin(b = 3)),
+                                   color = gris_titulo, hjust = 0,
+                                   margin = margin(b = if (is.null(subtitulo)) 10 else 3)),
       plot.subtitle = element_text(size = if (es_individual) rel(1.05) else rel(2),
                                    color = gris_texto, hjust = 0,
                                    lineheight = 0.6, margin = margin(b = 14)),

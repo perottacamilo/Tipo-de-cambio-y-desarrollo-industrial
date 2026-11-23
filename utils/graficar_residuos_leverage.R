@@ -4,11 +4,12 @@
 # ==============================================================================
 
 graficar_residuos_leverage <- function(modelo, datos_df, titulo, nombre_archivo,
-                                      umbral_cook = 0.15, ind = "Industria") {
+                                      subtitulo = NULL, umbral_cook = 0.15, ind = "Industria") {
   p <- panel_rvsl(
     modelo = modelo,
     datos_df = datos_df,
     titulo = titulo,
+    subtitulo = subtitulo,
     ind = ind,
     umbral_cook = umbral_cook,
     es_individual = TRUE

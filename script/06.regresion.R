@@ -94,8 +94,11 @@ for (a in anios) {
 #tablas_por_anio$anio_2001
 #tablas_por_anio$anio_2008
 #tablas_por_anio$anio_2022
+gtsave(tablas_por_anio$anio_2001, filename = "output/tablas/tabla_2001.png")
 gtsave(tablas_por_anio$anio_2001, filename = "output/tablas/tabla_2001.html")
+gtsave(tablas_por_anio$anio_2008, filename = "output/tablas/tabla_2008.png")
 gtsave(tablas_por_anio$anio_2008, filename = "output/tablas/tabla_2008.html")
+gtsave(tablas_por_anio$anio_2022, filename = "output/tablas/tabla_2022.png")
 gtsave(tablas_por_anio$anio_2022, filename = "output/tablas/tabla_2022.html")
 # ==============================================================================
 # DETECCIÓN AUTOMÁTICA DE OBSERVACIONES INFLUYENTES (DISTANCIA DE COOK)
@@ -200,8 +203,9 @@ tabla_sin_outliers <- modelsummary(
   tab_spanner(label = "Industria (per cápita)", columns = 2:4) |> 
   tab_spanner(label = "Exportaciones Manufactureras (per cápita)", columns = 5:7)
 
-# Visualizar en RStudio Viewer y guardar en HTML
+# Visualizar en RStudio Viewer y guardar en PNG y HTML
 #tabla_sin_outliers
+gtsave(tabla_sin_outliers, filename = "output/tablas/tabla_sin_outliers.png")
 gtsave(tabla_sin_outliers, filename = "output/tablas/tabla_sin_outliers.html")
 #####tests de Breusch-Pagan#####
 # 1. Creamos un data.frame vacío para ir guardando los resultados
@@ -256,6 +260,7 @@ tabla_bp_final <- resultados_bp |>
 
 # Imprimimos la tabla
 #tabla_bp_final
+gtsave(tabla_bp_final, filename = "output/tablas/tabla_bp_final.png")
 gtsave(tabla_bp_final, filename = "output/tablas/tabla_bp_final.html")
 
 # ==============================================================================
@@ -358,6 +363,7 @@ tabla_vif_final <- tabla_vif |>
 
 # Imprimimos la tabla
 #tabla_vif_final
+gtsave(tabla_vif_final, filename = "output/tablas/tabla_vif_final.png")
 gtsave(tabla_vif_final, filename = "output/tablas/tabla_vif_final.html")
 
 variables2 <- c(
@@ -461,7 +467,8 @@ tabla_reset_gt <- df_tabla_reset |>
 # Visualizar en la pestaña Viewer
 #tabla_reset_gt
 
-# Guardar en archivo HTML
+# Guardar en archivo PNG y HTML
+gtsave(tabla_reset_gt, filename = "output/tablas/tabla_reset_comparativa.png")
 gtsave(tabla_reset_gt, filename = "output/tablas/tabla_reset_comparativa.html")
 # 2. Dividimos la ventana en 4 (2 filas x 2 columnas)
 #par(mfrow = c(2, 2))
@@ -583,7 +590,7 @@ subtitulo_rvsl <- paste0(
 
 caption_rvsl <- paste0(
   "Fuente: elaboración propia en base a Banco Mundial (WDI) y Schteingart, D. y Sidicaro, N. (2025). Industria. Argendata. Fundar.\n",
-  "Notas: Modelos log-log con controles. Umbral de corte de influencia empírica fijado en Di > 0,15."
+  "Nota: Modelos log-log con controles."
 )
 
 grafico_rvsl_exploratorio <- juntar_rvsl(
@@ -651,8 +658,9 @@ tabla_resumen_modelos <- modelsummary(
     locations = cells_row_groups()
   )
 
-# Imprimir en Viewer y guardar en HTML
+# Imprimir en Viewer y guardar en PNG y HTML
 tabla_resumen_modelos
+gtsave(tabla_resumen_modelos, filename = "output/tablas/tabla_resumen_modelos.png")
 gtsave(tabla_resumen_modelos, filename = "output/tablas/tabla_resumen_modelos.html")
 
 # ==============================================================================
@@ -768,8 +776,9 @@ tabla_diagnosticos_gt <- df_diagnosticos |>
     ))
   )
 
-# Imprimir en Viewer y guardar en HTML
+# Imprimir en Viewer y guardar en PNG y HTML
 tabla_diagnosticos_gt
+gtsave(tabla_diagnosticos_gt, filename = "output/tablas/tabla_diagnosticos_resumen.png")
 gtsave(tabla_diagnosticos_gt, filename = "output/tablas/tabla_diagnosticos_resumen.html")
 
 
