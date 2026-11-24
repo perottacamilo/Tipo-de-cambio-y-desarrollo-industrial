@@ -51,7 +51,7 @@ Analizar la relación empírica entre el nivel relativo de precios (Índice de N
 | `industria_pc_wdi` | PBI industrial per cápita estimado con indicadores WDI | Numérica | Dólares constantes 2015 | > 0 | 6167 | 50 | 30 | 29 |
 | `exportacion_manufactura_pc` | Exportaciones de manufacturas per cápita | Numérica | Dólares corrientes | >= 0 | 6406 | 57 | 53 | 54 |
 
-*Nota: en `script/03.datos faltantes.R` se descartan `tipo_cambio_real_efectivo` y `gastos_totales_gob_pbi` por superar el 40% de faltantes.*
+*Nota: en `script/03_datos_faltantes.R` se descartan `tipo_cambio_real_efectivo` y `gastos_totales_gob_pbi` por superar el 40% de faltantes.*
 
 ## Análisis realizado
 

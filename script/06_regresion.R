@@ -15,11 +15,11 @@ library(gt)
 # ==============================================================================
 invisible(lapply(list.files("utils", full.names = TRUE), source))
 
+fuente_txt <- "Fuente: elaboración propia en base a Banco Mundial (WDI) y Schteingart, D. y Sidicaro, N. (2025). Industria. Argendata. Fundar."
 
 wdi_regresion <- read.csv("input/wdi_filtrado.csv")
 
 
-#/*
 wdi_2022 <- wdi_regresion |> 
   filter(anio == 2022)
 
@@ -59,7 +59,7 @@ for (a in anios) {
   tablas_por_anio[[paste0("anio_", a)]] <- modelsummary(
     mods,
     vcov = "HC1",
-    title = paste0("Regresiones para Industria y Exportaciones (", a, ")"),
+    title = paste0("Regresiones Log-Log para Industria y Exportaciones (", a, ")"),
     stars = TRUE,
     statistic = "std.error",
     fmt = 3,
@@ -68,7 +68,7 @@ for (a in anios) {
       "log(indice_nivel_precios)"= "log(Índice de nivel de precios)",
       "recursos_naturales"       = "Rentas rec. naturales (% PBI)",
       "ahorro_bruto_pbi"         = "Ahorro bruto (% PBI)",
-      "log(pbi_per_capita)"      = "log(PBI pc)"
+      "log(pbi_per_capita)"      = "log(PBI per cápita)"
     ),
     gof_map = list(
       list("raw" = "nobs", "clean" = "N", "fmt" = 0),
@@ -76,7 +76,8 @@ for (a in anios) {
       list("raw" = "adj.r.squared", "clean" = "R² ajustado", "fmt" = 3)
     ),
     output = "gt"
-  )
+  ) |>
+    tab_source_note(source_note = fuente_txt)
 }
 #tablas_por_anio$anio_2001
 #tablas_por_anio$anio_2008
@@ -169,16 +170,16 @@ modelos_sin_outliers_todos <- list(
 tabla_sin_outliers <- modelsummary(
   modelos_sin_outliers_todos,
   vcov = "HC1",
-  title = "Regresiones para Industria y Exportaciones sin outliers",
+  title = "Regresiones Log-Log para Industria y Exportaciones sin atípicos",
   stars = TRUE,
   statistic = "std.error",
   fmt = 3,
   coef_rename = c(
-    "(Intercept)"              = "Constante",
-    "indice_nivel_precios"     = "Índice de nivel de precios",
-    "recursos_naturales"       = "Rentas rec. naturales (% PBI)",
-    "ahorro_bruto_pbi"         = "Ahorro bruto (% PBI)",
-    "log(pbi_per_capita)"      = "log(PBI pc)"
+    "(Intercept)"               = "Constante",
+    "log(indice_nivel_precios)" = "log(Índice de nivel de precios)",
+    "recursos_naturales"        = "Rentas rec. naturales (% PBI)",
+    "ahorro_bruto_pbi"          = "Ahorro bruto (% PBI)",
+    "log(pbi_per_capita)"       = "log(PBI per cápita)"
   ),
   gof_map = list(
     list("raw" = "nobs", "clean" = "N", "fmt" = 0),
@@ -188,7 +189,13 @@ tabla_sin_outliers <- modelsummary(
   output = "gt"
 ) |> 
   tab_spanner(label = "Industria (per cápita)", columns = 2:4) |> 
-  tab_spanner(label = "Exportaciones Manufactureras (per cápita)", columns = 5:7)
+  tab_spanner(label = "Exportaciones Manufactureras (per cápita)", columns = 5:7) |>
+  tab_source_note(
+    source_note = md(paste0(
+      "**Sin atípicos:** Excluye observaciones influyentes detectadas mediante distancia de Cook (D > 0.15).<br>",
+      fuente_txt
+    ))
+  )
 
 # Visualizar en RStudio Viewer y guardar en PNG y HTML
 #tabla_sin_outliers
@@ -212,7 +219,7 @@ for (a in c(2001, 2008, 2022)) {
   # Guardamos los resultados temporalmente
   temp_df <- data.frame(
     Año = c(a, a),
-    Modelo = c("Industria (per cápita)", "Exportaciones Manufactureras"),
+    Modelo = c("Industria (per cápita)", "Exportaciones Manufactureras (per cápita)"),
     BP_Stat = c(bp_ind$statistic, bp_exp$statistic),
     p_valor = c(bp_ind$p.value, bp_exp$p.value)
   )
@@ -225,11 +232,11 @@ for (a in c(2001, 2008, 2022)) {
 tabla_bp_final <- resultados_bp |> 
   mutate(
     # Si el p-valor es menor a 0.05, rechazamos H0 (homocedasticidad)
-    `Diagnóstico` = ifelse(p_valor < 0.05, "Heteroscedasticidad", "Homocedasticidad")
+    `Diagnóstico` = ifelse(p_valor < 0.05, "Heterocedasticidad", "Homocedasticidad")
   ) |> 
   gt() |> 
   tab_header(
-    title = "Test de Breusch-Pagan para Heteroscedasticidad",
+    title = "Test de Breusch-Pagan para Heterocedasticidad",
     subtitle = "H0: Varianza constante (Homocedasticidad)"
   ) |> 
   cols_label(
@@ -243,7 +250,8 @@ tabla_bp_final <- resultados_bp |>
   fmt_number(
     columns = p_valor,
     decimals = 4
-  )
+  ) |>
+  tab_source_note(source_note = fuente_txt)
 
 # Imprimimos la tabla
 #tabla_bp_final
@@ -345,7 +353,10 @@ tabla_vif_final <- tabla_vif |>
     )
   ) |> 
   tab_source_note(
-    source_note = "Nota: Valores de VIF < 5 indican ausencia de multicolinealidad severa. Las leves diferencias entre ambos modelos se deben a la muestra efectiva de países disponibles con datos completos para cada variable dependiente."
+    source_note = md(paste0(
+      "Nota: Valores de VIF < 5 indican ausencia de multicolinealidad severa. Las leves diferencias entre ambos modelos se deben a la muestra efectiva de países disponibles con datos completos para cada variable dependiente.<br>",
+      fuente_txt
+    ))
   )
 
 # Imprimimos la tabla
@@ -353,19 +364,6 @@ tabla_vif_final <- tabla_vif |>
 gtsave(tabla_vif_final, filename = "output/tablas/tabla_vif_final.png")
 gtsave(tabla_vif_final, filename = "output/tablas/tabla_vif_final.html")
 
-variables2 <- c(
-  "crecimiento_industria",
-  "industria_per_capita",
-  "indice_nivel_precios",
-  "empleo_industrial",
-  "exportacion_manufactura_pc",
-  "gasto_gobierno_pbi",
-  "valor_agregado_trabajador",
-  "ahorro_bruto_pbi",
-  "credito_privado_pbi",
-  "recursos_naturales",
-  "pbi_per_capita",
-  "pbi_millones")
 # 1. Extraemos el modelo de la lista
 mod_exp_2022 <- modelos_por_anio$anio_2022[["log-log Exp: Control"]]
 mod_exp_2001 <- modelos_por_anio$anio_2001[["log-log Exp: Control"]]
@@ -449,7 +447,8 @@ tabla_reset_gt <- df_tabla_reset |>
   tab_style(
     style = cell_text(weight = "bold"),
     locations = cells_column_labels()
-  )
+  ) |>
+  tab_source_note(source_note = fuente_txt)
 
 # Visualizar en la pestaña Viewer
 #tabla_reset_gt
@@ -474,9 +473,9 @@ gtsave(tabla_reset_gt, filename = "output/tablas/tabla_reset_comparativa.html")
 #par(mfrow = c(1, 1))
 
 # ==============================================================================
-# DICCIONARIO DE TRADUCCIÓN DE PAÍSES AL ESPAÑOL Y RANKING COOK
+# RANKING DE DISTANCIA DE COOK Y ABREVIACIÓN DE PAÍSES
 # ==============================================================================
-# Funciones traducir_pais, top_cook y diccionario paises_espanol cargados desde utils/
+# Funciones abreviar_pais y top_cook cargadas desde utils/
 
 #print(top_cook(modelos_por_anio$anio_2022[["log-log Exp: Control"]], wdi_2022))
 #print(top_cook(modelos_por_anio$anio_2022[["log-log Ind: Control"]], wdi_2022))
@@ -527,7 +526,7 @@ subtitulo_rvsl <- paste0(
 )
 
 caption_rvsl <- paste0(
-  "Fuente: elaboración propia en base a Banco Mundial (WDI) y Schteingart, D. y Sidicaro, N. (2025). Industria. Argendata. Fundar.\n",
+  fuente_txt, "\n",
   "Nota: Modelos log-log con controles."
 )
 
@@ -559,7 +558,7 @@ tabla_resumen_modelos <- modelsummary(
   vcov = "HC1",
   title = "Regresiones Log-Log: Efecto del Nivel de Precios sobre Industria y Exportaciones",
   coef_map = c(
-    "log(indice_nivel_precios)" = "log(Índice de precios)"
+    "log(indice_nivel_precios)" = "log(Índice de nivel de precios)"
   ),
   gof_map = list(
     list("raw" = "nobs", "clean" = "N", "fmt" = 0),
@@ -588,7 +587,8 @@ tabla_resumen_modelos <- modelsummary(
     source_note = md(paste0(
       "**Variables de control incluidas en las especificaciones con controles:** ",
       "Rentas de recursos naturales (% PBI), Ahorro bruto (% PBI) y log(PBI per cápita).<br>",
-      "**Sin atípicos:** Excluye observaciones influyentes detectadas mediante distancia de Cook (D > 0.15)."
+      "**Sin atípicos:** Excluye observaciones influyentes detectadas mediante distancia de Cook (D > 0.15).<br>",
+      fuente_txt
     ))
   ) |> 
   tab_style(
@@ -630,7 +630,7 @@ for (a in c(2001, 2008, 2022)) {
     
     # 4. Observaciones influyentes (Distancia de Cook > 0.15)
     outliers_var <- get(paste0("outliers_", a, "_", tolower(dep)))
-    outliers_var_es <- traducir_pais(outliers_var)
+    outliers_var_es <- abreviar_pais(outliers_var)
     n_outliers   <- length(outliers_var_es)
     paises_out   <- paste(outliers_var_es, collapse = ", ")
     
@@ -669,7 +669,7 @@ tabla_diagnosticos_gt <- df_diagnosticos |>
     columns = VIF_max
   ) |>
   tab_spanner(
-    label = md("Observaciones Influyentes<br>(Cook > 0.15)"),
+    label = md("Observaciones Influyentes<br>&nbsp;"),
     columns = c(N_outliers, Paises_out)
   ) |>
   cols_label(
@@ -711,14 +711,18 @@ tabla_diagnosticos_gt <- df_diagnosticos |>
       "- **Breusch-Pagan:** H0 de homocedasticidad.<br>",
       "- **RESET de Ramsey:** H0 de correcta especificación de la forma funcional.<br>",
       "- **Multicolinealidad:** VIF Máx < 5 indica ausencia de multicolinealidad severa entre las covariables.<br>",
-      "- **Distancia de Cook:** Se identifican observaciones influyentes con umbral Di > 0.15."
+      "- **Distancia de Cook:** Se identifican observaciones influyentes con umbral Di > 0.15.<br>",
+      fuente_txt
     ))
   )
 
 # Imprimir en Viewer y guardar en PNG y HTML
 tabla_diagnosticos_gt
-gtsave(tabla_diagnosticos_gt, filename = "output/tablas/tabla_diagnosticos_resumen.png")
+gtsave(tabla_diagnosticos_gt, filename = "output/tablas/tabla_diagnosticos_resumen.png", vwidth = 1100, expand = 20)
 gtsave(tabla_diagnosticos_gt, filename = "output/tablas/tabla_diagnosticos_resumen.html")
+
+if (requireNamespace("showtext", quietly = TRUE)) showtext::showtext_auto(FALSE)
+
 
 
 

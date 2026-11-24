@@ -11,8 +11,8 @@ suppressPackageStartupMessages({
 
 panel_rvsl <- function(modelo, datos_df, titulo, subtitulo = NULL,
                        ind = "Industria", umbral_cook = 0.15, es_individual = FALSE) {
-  if (!exists("traducir_pais", mode = "function")) {
-    traducir_pais <- function(x) x
+  if (!exists("abreviar_pais", mode = "function")) {
+    abreviar_pais <- function(x) x
   }
   if (!exists("col")) {
     col <- c(rojo = "#B13507", azul = "#286BBB", gris = "#BDBDBD")
@@ -25,7 +25,7 @@ panel_rvsl <- function(modelo, datos_df, titulo, subtitulo = NULL,
   lev        <- hatvalues(modelo)
   cooks_d    <- cooks.distance(modelo)
   paises_raw <- datos_df[names(res_std), "pais"]
-  paises     <- traducir_pais(paises_raw)
+  paises     <- abreviar_pais(paises_raw)
   p_k        <- length(coef(modelo))
   
   df <- data.frame(
