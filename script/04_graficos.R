@@ -27,7 +27,6 @@ fuente_texto  <- if (fuentes_ok) "lato" else "sans"
 showtext_auto()
 showtext_opts(dpi = 96)
 
-# Paletas, formatos y rutas comunes
 col         <- c(rojo = "#B13507", azul = "#286BBB", gris = "#BDBDBD")
 col_asia    <- "#E0195B"
 col_latam   <- "#3919E0"

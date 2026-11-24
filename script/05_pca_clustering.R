@@ -87,7 +87,6 @@ ggsave(file.path(ruta_pca, "heatmap.png"), plot = heatmap, width = 12, height = 
 # ==============================================================================
 # 2. ANÁLISIS DE COMPONENTES PRINCIPALES (PCA)
 # ==============================================================================
-# FactoMineR::PCA() estandariza las variables (scale.unit = TRUE) y retiene ncp = 5
 
 res <- PCA(X, ncp = 5, scale.unit = TRUE, graph = FALSE)
 
@@ -252,7 +251,7 @@ print(mapa_regiones)
 ggsave(file.path(ruta_pca, "mapa_regiones.png"), plot = mapa_regiones, width = 12, height = 7, dpi = 300)
 
 # --- 2.5 Análisis de sensibilidad del PC1 (Anexo) -----------------------------
-# Evalúa si la varianza y el orden de PC1 cambian al excluir una variable por vez
+
 coord_pc1 <- res$ind$coord[, 1]
 
 sensibilidad <- map_dfr(vars, function(v) {
@@ -271,7 +270,7 @@ print(sensibilidad)
 # ==============================================================================
 
 # --- 3.1 Distancias euclidianas y validación (Método de Ward sobre Z) ---------
-# Sirve para: (a) ver países más parecidos, (b) elegir k=5 por altura, (c) validar silueta
+
 Z <- scale(X)
 d <- dist(Z, method = "euclidean")
 

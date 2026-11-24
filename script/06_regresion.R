@@ -37,10 +37,8 @@ tablas_por_anio  <- list()
 
 for (a in anios) {
   
-  # 1. Filtrar datos del año
   df_sub <- wdi_regresion |> filter(anio == a)
   
-  # 2. Estimación de los 4 modelos seleccionados
   mods <- list(
     # --- INDUSTRIA (per cápita) ---
     "log-log Ind: Simple"  = lm(log(industria_per_capita) ~ log(indice_nivel_precios), data = df_sub),
@@ -55,7 +53,6 @@ for (a in anios) {
                           ahorro_bruto_pbi + log(pbi_per_capita), data = df_sub)
   )
   
-  # Guardar modelos
   modelos_por_anio[[paste0("anio_", a)]] <- mods
   
   # 3. Generar la tabla comparativa para el Viewer
@@ -88,6 +85,7 @@ for (a in anios) {
 gtsave(tablas_por_anio$anio_2001, filename = "output/tablas/tabla_2001.png")
 gtsave(tablas_por_anio$anio_2008, filename = "output/tablas/tabla_2008.png")
 gtsave(tablas_por_anio$anio_2022, filename = "output/tablas/tabla_2022.png")
+
 # ==============================================================================
 # DETECCIÓN AUTOMÁTICA DE OBSERVACIONES INFLUYENTES (DISTANCIA DE COOK)
 # ==============================================================================
@@ -157,7 +155,7 @@ for (a in anios) {
   modelos_por_anio_sin_outliers[[paste0("anio_", a)]][["log-log Exp: Control"]] <- mods_exp[["log-log Exp: Control"]]
 }
 
-# 3. Generar la tabla comparativa unificada con todos los modelos
+# 3. Tabla comparativa unificada con todos los modelos
 modelos_sin_outliers_todos <- list(
   "2001"   = modelos_por_anio_sin_outliers$anio_2001[["log-log Ind: Control"]],
   "2008"   = modelos_por_anio_sin_outliers$anio_2008[["log-log Ind: Control"]],
@@ -197,17 +195,17 @@ tabla_sin_outliers <- modelsummary(
     ))
   )
 
-# Visualizar en RStudio Viewer y guardar en PNG
+# Guardar en PNG
 #tabla_sin_outliers
 gtsave(tabla_sin_outliers, filename = "output/tablas/tabla_sin_outliers.png")
+
 #####tests de Breusch-Pagan#####
-# 1. Creamos un data.frame vacío para ir guardando los resultados
+
 resultados_bp <- data.frame()
 
-# 2. Bucle para calcular el test en cada año y modelo
+
 for (a in c(2001, 2008, 2022)) {
   
-  # Extraemos los modelos
   mod_ind <- modelos_por_anio[[paste0("anio_", a)]][["log-log Ind: Control"]]
   mod_exp <- modelos_por_anio[[paste0("anio_", a)]][["log-log Exp: Control"]]
   
@@ -215,19 +213,16 @@ for (a in c(2001, 2008, 2022)) {
   bp_ind <- lmtest::bptest(mod_ind)
   bp_exp <- lmtest::bptest(mod_exp)
   
-  # Guardamos los resultados temporalmente
-  temp_df <- data.frame(
+
+    temp_df <- data.frame(
     Año = c(a, a),
     Modelo = c("Industria (per cápita)", "Exportaciones Manufactureras (per cápita)"),
     BP_Stat = c(bp_ind$statistic, bp_exp$statistic),
     p_valor = c(bp_ind$p.value, bp_exp$p.value)
   )
-  
-  # Unimos con el data.frame principal
   resultados_bp <- rbind(resultados_bp, temp_df)
 }
 
-# 3. Formateamos y generamos la tabla visual
 tabla_bp_final <- resultados_bp |> 
   mutate(
     # Si el p-valor es menor a 0.05, rechazamos H0 (homocedasticidad)
@@ -252,7 +247,6 @@ tabla_bp_final <- resultados_bp |>
   ) |>
   tab_source_note(source_note = fuente_txt)
 
-# Imprimimos la tabla
 #tabla_bp_final
 gtsave(tabla_bp_final, filename = "output/tablas/tabla_bp_final.png")
 
@@ -264,12 +258,10 @@ gtsave(tabla_bp_final, filename = "output/tablas/tabla_bp_final.png")
 # 1. MULTICOLINEALIDAD (VIF) PARA TODOS LOS AÑOS Y MODELOS
 # ==============================================================================
 
-# Creamos una lista para almacenar los resultados
 vifs_por_anio <- list()
 
 for (a in c(2001, 2008, 2022)) {
   
-  # Extraemos los modelos de control para cada año
   mod_ind <- modelos_por_anio[[paste0("anio_", a)]][["log-log Ind: Control"]]
   mod_exp <- modelos_por_anio[[paste0("anio_", a)]][["log-log Exp: Control"]]
   
@@ -286,10 +278,8 @@ for (a in c(2001, 2008, 2022)) {
 
 
 
-# Extraemos los nombres de las variables del primer VIF guardado
 nombres_vars <- names(vifs_por_anio$anio_2001$VIF_Industria)
 
-# Armamos el dataframe juntando los años para ambos modelos (Industria y Exportaciones)
 tabla_vif <- data.frame(
   Variable = nombres_vars,
   Ind_2001 = vifs_por_anio$anio_2001$VIF_Industria,
@@ -299,7 +289,6 @@ tabla_vif <- data.frame(
   Exp_2008 = vifs_por_anio$anio_2008$VIF_Exportaciones,
   Exp_2022 = vifs_por_anio$anio_2022$VIF_Exportaciones
 ) |> 
-  # Renombramos las variables para que queden presentables
   mutate(
     Variable = case_match(
       Variable,
@@ -311,7 +300,6 @@ tabla_vif <- data.frame(
     )
   )
 
-# Generamos la tabla con formato agrupada por modelo con spanners
 tabla_vif_final <- tabla_vif |> 
   gt() |> 
   tab_header(
@@ -357,11 +345,9 @@ tabla_vif_final <- tabla_vif |>
     ))
   )
 
-# Imprimimos la tabla
 #tabla_vif_final
 gtsave(tabla_vif_final, filename = "output/tablas/tabla_vif_final.png")
 
-# 1. Extraemos el modelo de la lista
 mod_exp_2022 <- modelos_por_anio$anio_2022[["log-log Exp: Control"]]
 mod_exp_2001 <- modelos_por_anio$anio_2001[["log-log Exp: Control"]]
 mod_exp_2008 <- modelos_por_anio$anio_2008[["log-log Exp: Control"]]
@@ -413,7 +399,6 @@ for (a in anios_test) {
 
 df_tabla_reset <- do.call(rbind, filas_reset)
 
-# Generación de la tabla formateada con gt
 tabla_reset_gt <- df_tabla_reset |>
   gt(groupname_col = "Año") |>
   tab_header(
@@ -447,41 +432,10 @@ tabla_reset_gt <- df_tabla_reset |>
   ) |>
   tab_source_note(source_note = fuente_txt)
 
-# Visualizar en la pestaña Viewer
 #tabla_reset_gt
 
 # Guardar en archivo PNG
 gtsave(tabla_reset_gt, filename = "output/tablas/tabla_reset_comparativa.png")
-# 2. Dividimos la ventana en 4 (2 filas x 2 columnas)
-#par(mfrow = c(2, 2))
-
-# 3. Generamos los gráficos con el color transparente
-#plot(mod_exp_2022, pch = 16, col = rgb(0, 0, 1, 0.1))
-#plot(mod_exp_2008, pch = 16, col = rgb(0, 0, 1, 0.1))
-#plot(mod_exp_2001, pch = 16, col = rgb(0, 0, 1, 0.1))
-
-
-#plot(mod_ind_2022, pch = 16, col = rgb(0, 0, 1, 0.1))
-#plot(mod_ind_2008, pch = 16, col = rgb(0, 0, 1, 0.1))
-#plot(mod_ind_2001, pch = 16, col = rgb(0, 0, 1, 0.1))
-
-# 4. Volvemos la ventana a la normalidad (1 gráfico a la vez)
-#par(mfrow = c(1, 1))
-
-# ==============================================================================
-# RANKING DE DISTANCIA DE COOK Y ABREVIACIÓN DE PAÍSES
-# ==============================================================================
-# Funciones abreviar_pais y top_cook cargadas desde utils/
-
-#print(top_cook(modelos_por_anio$anio_2022[["log-log Exp: Control"]], wdi_2022))
-#print(top_cook(modelos_por_anio$anio_2022[["log-log Ind: Control"]], wdi_2022))
-
-#print(top_cook(modelos_por_anio$anio_2001[["log-log Exp: Control"]], wdi_2001))
-#print(top_cook(modelos_por_anio$anio_2001[["log-log Ind: Control"]], wdi_2001))
-
-#print(top_cook(modelos_por_anio$anio_2008[["log-log Exp: Control"]], wdi_2008))
-#print(top_cook(modelos_por_anio$anio_2008[["log-log Ind: Control"]], wdi_2008))
-
 
 
 # ==============================================================================
@@ -490,10 +444,9 @@ gtsave(tabla_reset_gt, filename = "output/tablas/tabla_reset_comparativa.png")
 # Funciones panel_rvsl, graficar_residuos_leverage, juntar_rvsl, theme_owid y pintar
 # se cargan automáticamente desde utils/
 
-# Crear carpeta de salida si no existe
 dir.create("output/graficos/regresion", recursive = TRUE, showWarnings = FALSE)
 
-# --- CREAR Y GUARDAR EL GRÁFICO COMPLETO DE 6 PANELES (ESTILO EXPLORATORIO) ---
+# --- GRAFICO EXPLORATORIO DE LOS RESIDUOS  ------------------------------------
 showtext::showtext_auto(TRUE)
 
 p_ind_2001 <- panel_rvsl(mod_ind_2001, wdi_2001, "Industria (2001)", ind = "Industria")
@@ -594,8 +547,8 @@ tabla_resumen_modelos <- modelsummary(
     locations = cells_row_groups()
   )
 
-# Imprimir en Viewer y guardar en PNG
-tabla_resumen_modelos
+# Guardar en PNG
+#tabla_resumen_modelos
 gtsave(tabla_resumen_modelos, filename = "output/tablas/tabla_resumen_modelos.png")
 
 # ==============================================================================
@@ -646,7 +599,6 @@ for (a in c(2001, 2008, 2022)) {
 
 df_diagnosticos <- do.call(rbind, filas_diagnosticos)
 
-# Generación del boceto de tabla con gt
 tabla_diagnosticos_gt <- df_diagnosticos |>
   gt(groupname_col = "Año") |>
   tab_header(
@@ -713,7 +665,7 @@ tabla_diagnosticos_gt <- df_diagnosticos |>
     ))
   )
 
-# Imprimir en Viewer y guardar en PNG
+# Guardar en PNG
 gtsave(tabla_diagnosticos_gt, filename = "output/tablas/tabla_diagnosticos_resumen.png", vwidth = 1100, expand = 20)
 
 if (requireNamespace("showtext", quietly = TRUE)) showtext::showtext_auto(FALSE)

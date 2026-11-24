@@ -13,9 +13,7 @@ library(tidyr)
 wdi2 <- read.csv("input/wdi2.csv")
 wdi3 <- read.csv("input/wdi3.csv")
 
-# Se excluyen microestados (< 1 millón de hab.) por su escala reducida: suelen
-# especializarse en turismo o servicios financieros sin una base manufacturera
-# comparable, generan valores extremos per cápita y concentran faltantes.
+# Se excluyen microestados (< 1 millón de hab.) por su escala reducida
 wdi2 <- wdi2 |>
   filter(poblacion_mill > 1)
 
@@ -191,7 +189,6 @@ head(faltantes_pais_2008)
 head(faltantes_pais_2022)
 
 # Conclusión: se excluyen países con 50% o más de variables faltantes en algún corte
-# (interpolar la mitad de un país generaría observaciones artificiales):
 # - 2001: Kosovo, Sudán del Sur, Afganistán, Somalia y Angola.
 # - 2008: Somalia.
 # - 2022: Eritrea, Yemen, Sudán del Sur y Venezuela.
