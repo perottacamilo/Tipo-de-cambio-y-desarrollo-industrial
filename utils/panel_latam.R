@@ -11,7 +11,7 @@ suppressPackageStartupMessages({
 })
 
 panel_latam <- function(datos, subtitulo = datos$sub_filtrado[1]) {
-  if (!exists("col")) {
+  if (!exists("col", mode = "character")) {
     col <- c(rojo = "#B13507", azul = "#286BBB", gris = "#BDBDBD")
   }
   if (!exists("col_latam")) col_latam <- "#3919E0"

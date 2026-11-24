@@ -4,6 +4,9 @@
 
 library(tidyverse)
 library(ggrepel)
+library(ggtext)
+library(showtext)
+library(patchwork)
 library(lmtest)
 library(sandwich)
 library(car)
@@ -498,6 +501,8 @@ gtsave(tabla_reset_gt, filename = "output/tablas/tabla_reset_comparativa.html")
 dir.create("output/graficos/regresion", recursive = TRUE, showWarnings = FALSE)
 
 # --- CREAR Y GUARDAR EL GRÁFICO COMPLETO DE 6 PANELES (ESTILO EXPLORATORIO) ---
+showtext::showtext_auto(TRUE)
+
 p_ind_2001 <- panel_rvsl(mod_ind_2001, wdi_2001, "Industria (2001)", ind = "Industria")
 p_ind_2008 <- panel_rvsl(mod_ind_2008, wdi_2008, "Industria (2008)", ind = "Industria")
 p_ind_2022 <- panel_rvsl(mod_ind_2022, wdi_2022, "Industria (2022)", ind = "Industria")

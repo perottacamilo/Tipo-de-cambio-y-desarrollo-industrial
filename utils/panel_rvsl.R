@@ -14,7 +14,7 @@ panel_rvsl <- function(modelo, datos_df, titulo, subtitulo = NULL,
   if (!exists("abreviar_pais", mode = "function")) {
     abreviar_pais <- function(x) x
   }
-  if (!exists("col")) {
+  if (!exists("col", mode = "character")) {
     col <- c(rojo = "#B13507", azul = "#286BBB", gris = "#BDBDBD")
   }
   if (!exists("gris_titulo")) gris_titulo <- "#363636"
