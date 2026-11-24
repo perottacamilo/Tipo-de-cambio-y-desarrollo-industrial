@@ -59,7 +59,7 @@ wdi_limpio_2 <- wdi_limpio |>
                   "Latin America & Caribbean", "América Latina y el Caribe"),
     poblacion_mill > 1,
     anio >= 1990 & anio <= 2023,
-    !pais %in% c("Cuba", "Korea, Dem. People's Rep.", "Venezuela, RB")
+    !iso3c %in% c("CUB", "PRK", "VEN")
   ) |>
   select(pais, anio, industria_pbi, exportacion_manufactura_pc, region,
          pbi_per_capita, indice_nivel_precios, industria_pc) |>

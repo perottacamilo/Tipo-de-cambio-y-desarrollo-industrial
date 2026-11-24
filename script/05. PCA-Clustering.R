@@ -41,6 +41,20 @@ vars <- c(
   "recursos_naturales", "ln_pbi_pc"
 )
 
+etiquetas <- c(
+  "crecimiento_industria"         = "Crecimiento industrial (%)",
+  "ln_industria_per_capita"       = "PBI industrial per cápita (log)",
+  "indice_nivel_precios"          = "Índice de nivel de precios",
+  "empleo_industrial"             = "Empleo industrial (%)",
+  "ln_exportacion_manufactura_pc" = "Exportaciones manuf. per cápita (log)",
+  "gasto_gobierno_pbi"            = "Gasto de gobierno (% PBI)",
+  "ln_va_trabajador"              = "Valor agregado por trabajador (log)",
+  "ahorro_bruto_pbi"              = "Ahorro bruto (% PBI)",
+  "credito_privado_pbi"           = "Crédito privado (% PBI)",
+  "recursos_naturales"            = "Rentas de recursos naturales (% PBI)",
+  "ln_pbi_pc"                     = "PBI per cápita (log)"
+)
+
 X <- wdi_pca |> select(all_of(vars)) |> as.data.frame()
 rownames(X) <- wdi_pca$pais
 
@@ -57,6 +71,8 @@ heatmap <- cor(X) |>
   geom_tile(color = "white") +
   geom_text(aes(label = round(r, 2)), size = 3) +
   scale_fill_gradient2(low = "firebrick", mid = "white", high = "steelblue", limits = c(-1, 1)) +
+  scale_x_discrete(labels = etiquetas) +
+  scale_y_discrete(labels = etiquetas) +
   labs(
     x = NULL, y = NULL,
     title = "Correlaciones entre las variables activas",
@@ -102,7 +118,9 @@ ejes <- theme(
   axis.title = element_text(size = 18))
 
 
-pc1 <- fviz_contrib(res, choice = "var", axes = 1)  + ejes + 
+pc1 <- fviz_contrib(res, choice = "var", axes = 1) + 
+  scale_x_discrete(labels = etiquetas) +
+  ejes + 
   labs(
     title   = NULL,
     y       = "Contribución (%)",
@@ -119,7 +137,9 @@ pc1 <- fviz_contrib(res, choice = "var", axes = 1)  + ejes +
     panel.grid            = element_blank(),
   )
 
-pc2 <- fviz_contrib(res, choice = "var", axes = 2) + ejes  + 
+pc2 <- fviz_contrib(res, choice = "var", axes = 2) + 
+  scale_x_discrete(labels = etiquetas) +
+  ejes  + 
   labs(
     title   = NULL,
     y       = "Contribución (%)",
@@ -136,7 +156,9 @@ pc2 <- fviz_contrib(res, choice = "var", axes = 2) + ejes  +
     panel.grid            = element_blank(),
   )
 
-pc3 <- fviz_contrib(res, choice = "var", axes = 3)  + ejes + 
+pc3 <- fviz_contrib(res, choice = "var", axes = 3)  + 
+  scale_x_discrete(labels = etiquetas) +
+  ejes + 
   labs(
     title   = NULL,
     y       = "Contribución (%)",
@@ -153,7 +175,9 @@ pc3 <- fviz_contrib(res, choice = "var", axes = 3)  + ejes +
     panel.grid            = element_blank(),
   )
 
-pc4 <- fviz_contrib(res, choice = "var", axes = 4) + ejes + 
+pc4 <- fviz_contrib(res, choice = "var", axes = 4) + 
+  scale_x_discrete(labels = etiquetas) +
+  ejes + 
   labs(
     title   = NULL,
     y       = "Contribución (%)",
@@ -280,6 +304,18 @@ alturas_plot <- tibble(k = 1:8, altura = rev(hc_ward$height)[1:8]) |>
 
 print(alturas_plot)
 ggsave(file.path(ruta_pca, "altura_fusiones.png"), plot = alturas_plot, width = 12, height = 7, dpi = 300)
+
+#Dendrograma
+dendrograma <- fviz_dend(hc_ward, k = 5, cex = 0.45, horiz = TRUE, rect = TRUE,
+          k_colors = c("#2C6E9B", "#C1553B", "#E3A33A", "#4E8F5A", "#25E6DB"),
+          main = "Dendrograma, 5 grupos") + labs(y = "Altura", caption = fuente_txt) +
+  theme( plot.caption          = element_text(hjust = 0, size = 8, color = "gray30", margin = margin(t = 12)),
+         plot.caption.position = "plot")
+
+print(dendrograma)
+ggsave(file.path(ruta_pca, "dendrograma.png"), plot = dendrograma, width = 12, height = 7, dpi = 300)
+
+
 
 # Silueta (Anexo)
 k      <- 5
