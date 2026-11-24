@@ -147,7 +147,7 @@ pc2 <- fviz_contrib(res, choice = "var", axes = 2) +
   ) +
   theme(
     plot.title            = element_blank(),
-    axis.text.x           = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.x           = element_text(angle = 70, hjust = 1, size = 12),
     axis.text.y           = element_text(size = 12),
     axis.title.y          = element_text(size = 14, face = "bold"),
     panel.border          = element_rect(colour = "black", fill = NA, linewidth = 1),
@@ -166,7 +166,7 @@ pc3 <- fviz_contrib(res, choice = "var", axes = 3)  +
   ) +
   theme(
     plot.title            = element_blank(),
-    axis.text.x           = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.x           = element_text(angle = 70, hjust = 1, size = 12),
     axis.text.y           = element_text(size = 12),
     axis.title.y          = element_text(size = 14, face = "bold"),
     panel.border          = element_rect(colour = "black", fill = NA, linewidth = 1),
