@@ -1,5 +1,5 @@
 # Script Analisis cuantitativo - Regresiones ===================================
-# options(timeout = 600)
+# 
 # ==============================================================================
 
 library(tidyverse)
@@ -86,11 +86,8 @@ for (a in anios) {
 #tablas_por_anio$anio_2008
 #tablas_por_anio$anio_2022
 gtsave(tablas_por_anio$anio_2001, filename = "output/tablas/tabla_2001.png")
-gtsave(tablas_por_anio$anio_2001, filename = "output/tablas/tabla_2001.html")
 gtsave(tablas_por_anio$anio_2008, filename = "output/tablas/tabla_2008.png")
-gtsave(tablas_por_anio$anio_2008, filename = "output/tablas/tabla_2008.html")
 gtsave(tablas_por_anio$anio_2022, filename = "output/tablas/tabla_2022.png")
-gtsave(tablas_por_anio$anio_2022, filename = "output/tablas/tabla_2022.html")
 # ==============================================================================
 # DETECCIÓN AUTOMÁTICA DE OBSERVACIONES INFLUYENTES (DISTANCIA DE COOK)
 # ==============================================================================
@@ -200,10 +197,9 @@ tabla_sin_outliers <- modelsummary(
     ))
   )
 
-# Visualizar en RStudio Viewer y guardar en PNG y HTML
+# Visualizar en RStudio Viewer y guardar en PNG
 #tabla_sin_outliers
 gtsave(tabla_sin_outliers, filename = "output/tablas/tabla_sin_outliers.png")
-gtsave(tabla_sin_outliers, filename = "output/tablas/tabla_sin_outliers.html")
 #####tests de Breusch-Pagan#####
 # 1. Creamos un data.frame vacío para ir guardando los resultados
 resultados_bp <- data.frame()
@@ -259,7 +255,6 @@ tabla_bp_final <- resultados_bp |>
 # Imprimimos la tabla
 #tabla_bp_final
 gtsave(tabla_bp_final, filename = "output/tablas/tabla_bp_final.png")
-gtsave(tabla_bp_final, filename = "output/tablas/tabla_bp_final.html")
 
 # ==============================================================================
 # DIAGNÓSTICOS ECONOMÉTRICOS PARA CADA AÑO
@@ -365,7 +360,6 @@ tabla_vif_final <- tabla_vif |>
 # Imprimimos la tabla
 #tabla_vif_final
 gtsave(tabla_vif_final, filename = "output/tablas/tabla_vif_final.png")
-gtsave(tabla_vif_final, filename = "output/tablas/tabla_vif_final.html")
 
 # 1. Extraemos el modelo de la lista
 mod_exp_2022 <- modelos_por_anio$anio_2022[["log-log Exp: Control"]]
@@ -456,9 +450,8 @@ tabla_reset_gt <- df_tabla_reset |>
 # Visualizar en la pestaña Viewer
 #tabla_reset_gt
 
-# Guardar en archivo PNG y HTML
+# Guardar en archivo PNG
 gtsave(tabla_reset_gt, filename = "output/tablas/tabla_reset_comparativa.png")
-gtsave(tabla_reset_gt, filename = "output/tablas/tabla_reset_comparativa.html")
 # 2. Dividimos la ventana en 4 (2 filas x 2 columnas)
 #par(mfrow = c(2, 2))
 
@@ -542,7 +535,7 @@ grafico_rvsl_exploratorio <- juntar_rvsl(
   caption = caption_rvsl
 )
 
-ggsave("output/graficos/regresion/rvsl_exploratorio_completo.png", plot = grafico_rvsl_exploratorio,
+ggsave("output/graficos/regresion/residuos_apalancamiento.png", plot = grafico_rvsl_exploratorio,
        width = 22, height = 14, units = "cm", dpi = 300)
 
 # ==============================================================================
@@ -601,10 +594,9 @@ tabla_resumen_modelos <- modelsummary(
     locations = cells_row_groups()
   )
 
-# Imprimir en Viewer y guardar en PNG y HTML
+# Imprimir en Viewer y guardar en PNG
 tabla_resumen_modelos
 gtsave(tabla_resumen_modelos, filename = "output/tablas/tabla_resumen_modelos.png")
-gtsave(tabla_resumen_modelos, filename = "output/tablas/tabla_resumen_modelos.html")
 
 # ==============================================================================
 # TABLA RESUMEN DE DIAGNÓSTICOS ECONOMÉTRICOS Y TESTS DE ESPECIFICACIÓN
@@ -721,10 +713,8 @@ tabla_diagnosticos_gt <- df_diagnosticos |>
     ))
   )
 
-# Imprimir en Viewer y guardar en PNG y HTML
-tabla_diagnosticos_gt
+# Imprimir en Viewer y guardar en PNG
 gtsave(tabla_diagnosticos_gt, filename = "output/tablas/tabla_diagnosticos_resumen.png", vwidth = 1100, expand = 20)
-gtsave(tabla_diagnosticos_gt, filename = "output/tablas/tabla_diagnosticos_resumen.html")
 
 if (requireNamespace("showtext", quietly = TRUE)) showtext::showtext_auto(FALSE)
 

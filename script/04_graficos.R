@@ -2,7 +2,6 @@
 # 0. CONFIGURACIÓN, LIBRERÍAS, TIPOGRAFÍAS Y BASES
 # ==============================================================================
 
-options(scipen = 999)
 
 library(tidyverse)
 library(scales)
@@ -11,6 +10,7 @@ library(ggrepel)
 library(showtext)
 library(patchwork)
 
+options(scipen = 999)
 # Carga de funciones auxiliares propias (hacer_hist, theme_owid, pintar, panel_latam, juntar)
 invisible(lapply(list.files("utils", full.names = TRUE), source))
 

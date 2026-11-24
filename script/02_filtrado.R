@@ -1,12 +1,12 @@
 # ==============================================================================
 # 0. CONFIGURACIÓN Y LIBRERÍAS
 # ==============================================================================
-options(scipen = 999)
 
 library(tidyverse)
 library(gt)
 library(here)
 
+options(scipen = 999)
 source(here::here("utils", "traducir_pais_wdi.R"))
 # ==============================================================================
 # 1. CARGA, LIMPIEZA Y TRANSFORMACIÓN DE LA BASE COMPLETA (WDI + ARGENDATA)
