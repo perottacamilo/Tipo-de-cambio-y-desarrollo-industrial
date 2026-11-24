@@ -103,7 +103,7 @@ diccionario <- diccionario |>
   cols_align(align = "center")
 
 print(diccionario)
-gtsave(diccionario, "output/tablas/diccionario.png")
+gtsave(diccionario, "output/tablas/diccionario.png", vwidth = 1800, expand = 20)
 
 
 # ==============================================================================

@@ -47,7 +47,7 @@ Analizar la relación empírica entre el nivel relativo de precios (Índice de N
 | `ahorro_bruto_pbi` | Ahorro bruto nacional | Numérica | % del PBI | 0 a 100 | 7845 | 89 | 61 | 58 |
 | `credito_privado_pbi` | Crédito interno al sector privado | Numérica | % del PBI | 0 a 100 | 6648 | 76 | 54 | 55 |
 | `industria_pc` | PBI industrial per cápita (serie Argendata) | Numérica | Dólares constantes 2015 | > 0 | 3882 | 15 | 11 | 11 |
-| `poblacion_mill` | Población del país en millones de habitantes | Numérica | Millones de habitantes | > 0 | 30 | 0 | 0 | 0 |
+| `poblacion_mill` | Población del país en millones de habitantes | Numérica | Millones de habitantes | > 0 | 0 | 0 | 0 | 0 |
 | `industria_pc_wdi` | PBI industrial per cápita estimado con indicadores WDI | Numérica | Dólares constantes 2015 | > 0 | 6167 | 50 | 30 | 29 |
 | `exportacion_manufactura_pc` | Exportaciones de manufacturas per cápita | Numérica | Dólares corrientes | >= 0 | 6406 | 57 | 53 | 54 |
 
@@ -73,12 +73,12 @@ Trabajo-Practico-Ciencia-de-Datos/
 │   ├── tablas/       # Diccionario, regresiones y diagnósticos (HTML y PNG)
 │   └── graficos/     # Gráficos comunicativo, exploratorio, EDA, clustering y regresión
 ├── script/
-│   ├── 01.datos.R
-│   ├── 02.filtrado.R
-│   ├── 03.datos faltantes.R
-│   ├── 04.graficos.R
-│   ├── 05. PCA-Clustering.R
-│   └── 06.regresion.R
+│   ├── 01_datos.R
+│   ├── 02_filtrado.R
+│   ├── 03_datos_faltantes.R
+│   ├── 04_graficos.R
+│   ├── 05_pca_clustering.R
+│   └── 06_regresion.R
 ├── utils/            # Funciones auxiliares propias (gráficos, imputación y diagnósticos)
 └── README.md
 ```
@@ -93,20 +93,20 @@ El procesamiento de datos, análisis cuantitativo y generación de visualizacion
 
 ```r
 install.packages(c(
-  "tidyverse", "WDI", "readxl", "scales", "ggtext", "ggrepel", "showtext",
-  "patchwork", "FactoMineR", "factoextra", "cluster", "mclust",
-  "lmtest", "sandwich", "car", "tseries", "modelsummary", "gt", "webshot2"
+  "tidyverse", "WDI", "scales", "ggtext", "ggrepel", "showtext",
+  "patchwork", "FactoMineR", "factoextra", "cluster", "here",
+  "lmtest", "sandwich", "car", "modelsummary", "gt", "webshot2"
 ))
 ```
 
 ### Orden de ejecución
 
-1. `script/01.datos.R` — Descarga los datos de WDI, los cruza con `auxiliar/` y guarda la base cruda en `raw/`.
-2. `script/02.filtrado.R` — Limpia la base, construye variables per cápita, exporta el diccionario en `output/tablas/` y guarda las bases intermedias en `input/`.
-3. `script/03.datos faltantes.R` — Aplica filtros de población y faltantes, interpola años adyacentes y genera `wdi_filtrado.csv` y `wdi_final.csv` en `input/`.
-4. `script/04.graficos.R` — Genera los gráficos exploratorio, comunicativo y de EDA en `output/graficos/`.
-5. `script/05. PCA-Clustering.R` — Ejecuta PCA y clustering jerárquico (Ward y HCPC) y exporta las visualizaciones en `output/graficos/clustering/`.
-6. `script/06.regresion.R` — Estima los modelos log-log, realiza diagnósticos y exporta tablas y gráficos en `output/tablas/` y `output/graficos/regresion/`.
+1. `script/01_datos.R` — Descarga los datos de WDI, los cruza con `auxiliar/` y guarda la base cruda en `raw/`.
+2. `script/02_filtrado.R` — Limpia la base, construye variables per cápita, exporta el diccionario en `output/tablas/` y guarda las bases intermedias en `input/`.
+3. `script/03_datos_faltantes.R` — Aplica filtros de población y faltantes, interpola años adyacentes y genera `wdi_filtrado.csv` y `wdi_final.csv` en `input/`.
+4. `script/04_graficos.R` — Genera los gráficos exploratorio, comunicativo y de EDA en `output/graficos/`.
+5. `script/05_pca_clustering.R` — Ejecuta PCA y clustering jerárquico (Ward y HCPC) y exporta las visualizaciones en `output/graficos/clustering/`.
+6. `script/06_regresion.R` — Estima los modelos log-log, realiza diagnósticos y exporta tablas y gráficos en `output/tablas/` y `output/graficos/regresion/`.
 
 ## Conclusiones principales
 
