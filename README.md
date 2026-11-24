@@ -5,9 +5,9 @@
 
 ## Integrantes
 
-- Camilo Perotta
-- Ignacio Keena
-- Thomas Hannon
+- [Camilo Perotta](https://github.com/perottacamilo)
+- [Ignacio Keena](https://github.com/Ignacio-06)
+- [Thomas Hannon](https://github.com/TomasHannon)
 
 ## Objetivo
 
