@@ -56,8 +56,8 @@ Analizar la relación empírica entre el nivel relativo de precios (Índice de N
 ## Análisis realizado
 
 1. Descarga de indicadores WDI vía API y empalme con la serie de PBI industrial per cápita de Argendata.
-2. Limpieza de agregados, traducción de regiones e ingresos, construcción de variables per cápita y generación del diccionario de variables.
-3. Exclusión de microestados y paises con menos de un millón de habitantes, depuración de variables y países con alta proporción de faltantes e interpolación por años adyacentes (±1) para 2001, 2008 y 2022.
+2. Limpieza de agregados, traducción de países, regiones e ingresos, construcción de variables per cápita y generación del diccionario de variables.
+3. Exclusión de microestados y países con menos de un millón de habitantes, depuración de variables y países con alta proporción de faltantes e interpolación por años adyacentes (±1) para 2001, 2008 y 2022.
 4. Análisis exploratorio y visualizaciones: distribuciones, faltantes, gráfico de dispersión con curva de tendencia (2001, 2008 y 2022) y evolución del PBI industrial per cápita (1990–2023).
 5. Análisis de Componentes Principales (PCA) sobre 11 variables estandarizadas y clustering jerárquico (Ward y HCPC en 5 grupos) para 2022.
 6. Regresiones log-log (simples, con controles y sin atípicos) para industria y exportaciones en 2001, 2008 y 2022, con diagnósticos de heterocedasticidad (Breusch-Pagan, errores robustos HC1), multicolinealidad (VIF), especificación (RESET) y observaciones influyentes (Distancia de Cook > 0,15).
@@ -66,11 +66,11 @@ Analizar la relación empírica entre el nivel relativo de precios (Índice de N
 
 ```
 Trabajo-Practico-Ciencia-de-Datos/
-├── raw/              # Bases originales descargadas (WDI y Argendata)
+├── raw/              # Base cruda descargada y combinada (WDI + Argendata)
 ├── auxiliar/         # Base complementaria de Argendata
 ├── input/            # Bases limpias, imputadas y listas para el análisis
 ├── output/
-│   ├── tablas/       # Diccionario, regresiones y diagnósticos (HTML y PNG)
+│   ├── tablas/       # Diccionario, regresiones y diagnósticos (PNG)
 │   └── graficos/     # Gráficos comunicativo, exploratorio, EDA, clustering y regresión
 ├── script/
 │   ├── 01_datos.R
@@ -79,7 +79,7 @@ Trabajo-Practico-Ciencia-de-Datos/
 │   ├── 04_graficos.R
 │   ├── 05_pca_clustering.R
 │   └── 06_regresion.R
-├── utils/            # Funciones auxiliares propias (gráficos, imputación y diagnósticos)
+├── utils/            # Funciones auxiliares propias (traducción, imputación, gráficos y diagnósticos)
 └── README.md
 ```
 
@@ -102,7 +102,7 @@ install.packages(c(
 ### Orden de ejecución
 
 1. `script/01_datos.R` — Descarga los datos de WDI, los cruza con `auxiliar/` y guarda la base cruda en `raw/`.
-2. `script/02_filtrado.R` — Limpia la base, construye variables per cápita, exporta el diccionario en `output/tablas/` y guarda las bases intermedias en `input/`.
+2. `script/02_filtrado.R` — Limpia la base, traduce países, regiones e ingresos, construye variables per cápita, exporta el diccionario en `output/tablas/` y guarda las bases intermedias en `input/`.
 3. `script/03_datos_faltantes.R` — Aplica filtros de población y faltantes, interpola años adyacentes y genera `wdi_filtrado.csv` y `wdi_final.csv` en `input/`.
 4. `script/04_graficos.R` — Genera los gráficos exploratorio, comunicativo y de EDA en `output/graficos/`.
 5. `script/05_pca_clustering.R` — Ejecuta PCA y clustering jerárquico (Ward y HCPC) y exporta las visualizaciones en `output/graficos/clustering/`.
